@@ -88,10 +88,10 @@
 		76C2A8902EDDB62A005608E6 = {
 			isa = PBXGroup;
 			children = (
-				76C2A89B2EDDB62A005608E6 /* Skill-Link */,
 				76C2A8B22EDDB62C005608E6 /* Skill-LinkTests */,
 				76C2A8BC2EDDB62C005608E6 /* Skill-LinkUITests */,
 				76C2A89A2EDDB62A005608E6 /* Products */,
+				76C2A89B2EDDB62A005608E6 /* Skill-Link */,
 			);
 			sourceTree = "<group>";
 		};
