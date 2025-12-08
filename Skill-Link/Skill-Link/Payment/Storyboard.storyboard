@@ -40,7 +40,7 @@
                                 <rect key="frame" x="45" y="479" width="302" height="95"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Visa Card - 1234" cornerStyle="small">
+                                <buttonConfiguration key="configuration" style="filled" title="Visa Card - 1234" cornerStyle="large">
                                     <color key="baseForegroundColor" systemColor="secondarySystemGroupedBackgroundColor"/>
                                     <color key="baseBackgroundColor" red="0.11372549830000001" green="0.18039217590000001" blue="0.3686274886" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 </buttonConfiguration>
