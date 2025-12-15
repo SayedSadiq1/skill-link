@@ -9,13 +9,19 @@ import UIKit
 
 class ServiceDetailsView: UIViewController {
     
+    @IBOutlet weak var TitleStackView: UIStackView!
     @IBOutlet weak var categoryLabel: UILabel!
     
     override func viewWillAppear(_ animated: Bool) {
         setupUI()
     }
     
+    override func viewDidLoad() {
+        setupUI()
+    }
+    
     func setupUI() {
-        categoryLabel.layer.borderWidth = 1
+        TitleStackView.layer.borderWidth = 1
+        TitleStackView.layer.masksToBounds = true
     }
 }
