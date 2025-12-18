@@ -7,7 +7,7 @@
 
 import UIKit
 
-class UpcomingTableViewCell: UITableViewCell {
+class BookingsTableViewCell: UITableViewCell {
 
     @IBOutlet weak var serviceTitle: UILabel!
     @IBOutlet weak var bookingCategory: UILabel!

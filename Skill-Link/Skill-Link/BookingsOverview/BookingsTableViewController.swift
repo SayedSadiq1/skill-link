@@ -41,7 +41,7 @@ class UpcomingTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = table.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! UpcomingTableViewCell
+        let cell = table.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! BookingsTableViewCell
         let booking = data[indexPath.row]
         
         cell.serviceTitle.text = booking.title
