@@ -10,6 +10,7 @@ import UIKit
 class UpcomingTableViewCell: UITableViewCell {
 
     @IBOutlet weak var serviceTitle: UILabel!
+    @IBOutlet weak var bookingCategory: UILabel!
     @IBOutlet weak var providedBy: UILabel!
     @IBOutlet weak var date: UILabel!
     @IBOutlet weak var time: UILabel!

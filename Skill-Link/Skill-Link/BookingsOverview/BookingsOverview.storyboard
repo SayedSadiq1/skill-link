@@ -12,27 +12,27 @@
         <!--Upcoming-->
         <scene sceneID="s0d-6b-0kx">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
                 <viewController id="Y6W-OH-hqX" customClass="UpcomingTableViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="2hQ-4o-Rsi">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" image="bg" translatesAutoresizingMaskIntoConstraints="NO" id="fuP-2H-JlC">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bg" translatesAutoresizingMaskIntoConstraints="NO" id="fuP-2H-JlC">
                                 <rect key="frame" x="0.0" y="-109" width="393" height="320"/>
                             </imageView>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="arrow_back" translatesAutoresizingMaskIntoConstraints="NO" id="5KP-Yu-o9y">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="arrow_back" translatesAutoresizingMaskIntoConstraints="NO" id="5KP-Yu-o9y">
                                 <rect key="frame" x="8" y="72" width="44" height="41"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="41" id="YgD-LO-V7P"/>
+                                </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Upcoming Bookings" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jlv-uW-GIR">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Upcoming Bookings" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jlv-uW-GIR">
                                 <rect key="frame" x="57" y="71" width="278" height="39"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="32"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" ambiguous="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="u6Q-Af-Wr9">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="u6Q-Af-Wr9">
                                 <rect key="frame" x="0.0" y="219" width="393" height="516"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
@@ -167,6 +167,7 @@
                                             </subviews>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="bookingCategory" destination="Ukw-hq-uEA" id="rxh-IJ-lE1"/>
                                             <outlet property="date" destination="Gpz-4Z-Ora" id="RKc-Of-WlK"/>
                                             <outlet property="location" destination="s81-fe-xUK" id="qxT-ta-usK"/>
                                             <outlet property="price" destination="uWk-z5-JI3" id="acS-u3-RE9"/>
@@ -182,9 +183,18 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="u6Q-Af-Wr9" firstAttribute="trailing" secondItem="Ka2-iZ-tql" secondAttribute="trailing" id="2Jv-hx-NLT"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="Jlv-uW-GIR" secondAttribute="trailing" constant="42" id="7iK-SR-Lid"/>
                             <constraint firstItem="u6Q-Af-Wr9" firstAttribute="top" secondItem="fuP-2H-JlC" secondAttribute="bottom" constant="8" symbolic="YES" id="GEy-d4-zzM"/>
                             <constraint firstItem="u6Q-Af-Wr9" firstAttribute="leading" secondItem="Ka2-iZ-tql" secondAttribute="leading" id="M4f-hI-Tui"/>
+                            <constraint firstItem="fuP-2H-JlC" firstAttribute="top" secondItem="2hQ-4o-Rsi" secondAttribute="top" constant="-109" id="QDI-Ds-dY5"/>
+                            <constraint firstItem="5KP-Yu-o9y" firstAttribute="leading" secondItem="2hQ-4o-Rsi" secondAttribute="leadingMargin" constant="-8" id="S8u-cj-20t"/>
                             <constraint firstItem="u6Q-Af-Wr9" firstAttribute="bottom" secondItem="Ka2-iZ-tql" secondAttribute="bottom" id="U6X-2O-RG2"/>
+                            <constraint firstItem="Ka2-iZ-tql" firstAttribute="top" secondItem="Jlv-uW-GIR" secondAttribute="bottom" constant="8" symbolic="YES" id="UCQ-Gg-pRZ"/>
+                            <constraint firstItem="fuP-2H-JlC" firstAttribute="leading" secondItem="u6Q-Af-Wr9" secondAttribute="leading" id="VKu-0S-UsM"/>
+                            <constraint firstItem="fuP-2H-JlC" firstAttribute="centerX" secondItem="Jlv-uW-GIR" secondAttribute="centerX" id="dWT-tF-uNb"/>
+                            <constraint firstItem="5KP-Yu-o9y" firstAttribute="top" secondItem="2hQ-4o-Rsi" secondAttribute="topMargin" constant="-46" id="fMZ-Db-N41"/>
+                            <constraint firstItem="Jlv-uW-GIR" firstAttribute="leading" secondItem="5KP-Yu-o9y" secondAttribute="trailing" constant="5" id="jre-YF-bkT"/>
+                            <constraint firstItem="Jlv-uW-GIR" firstAttribute="centerX" secondItem="u6Q-Af-Wr9" secondAttribute="centerX" id="kkV-vC-0bs"/>
                             <constraint firstAttribute="width" constant="393" id="x0G-NZ-r59"/>
                         </constraints>
                     </view>
@@ -193,6 +203,7 @@
                         <outlet property="table" destination="u6Q-Af-Wr9" id="M6s-QX-Hvc"/>
                     </connections>
                 </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-1292.3664122137404" y="597.18309859154931"/>
         </scene>
@@ -290,6 +301,7 @@
                 <tabBarController automaticallyAdjustsScrollViewInsets="NO" id="pQq-D3-CZd" sceneMemberID="viewController">
                     <toolbarItems/>
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="0Aa-AN-cG5">
+                        <rect key="frame" x="0.0" y="0.0" width="1000" height="1000"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </tabBar>
