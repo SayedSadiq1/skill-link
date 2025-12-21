@@ -11,11 +11,25 @@ class BaseViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.layer.contents = UIImage(named: "smaller_background")?.cgImage
-        view.layer.contentsGravity = .resizeAspectFill
-
+        setBackgroundImage(named: "smaller_background")
         setupNavigationItemStyle()
     }
+
+    private func setBackgroundImage(named name: String) {
+        let bg = UIImageView(image: UIImage(named: name))
+        bg.contentMode = .scaleAspectFill
+        bg.translatesAutoresizingMaskIntoConstraints = false
+
+        view.insertSubview(bg, at: 0) // behind everything
+
+        NSLayoutConstraint.activate([
+            bg.topAnchor.constraint(equalTo: view.topAnchor),
+            bg.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            bg.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bg.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+    }
+
 
     private func setupNavigationItemStyle() {
         guard let navBar = navigationController?.navigationBar else { return }
@@ -61,5 +75,43 @@ class BaseViewController: UIViewController {
          @objc private func handleBack() {
              navigationController?.popViewController(animated: true)
          }
+    
+        func addBottomBorder(
+        to view: UIView,
+        color: UIColor = .lightGray,
+        height: CGFloat = 1
+    ) {
+        let border = UIView()
+        border.backgroundColor = color
+        border.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(border)
+
+        NSLayoutConstraint.activate([
+            border.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            border.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            border.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            border.heightAnchor.constraint(equalToConstant: height)
+        ])
+    }
+    
+    
+    func addTopBorder(
+        to view: UIView,
+        color: UIColor = .lightGray,
+        height: CGFloat = 1
+    ) {
+        let border = UIView()
+        border.backgroundColor = color
+        border.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(border)
+
+        NSLayoutConstraint.activate([
+            border.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            border.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            border.topAnchor.constraint(equalTo: view.topAnchor),
+            border.heightAnchor.constraint(equalToConstant: height)
+        ])
+    }
     }
 
