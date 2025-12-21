@@ -24,5 +24,11 @@ class PaymentViewController: BaseViewController {
         addTopBorder(to: totalContainer, color: UIColor(hex:"#E8DEF8"), height: 3)
     }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "paymentVerfication" {
+            segue.destination.modalPresentationStyle = .fullScreen
+        }
+    }
+
 }
 
