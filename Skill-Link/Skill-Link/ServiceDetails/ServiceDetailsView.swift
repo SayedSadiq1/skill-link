@@ -8,20 +8,14 @@
 import UIKit
 
 class ServiceDetailsView: UIViewController {
-    
-    @IBOutlet weak var TitleStackView: UIStackView!
-    @IBOutlet weak var categoryLabel: UILabel!
-    
-    override func viewWillAppear(_ animated: Bool) {
-        setupUI()
-    }
-    
+    @IBOutlet weak var headerStackVIew: UIStackView!
     override func viewDidLoad() {
         setupUI()
+        super.viewDidLoad()
     }
     
     func setupUI() {
-        TitleStackView.layer.borderWidth = 1
-        TitleStackView.layer.masksToBounds = true
+        headerStackVIew.layer.borderWidth = 1
+        headerStackVIew.layer.borderColor = UIColor.black.cgColor
     }
 }
