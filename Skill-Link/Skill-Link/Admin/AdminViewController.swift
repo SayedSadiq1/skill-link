@@ -7,7 +7,7 @@
 
 import UIKit
 
-class AdminViewController: UIViewController {
+class AdminViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
