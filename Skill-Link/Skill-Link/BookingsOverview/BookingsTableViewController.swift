@@ -1,70 +1,81 @@
-//
-//  UpcomingTableViewController.swift
-//  Skill-Link
-//
-//  Created by BP-36-201-24 on 18/12/2025.
-//
-
 import UIKit
 
-class UpcomingTableViewController: UITableViewController {
-
+class BookingsOverviewTableViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+    
     @IBOutlet weak var table: UITableView!
     override func viewDidLoad() {
         super.viewDidLoad()
-        table.dataSource = self
-    }
-
-        struct BookedService {
-            let state: BookedServiceStatus
-            let title: String
-            let providedBy: String
-            let date: Date
-            let time: String
-            let location: String
-            let totalPrice: Double
-        }
         
+        // Set up the table view
+        table.dataSource = self
+        table.delegate = self
+        
+        // Register cell if not done in storyboard
+        table.register(BookingsTableViewCell.self, forCellReuseIdentifier: "cell")
+    }
+    
+    struct BookedService {
+        let state: BookedServiceStatus
+        let title: String
+        let providedBy: String
+        let date: Date
+        let time: String
+        let location: String
+        let totalPrice: Double
+    }
+    
     enum BookedServiceStatus: String {
-            case upcoming
-            case completed
-            case canceled
-        }
+        case upcoming
+        case completed
+        case canceled
+    }
     
     let data: [BookedService] = [
         BookedService(state: .upcoming, title: "Cleaning Service", providedBy: "Younis", date: Date.now, time: "8:00 - 10:00 AM", location: "Manama", totalPrice: 46.3)
     ]
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
+    
+    // MARK: - UITableViewDataSource
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return data.count
     }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = table.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! BookingsTableViewCell
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! BookingsTableViewCell
         let booking = data[indexPath.row]
+        
+        // Format the date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
         
         cell.serviceTitle.text = booking.title
         cell.providedBy.text = booking.providedBy
-        cell.date.text = DateFormatter().string(from: booking.date)
+        cell.date.text = dateFormatter.string(from: booking.date)
         cell.time.text = booking.time
         cell.location.text = booking.location
         cell.price.text = "\(booking.totalPrice)BD"
+        
         switch booking.state {
-            case .upcoming:
+        case .upcoming:
             cell.bookingCategory.text = "Upcoming"
             cell.bookingCategory.backgroundColor = UIColor.tintColor
-            break
-            case .completed:
+        case .completed:
             cell.bookingCategory.text = "Completed"
             cell.bookingCategory.backgroundColor = UIColor.green
-            break
-            case .canceled:
+        case .canceled:
             cell.bookingCategory.text = "Canceled"
             cell.bookingCategory.backgroundColor = UIColor.orange
-            break
         }
         
         return cell
     }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+            return 150 // Adjust as needed
+        }
+        
+        func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+            table.deselectRow(at: indexPath, animated: true)
+            // Handle row selection
+        }
 }
