@@ -18,10 +18,8 @@ class TransactionCell : UITableViewCell {
     override func awakeFromNib() {
            super.awakeFromNib()
         
-        containerView.backgroundColor = UIColor(hex: "#182E61")
         containerView.layer.cornerRadius = 20
         containerView.layer.masksToBounds = true
-        
        }
 
        func configure(with transaction: Transaction) {
