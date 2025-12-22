@@ -56,13 +56,20 @@ class SelectInterstViewController: UIViewController {
             // Set the tag
             button.tag = tag
             
-            // Style the button - GREY initially
+            // Style the button
             button.layer.cornerRadius = 25
-            button.layer.borderWidth = 2
-            button.layer.borderColor = UIColor.clear.cgColor
-            button.backgroundColor = UIColor.systemGray5  // Grey background
+            button.layer.borderWidth = 0
             
-            // Set text color if button has text
+            // Remove any background images
+            button.setBackgroundImage(nil, for: .normal)
+            button.setBackgroundImage(nil, for: .selected)
+            button.setBackgroundImage(nil, for: .highlighted)
+            
+            // Force set grey background (this will override Storyboard)
+            let grey = UIColor(red: 200/255, green: 200/255, blue: 200/255, alpha: 1.0)
+            button.backgroundColor = grey
+            
+            // Set text color
             button.setTitleColor(.darkGray, for: .normal)
             button.tintColor = .darkGray
             
@@ -113,33 +120,40 @@ class SelectInterstViewController: UIViewController {
     private func updateButton(_ button: UIButton, isSelected: Bool) {
         print("Updating button \(button.tag) - selected: \(isSelected)")
         
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
-            if isSelected {
-                // SKY BLUE background with blue stroke
-                button.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)  // Light sky blue
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-                button.layer.borderWidth = 2
-                
-                // Blue text/icon
-                button.setTitleColor(.systemBlue, for: .normal)
-                button.tintColor = .systemBlue
-                
-                // Optional: slight scale effect
-                button.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
-                
-            } else {
-                // GREY background with no stroke
-                button.backgroundColor = UIColor.systemGray5
-                button.layer.borderColor = UIColor.clear.cgColor
-                
-                // Dark grey text/icon
-                button.setTitleColor(.darkGray, for: .normal)
-                button.tintColor = .darkGray
-                
-                // Reset scale
-                button.transform = .identity
-            }
+        // Remove any background images that might block color changes
+        button.setBackgroundImage(nil, for: .normal)
+        button.setBackgroundImage(nil, for: .selected)
+        button.setBackgroundImage(nil, for: .highlighted)
+        
+        if isSelected {
+            // SKY BLUE fill (#38A1FF)
+            let skyBlue = UIColor(red: 56/255, green: 161/255, blue: 255/255, alpha: 1.0)
+            button.backgroundColor = skyBlue
+            button.layer.borderWidth = 0
+            
+            // White text
+            button.setTitleColor(.white, for: .normal)
+            button.setTitleColor(.white, for: .highlighted)
+            button.tintColor = .white
+            
+            print("✅ Changed to SKY BLUE")
+            
+        } else {
+            // GREY fill
+            let grey = UIColor(red: 200/255, green: 200/255, blue: 200/255, alpha: 1.0)
+            button.backgroundColor = grey
+            button.layer.borderWidth = 0
+            
+            // Dark grey text
+            button.setTitleColor(.darkGray, for: .normal)
+            button.setTitleColor(.darkGray, for: .highlighted)
+            button.tintColor = .darkGray
+            
+            print("✅ Changed to GREY")
         }
+        
+        // Force layout update
+        button.layoutIfNeeded()
     }
     
     private func showAlert() {
