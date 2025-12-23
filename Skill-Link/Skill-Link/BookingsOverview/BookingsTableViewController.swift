@@ -41,13 +41,17 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! BookingsTableViewCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? BookingsTableViewCell else {
+            print("ashdkhsjfas")
+            return UITableViewCell()
+        }
         let booking = data[indexPath.row]
         
         // Format the date
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .medium
         
+        print("serviceTitle \(String(describing: cell.serviceTitle)) booking \(booking)")
         cell.serviceTitle.text = booking.title
         cell.providedBy.text = booking.providedBy
         cell.date.text = dateFormatter.string(from: booking.date)
