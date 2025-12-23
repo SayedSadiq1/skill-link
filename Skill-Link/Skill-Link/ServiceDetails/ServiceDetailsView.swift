@@ -14,9 +14,8 @@ class ServiceDetailsView: UIViewController {
     }
     
     let categories = ["Home Maintenance", "Handwork", "Electricity"]
-    let isProvider: Bool = true
+    let isProvider: Bool = false
     
-    @IBOutlet weak var reportStackView: UIStackView!
     @IBOutlet weak var pricingPopupBtn: UIButton!
     @IBOutlet weak var actionBtn: UIButton!
     @IBOutlet weak var cancelBtn: UIButton!
@@ -62,8 +61,15 @@ class ServiceDetailsView: UIViewController {
         
     }
     
-    @IBAction func reportClicked(_ sender: UIButton) {
-        reportStackView.isHidden = false
+    @IBAction func reportClicked(_ sender: Any) {
+        if isProvider {
+            return
+        }
+        
+        let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+        let controller = storyboard.instantiateViewController(withIdentifier: "reportPage")
+        controller.modalPresentationStyle = .popover
+        self.present(controller, animated: true)
     }
     
     
