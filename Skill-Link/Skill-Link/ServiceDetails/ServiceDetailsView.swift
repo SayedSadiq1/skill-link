@@ -14,7 +14,8 @@ class ServiceDetailsView: UIViewController {
     }
     
     let categories = ["Home Maintenance", "Handwork", "Electricity"]
-    let isProvider: Bool = false
+    let isProvider: Bool = true
+    var isActivated: Bool = true
     
     @IBOutlet weak var pricingPopupBtn: UIButton!
     @IBOutlet weak var actionBtn: UIButton!
@@ -55,14 +56,42 @@ class ServiceDetailsView: UIViewController {
             actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
         }
         if cancelBtn != nil {
-            cancelBtn.setTitle("Deactivate", for: .normal)
-            cancelBtn.setImage(UIImage(systemName: "xmark.app"), for: .normal)
+            if isActivated {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "xmark.app")
+                config.title = "Deactivate"
+                config.baseBackgroundColor = UIColor.red
+                cancelBtn.configuration = config
+                
+            } else {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "repeat")
+                config.title = "Reactivate"
+                config.baseBackgroundColor = UIColor.systemTeal
+                cancelBtn.configuration = config
+            }
         }
         
     }
     
     @IBAction func reportClicked(_ sender: Any) {
         if isProvider {
+            isActivated = !isActivated
+            if isActivated {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "xmark.app")
+                config.title = "Deactivate"
+                config.baseBackgroundColor = UIColor.red
+                cancelBtn.configuration = config
+                
+            } else {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "repeat")
+                config.title = "Reactivate"
+                config.baseBackgroundColor = UIColor.systemTeal
+                cancelBtn.configuration = config
+            }
+            
             return
         }
         
