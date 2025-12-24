@@ -1,6 +1,6 @@
 import UIKit
 
-class ProfileViewController: UIViewController {
+class ProfileViewController: BaseViewController {
 
     @IBOutlet weak var skillsStackView: UIStackView!
     @IBOutlet weak var skillsContainerView: UIView!
@@ -12,6 +12,11 @@ class ProfileViewController: UIViewController {
 
     @IBOutlet weak var briefContainerView: UIView!
     @IBOutlet weak var briefTextView: UITextView!
+    
+    @IBOutlet weak var profileImageView: UIImageView!
+    
+    
+    
 
     // ✅ Profile data (TEMP now, later Firebase)
     var currentProfile = UserProfile(
@@ -28,6 +33,12 @@ class ProfileViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         print("✅ ProfileViewController loaded")
+        
+        
+        //making image rounded
+        profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
+            profileImageView.clipsToBounds = true
+            profileImageView.contentMode = .scaleAspectFill
 
         // Skills container styling
         skillsContainerView.layer.cornerRadius = 10
@@ -71,11 +82,19 @@ class ProfileViewController: UIViewController {
         contactLabel.text = currentProfile.contact
         briefTextView.text = currentProfile.brief
         showSkills(currentProfile.skills)
+        
+        if let data = currentProfile.imageData, let img = UIImage(data: data) {
+               profileImageView.image = img
+           } else {
+               profileImageView.image = UIImage(systemName: "person.circle.fill") // optional fallback
+           }
     }
 
     // ✅ Connect your Edit button to this IBAction in storyboard
     @IBAction func editTapped(_ sender: UIButton) {
-        let vc = storyboard?.instantiateViewController(withIdentifier: "EditProfileViewController") as! EditProfileViewController
+        let sb = UIStoryboard(name: "login", bundle: nil)
+
+        let vc = sb.instantiateViewController(withIdentifier: "EditProfileViewController") as! EditProfileViewController
 
         vc.profile = currentProfile
 
@@ -85,8 +104,9 @@ class ProfileViewController: UIViewController {
             self.applyProfileToUI()
         }
 
-        navigationController?.pushViewController(vc, animated: true)
+       
     }
+
 
     // MARK: - Skills chips
     private func showSkills(_ skills: [String]) {
@@ -130,4 +150,6 @@ class ProfileViewController: UIViewController {
                           height: size.height + verticalPadding * 2)
         }
     }
+    
+    
 }

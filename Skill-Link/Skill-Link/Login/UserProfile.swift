@@ -5,4 +5,5 @@ struct UserProfile {
     var skills: [String]
     var brief: String
     var contact: String
+    var imageData: Data?
 }
