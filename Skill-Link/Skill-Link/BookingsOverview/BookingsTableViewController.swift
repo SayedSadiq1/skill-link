@@ -10,8 +10,20 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
         table.dataSource = self
         table.delegate = self
         
+        addProviderView()
         setupForCurrentTab()
     }
+    
+    let data: [BookedService] = [
+        BookedService(state: .completed, title: "Cleaning Service", providedBy: "Provided By: Younis", date: Date.now, time: "8:00 - 10:00 AM", location: "Manama", totalPrice: 46.3),
+        BookedService(state: .canceled, title: "Lights Replacement", providedBy: "Provided By: Ahmed", date: Date.now, time: "1:00 - 2:00 PM", location: "Sanabis", totalPrice: 5.25),
+        BookedService(state: .upcoming, title: "Garage Door Installation", providedBy: "Provided By: Jamous", date: Date.now, time: "12:00 - 4:00 PM", location: "Saar", totalPrice: 30),
+        BookedService(state: .pending, title: "Deep cleaning", providedBy: "Requested By: Murtadha", date: Date.now, time: "4:00 - 9:00 PM", location: "Zallaq Pier", totalPrice: 140)
+    ]
+    
+    private var filteredData: [BookedService] = []
+    private var currentState: BookedServiceStatus = .upcoming
+    let isProvider = true
     
     struct BookedService {
         let state: BookedServiceStatus
@@ -24,19 +36,50 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
     }
     
     enum BookedServiceStatus: String {
+        case pending
         case upcoming
         case completed
         case canceled
     }
     
-    let data: [BookedService] = [
-        BookedService(state: .completed, title: "Cleaning Service", providedBy: "Provided By: Younis", date: Date.now, time: "8:00 - 10:00 AM", location: "Manama", totalPrice: 46.3),
-        BookedService(state: .canceled, title: "Lights Replacement", providedBy: "Provided By: Ahmed", date: Date.now, time: "1:00 - 2:00 PM", location: "Sanabis", totalPrice: 5.25),
-        BookedService(state: .upcoming, title: "Garage Door Installation", providedBy: "Provided By: Jamous", date: Date.now, time: "12:00 - 4:00 PM", location: "Saar", totalPrice: 30)
-    ]
-    
-    private var filteredData: [BookedService] = []
-    private var currentState: BookedServiceStatus = .upcoming
+    private func addProviderView() {
+        if !isProvider {
+            return
+        }
+        
+        // 1. Get a reference to your Tab Bar Controller
+        guard let tabBarController = self.tabBarController else {
+            return
+        }
+        
+        if tabBarController.viewControllers?.count == 4 {
+            return
+        }
+
+        // 2. Prepare your conditional view controller (e.g., from Storyboard)
+        let storyboard = UIStoryboard(name: "BookingsOverview", bundle: nil)
+        let providerVC = storyboard.instantiateViewController(withIdentifier: "PendingBookings")
+
+        // Configure the adminVC's tab bar item
+        providerVC.tabBarItem = UITabBarItem(title: "Pending", image: UIImage(systemName: "lock.shield"), tag: 3)
+
+        // 3. Check the condition (e.g., user is an admin)
+        if isProvider {
+            // Insert the admin tab as the fourth item (index 3)
+            var currentViewControllers = tabBarController.viewControllers ?? []
+            // Ensure we don't insert it multiple times
+            if !currentViewControllers.contains(providerVC) {
+                currentViewControllers.insert(providerVC, at: 0) // Add at specific position
+                tabBarController.viewControllers = currentViewControllers
+            } 
+        } else {
+            if let providerVCIndex = tabBarController.viewControllers?.firstIndex(where: { $0.tabBarItem.title == "Pending" }) {
+                var currentViewControllers = tabBarController.viewControllers
+                currentViewControllers?.remove(at: providerVCIndex)
+                tabBarController.viewControllers = currentViewControllers
+            }
+        }
+    }
     
     // MARK: - UITableViewDataSource
     
@@ -66,6 +109,9 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
             stateLabel.alpha = CGFloat(0.65)
             
             switch booking.state {
+            case .pending:
+                stateLabel.text = "Pending"
+                stateLabel.setBackgroundColor(UIColor.yellow)
             case .upcoming:
                 stateLabel.text = "Upcoming"
                 stateLabel.setBackgroundColor(UIColor.tintColor)
@@ -95,16 +141,32 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
                let index = tabBarController.viewControllers?.firstIndex(of: self) {
                 
                 // Set current state based on tab index
-                switch index {
-                case 0:
-                    currentState = .upcoming
-                case 1:
-                    currentState = .completed
-                case 2:
-                    currentState = .canceled
-                default:
-                    break
+                if !isProvider {
+                    switch index {
+                    case 0:
+                        currentState = .upcoming
+                    case 1:
+                        currentState = .completed
+                    case 2:
+                        currentState = .canceled
+                    default:
+                        break
+                    }
+                } else {
+                    switch index {
+                    case 0:
+                        currentState = .pending
+                    case 1:
+                        currentState = .upcoming
+                    case 2:
+                        currentState = .completed
+                    case 3:
+                        currentState = .canceled
+                    default:
+                        break
+                    }
                 }
+                
                 
                 // Filter the data
                 filteredData = data.filter { $0.state == currentState }
