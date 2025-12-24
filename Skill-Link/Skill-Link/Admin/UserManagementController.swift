@@ -21,7 +21,7 @@ class UserManagementController : BaseViewController,
     // SAMPLE DATA (replace with real API later)
     let users: [User] = [
         User(name: "Sayed Hussain", role: "Provider", status: "Active"),
-        User(name: "Ali Ahmed", role: "Provider", status: "Suspended")
+        User(name: "Ali Ahmed", role: "Provider", status: "Suspend")
     ]
 
     override func viewDidLoad() {
@@ -29,7 +29,14 @@ class UserManagementController : BaseViewController,
 
         tableView.delegate = self
         tableView.dataSource = self
+
+        // 🔧 FIX unwanted top spacing
+        tableView.contentInsetAdjustmentBehavior = .never
+        tableView.sectionHeaderTopPadding = 0   // iOS 15+
+        tableView.rowHeight = 100
+
     }
+
 
     // MARK: - TableView
 

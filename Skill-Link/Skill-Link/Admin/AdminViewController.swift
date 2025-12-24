@@ -8,12 +8,39 @@
 import UIKit
 
 class AdminViewController: BaseViewController {
+    
+    @IBOutlet weak var totalUsersLabel: UILabel!
+    @IBOutlet weak var activeProvidersLabel: UILabel!
+    @IBOutlet weak var activeBookingsLabel: UILabel!
+    @IBOutlet weak var reportedCasesLabel: UILabel!
+    @IBOutlet weak var pendingVerificationsLabel: UILabel!
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
+        totalUsersLabel.text = "100"
+        activeProvidersLabel.text = "87"
+        activeBookingsLabel.text = "42"
+        reportedCasesLabel.text = "3"
+        pendingVerificationsLabel.text = "12"
     }
+    
+    func updateStats(
+        totalUsers: Int,
+        activeProviders: Int,
+        activeBookings: Int,
+        reportedCases: Int,
+        pendingVerifications: Int
+    ) {
+        totalUsersLabel.text = "\(totalUsers)"
+        activeProvidersLabel.text = "\(activeProviders)"
+        activeBookingsLabel.text = "\(activeBookings)"
+        reportedCasesLabel.text = "\(reportedCases)"
+        pendingVerificationsLabel.text = "\(pendingVerifications)"
+    }
+
+
     
 
     /*
