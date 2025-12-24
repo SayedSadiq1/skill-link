@@ -15,6 +15,8 @@ class CardLabel: UILabel {
 
        override func drawText(in rect: CGRect) {
           let insets = UIEdgeInsets(top: topInset, left: leftInset, bottom: bottomInset, right: rightInset)
+           super.layer.cornerRadius = 10
+           super.layer.borderWidth = 1
            super.drawText(in: rect.inset(by: insets))
        }
 
@@ -26,4 +28,16 @@ class CardLabel: UILabel {
              return contentSize
           }
        }
+    
+    func setBackgroundColor(_ color: UIColor) {
+        super.layer.backgroundColor = color.cgColor
+    }
+    
+    func setForegroundColor(_ color: UIColor) {
+        super.textColor = color
+    }
+    
+    func setBorderColor(_ color: UIColor) {
+        super.layer.borderColor = color.cgColor
+    }
 }
