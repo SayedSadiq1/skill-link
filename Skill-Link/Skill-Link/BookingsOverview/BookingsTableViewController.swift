@@ -14,33 +14,203 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
         setupForCurrentTab()
     }
     
-    let data: [BookedService] = [
-        BookedService(state: .completed, title: "Cleaning Service", providedBy: "Provided By: Younis", date: Date.now, time: "8:00 - 10:00 AM", location: "Manama", totalPrice: 46.3),
-        BookedService(state: .canceled, title: "Lights Replacement", providedBy: "Provided By: Ahmed", date: Date.now, time: "1:00 - 2:00 PM", location: "Sanabis", totalPrice: 5.25),
-        BookedService(state: .upcoming, title: "Garage Door Installation", providedBy: "Provided By: Jamous", date: Date.now, time: "12:00 - 4:00 PM", location: "Saar", totalPrice: 30),
-        BookedService(state: .pending, title: "Deep cleaning", providedBy: "Requested By: Murtadha", date: Date.now, time: "4:00 - 9:00 PM", location: "Zallaq Pier", totalPrice: 140)
+    let data: [Booking] = [
+        // PENDING: Waiting for provider acceptance
+        Booking(
+            service: BookedService(
+                state: .Pending,
+                title: "Light Replacement",
+                date: Date.now,
+                time: "10:00 - 11:00 AM",
+                location: "Manama, Bahrain",
+                totalPrice: 13.0
+            ),
+            user: UserProfile(
+                name: "Jaffar",
+                skills: [],
+                brief: "",
+                contact: "+973 1234 5678"
+            ),
+            provider: UserProfile(
+                name: "Modeer",
+                skills: ["Electrician", "Stock Analyst"],
+                brief: "Microsoft Certified Electrician with 5 years experience!",
+                contact: "+973 3232 4545"
+            )
+        ),
+        
+        // UPCOMING: Accepted and scheduled for future
+        Booking(
+            service: BookedService(
+                state: .Upcoming,
+                title: "Home Cleaning Service",
+                date: Date.now.addingTimeInterval(86400 * 2), // 2 days from now
+                time: "2:00 - 4:00 PM",
+                location: "Riffa, Bahrain",
+                totalPrice: 28.5
+            ),
+            user: UserProfile(
+                name: "Sarah Ahmed",
+                skills: [],
+                brief: "",
+                contact: "+973 9876 5432"
+            ),
+            provider: UserProfile(
+                name: "CleanPro Co.",
+                skills: ["Deep Cleaning", "Carpet Cleaning", "Window Cleaning"],
+                brief: "Professional cleaning team with eco-friendly products",
+                contact: "+973 1717 0000"
+            )
+        ),
+        
+        // UPCOMING: Another upcoming booking
+        Booking(
+            service: BookedService(
+                state: .Upcoming,
+                title: "AC Repair & Maintenance",
+                date: Date.now.addingTimeInterval(86400 * 1), // Tomorrow
+                time: "9:00 - 11:00 AM",
+                location: "Muharraq, Bahrain",
+                totalPrice: 75.0
+            ),
+            user: UserProfile(
+                name: "Ali Hassan",
+                skills: [],
+                brief: "",
+                contact: "+973 3344 5566"
+            ),
+            provider: UserProfile(
+                name: "CoolAir Solutions",
+                skills: ["AC Repair", "Maintenance", "Installation"],
+                brief: "Certified HVAC technicians with 10+ years experience",
+                contact: "+973 1777 8888"
+            )
+        ),
+        
+        // COMPLETED: Past successful service
+        Booking(
+            service: BookedService(
+                state: .Completed,
+                title: "Plumbing Fix - Leaking Pipe",
+                date: Date.now.addingTimeInterval(-86400 * 3), // 3 days ago
+                time: "11:00 AM - 12:30 PM",
+                location: "Seef, Bahrain",
+                totalPrice: 42.0
+            ),
+            user: UserProfile(
+                name: "Fatima Khalid",
+                skills: [],
+                brief: "",
+                contact: "+973 9988 7766"
+            ),
+            provider: UserProfile(
+                name: "QuickFix Plumbers",
+                skills: ["Emergency Plumbing", "Pipe Repair", "Installation"],
+                brief: "24/7 emergency plumbing services",
+                contact: "+973 1600 1234"
+            )
+        ),
+        
+        // COMPLETED: Another completed service
+        Booking(
+            service: BookedService(
+                state: .Completed,
+                title: "Monthly Car Wash & Polish",
+                date: Date.now.addingTimeInterval(-86400 * 7), // 1 week ago
+                time: "3:00 - 4:00 PM",
+                location: "Budaiya, Bahrain",
+                totalPrice: 15.0
+            ),
+            user: UserProfile(
+                name: "Khalid Ali",
+                skills: [],
+                brief: "",
+                contact: "+973 4455 6677"
+            ),
+            provider: UserProfile(
+                name: "ShinyCars Detailing",
+                skills: ["Car Wash", "Polishing", "Interior Cleaning"],
+                brief: "Premium car care with ceramic coating options",
+                contact: "+973 3666 9999"
+            )
+        ),
+        
+        // CANCELED: User canceled booking
+        Booking(
+            service: BookedService(
+                state: .Canceled,
+                title: "Furniture Assembly",
+                date: Date.now.addingTimeInterval(86400 * 5), // Would have been 5 days from now
+                time: "1:00 - 3:00 PM",
+                location: "Isa Town, Bahrain",
+                totalPrice: 35.0
+            ),
+            user: UserProfile(
+                name: "Maryam Abdul",
+                skills: [],
+                brief: "",
+                contact: "+973 2233 4455"
+            ),
+            provider: UserProfile(
+                name: "Home Assembly Pro",
+                skills: ["Furniture Assembly", "Mounting", "Installation"],
+                brief: "Expert furniture assemblers for all brands",
+                contact: "+973 1888 2222"
+            )
+        ),
+        
+        // CANCELED: Provider canceled
+        Booking(
+            service: BookedService(
+                state: .Canceled,
+                title: "Gardening & Landscaping",
+                date: Date.now.addingTimeInterval(86400 * 4), // Would have been 4 days from now
+                time: "8:00 AM - 12:00 PM",
+                location: "Hamala, Bahrain",
+                totalPrice: 120.0
+            ),
+            user: UserProfile(
+                name: "Omar Farooq",
+                skills: [],
+                brief: "",
+                contact: "+973 6677 8899"
+            ),
+            provider: UserProfile(
+                name: "GreenThumb Gardens",
+                skills: ["Landscaping", "Gardening", "Irrigation"],
+                brief: "Complete garden design and maintenance",
+                contact: "+973 1777 3333"
+            )
+        ),
+        
+        // PENDING: Another pending request
+        Booking(
+            service: BookedService(
+                state: .Pending,
+                title: "WiFi Network Setup",
+                date: Date.now.addingTimeInterval(86400 * 3), // 3 days from now
+                time: "4:00 - 5:30 PM",
+                location: "Juffair, Bahrain",
+                totalPrice: 25.0
+            ),
+            user: UserProfile(
+                name: "Layla Mohammed",
+                skills: [],
+                brief: "",
+                contact: "+973 5544 3322"
+            ),
+            provider: UserProfile(
+                name: "TechConnect Solutions",
+                skills: ["Network Setup", "WiFi Optimization", "IT Support"],
+                brief: "Certified network engineers for home and business",
+                contact: "+973 1700 5555"
+            )
+        )
     ]
     
-    private var filteredData: [BookedService] = []
-    private var currentState: BookedServiceStatus = .upcoming
+    private var filteredData: [Booking] = []
+    private var currentState: BookedServiceStatus = .Upcoming
     let isProvider = true
-    
-    struct BookedService {
-        let state: BookedServiceStatus
-        let title: String
-        let providedBy: String
-        let date: Date
-        let time: String
-        let location: String
-        let totalPrice: Double
-    }
-    
-    enum BookedServiceStatus: String {
-        case pending
-        case upcoming
-        case completed
-        case canceled
-    }
     
     private func addProviderView() {
         if !isProvider {
@@ -98,36 +268,37 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
             let dateFormatter = DateFormatter()
             dateFormatter.dateStyle = .medium
             
-            cell.serviceTitle?.text = booking.title
-            cell.providedBy?.text = booking.providedBy
-            cell.date?.text = dateFormatter.string(from: booking.date)
-            cell.time?.text = booking.time
-            cell.location?.text = booking.location
-            cell.price?.text = "\(booking.totalPrice)BD"
+        cell.serviceTitle?.text = booking.service.title
+        if currentState == .Pending {
+            cell.providedBy?.text = "Request By: \(booking.user.name)"
+        } else {
+            cell.providedBy?.text = "Provided By: \(booking.provider.name)"
+        }
+        
+        cell.date?.text = dateFormatter.string(from: booking.service.date)
+        cell.time?.text = booking.service.time
+        cell.location?.text = booking.service.location
+        cell.price?.text = "\(booking.service.totalPrice)BD"
             
             let stateLabel = cell.bookingCategory as! CardLabel
             stateLabel.alpha = CGFloat(0.65)
-            
-            switch booking.state {
-            case .pending:
-                stateLabel.text = "Pending"
-                stateLabel.setBackgroundColor(UIColor.yellow)
-            case .upcoming:
-                stateLabel.text = "Upcoming"
-                stateLabel.setBackgroundColor(UIColor.tintColor)
-            case .completed:
-                stateLabel.text = "Completed"
-                stateLabel.setBackgroundColor(UIColor.systemGreen)
-            case .canceled:
-                stateLabel.text = "Canceled"
-                stateLabel.setBackgroundColor(UIColor.orange)
+        stateLabel.text = booking.service.state.rawValue
+        switch booking.service.state {
+                case .Pending:
+                    stateLabel.setBackgroundColor(UIColor.yellow)
+                case .Upcoming:
+                    stateLabel.setBackgroundColor(UIColor.tintColor)
+                case .Completed:
+                    stateLabel.setBackgroundColor(UIColor.systemGreen)
+                case .Canceled:
+                    stateLabel.setBackgroundColor(UIColor.orange)
             }
             
             return cell
         }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-            return 230
+            return 250
         }
 //        
         func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -144,24 +315,24 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
                 if !isProvider {
                     switch index {
                     case 0:
-                        currentState = .upcoming
+                        currentState = .Upcoming
                     case 1:
-                        currentState = .completed
+                        currentState = .Completed
                     case 2:
-                        currentState = .canceled
+                        currentState = .Canceled
                     default:
                         break
                     }
                 } else {
                     switch index {
                     case 0:
-                        currentState = .pending
+                        currentState = .Pending
                     case 1:
-                        currentState = .upcoming
+                        currentState = .Upcoming
                     case 2:
-                        currentState = .completed
+                        currentState = .Completed
                     case 3:
-                        currentState = .canceled
+                        currentState = .Canceled
                     default:
                         break
                     }
@@ -169,7 +340,7 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
                 
                 
                 // Filter the data
-                filteredData = data.filter { $0.state == currentState }
+                filteredData = data.filter { $0.service.state == currentState }
                 
                 // Reload table
                 table.reloadData()
