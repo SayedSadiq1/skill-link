@@ -110,20 +110,29 @@ class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate
 
     private func goToProfileScreen() {
         let sb = UIStoryboard(name: "login", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "ProfileViewController") as! ProfileViewController
 
-        let name = fullNameTextField.text!.trimmingCharacters(in: .whitespacesAndNewlines)
-        let contact = contactTextField.text!.trimmingCharacters(in: .whitespacesAndNewlines)
+        // ✅ MUST match storyboard ID + class
+        guard let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController") as? ProfileProviderViewController else {
+            fatalError("❌ Could not find ProfileProviderViewController in storyboard. Check Storyboard ID + Custom Class.")
+        }
 
-        let skillsArray = skillsTextField.text!
+        let name = fullNameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        let skillsArray = (skillsTextField.text ?? "")
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        let briefFinal = (briefTextView.textColor == .systemGray3) ? "" : (briefTextView.text ?? "")
+        let briefFinal: String
+        if briefTextView.textColor == .systemGray3 {
+            briefFinal = ""   // placeholder
+        } else {
+            briefFinal = briefTextView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
 
-        // ✅ PASS IMAGE DATA HERE
-        vc.currentProfile = UserProfile(
+        // ✅ PASS image too
+        let profile = UserProfile(
             name: name,
             skills: skillsArray,
             brief: briefFinal,
@@ -131,8 +140,10 @@ class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate
             imageData: selectedImageData
         )
 
+        vc.currentProfile = profile
         navigationController?.pushViewController(vc, animated: true)
     }
+
 
     
     @objc private func changePhotoTapped() {
