@@ -61,7 +61,7 @@ class BookingsOverviewTableViewController: UIViewController, UITableViewDataSour
         let providerVC = storyboard.instantiateViewController(withIdentifier: "PendingBookings")
 
         // Configure the adminVC's tab bar item
-        providerVC.tabBarItem = UITabBarItem(title: "Pending", image: UIImage(systemName: "lock.shield"), tag: 3)
+        providerVC.tabBarItem = UITabBarItem(title: "Pending", image: UIImage(systemName: "person.fill.checkmark.and.xmark"), tag: 3)
 
         // 3. Check the condition (e.g., user is an admin)
         if isProvider {

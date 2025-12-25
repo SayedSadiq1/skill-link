@@ -222,7 +222,7 @@
                         <viewLayoutGuide key="safeArea" id="Ka2-iZ-tql"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Upcoming" selectedImage="calendar" catalog="system" id="GFn-jg-zDT"/>
+                    <tabBarItem key="tabBarItem" title="Upcoming" image="calendar" catalog="system" selectedImage="calendar" id="GFn-jg-zDT"/>
                     <connections>
                         <outlet property="table" destination="VCC-Gu-dW7" id="GhE-pL-B7u"/>
                     </connections>
@@ -314,6 +314,9 @@
                                                                             <state key="normal" image="ellipsis" catalog="system"/>
                                                                         </button>
                                                                     </subviews>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="trailing" secondItem="a8t-mp-jKZ" secondAttribute="trailing" id="W51-HT-hSt"/>
+                                                                    </constraints>
                                                                 </stackView>
                                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" spacing="7" translatesAutoresizingMaskIntoConstraints="NO" id="Xqa-xP-xlw">
                                                                     <rect key="frame" x="0.0" y="82.333333333333329" width="132" height="74.999999999999986"/>
@@ -436,7 +439,7 @@
                         <viewLayoutGuide key="safeArea" id="050-QB-Amj"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Completed" selectedImage="checkmark" catalog="system" id="iVc-U3-nb2"/>
+                    <tabBarItem key="tabBarItem" title="Completed" image="checkmark.rectangle.stack" catalog="system" selectedImage="checkmark.rectangle.stack" id="iVc-U3-nb2"/>
                     <connections>
                         <outlet property="table" destination="Jqe-rj-dKg" id="kPH-tS-Lif"/>
                     </connections>
@@ -635,7 +638,7 @@
                         <viewLayoutGuide key="safeArea" id="Dbi-Sb-CZm"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Canceled" selectedImage="xmark" catalog="system" id="SC3-Lp-rMR"/>
+                    <tabBarItem key="tabBarItem" title="Canceled" image="xmark" catalog="system" selectedImage="xmark" id="SC3-Lp-rMR"/>
                     <connections>
                         <outlet property="table" destination="bPY-05-ClT" id="ctG-9k-Yxr"/>
                     </connections>
@@ -647,6 +650,7 @@
         <!--Tab Bar Controller-->
         <scene sceneID="R2Y-a0-xnV">
             <objects>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="IDH-IX-sar" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
                 <tabBarController automaticallyAdjustsScrollViewInsets="NO" id="pQq-D3-CZd" sceneMemberID="viewController">
                     <toolbarItems/>
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="0Aa-AN-cG5">
@@ -660,7 +664,6 @@
                         <segue destination="zBF-3X-v4e" kind="relationship" relationship="viewControllers" id="jy4-hy-0iI"/>
                     </connections>
                 </tabBarController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="IDH-IX-sar" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-306.1068702290076" y="-136.61971830985917"/>
         </scene>
@@ -895,6 +898,7 @@
         <image name="bg" width="393" height="320"/>
         <image name="calendar" catalog="system" width="128" height="107"/>
         <image name="checkmark" catalog="system" width="128" height="114"/>
+        <image name="checkmark.rectangle.stack" catalog="system" width="126" height="128"/>
         <image name="clock" catalog="system" width="128" height="123"/>
         <image name="ellipsis" catalog="system" width="128" height="37"/>
         <image name="map" catalog="system" width="128" height="112"/>
