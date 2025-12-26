@@ -6,9 +6,9 @@
 //
 
 struct Transaction {
-    var id: String?
+    var id: String
     var amount: Double
-    var serviceId: String
+    var serviceName: String
     var method: String
     var createdAt: String
 }
