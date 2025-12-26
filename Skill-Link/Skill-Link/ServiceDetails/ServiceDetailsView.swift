@@ -8,20 +8,132 @@
 import UIKit
 
 class ServiceDetailsView: UIViewController {
-    
-    @IBOutlet weak var TitleStackView: UIStackView!
-    @IBOutlet weak var categoryLabel: UILabel!
-    
-    override func viewWillAppear(_ animated: Bool) {
-        setupUI()
-    }
-    
     override func viewDidLoad() {
+        super.viewDidLoad()
         setupUI()
     }
+    
+    let categories = ["Home Maintenance", "Handwork", "Electricity"]
+    let isProvider: Bool = true
+    var isActivated: Bool = true
+    
+    @IBOutlet weak var pricingPopupBtn: UIButton!
+    @IBOutlet weak var actionBtn: UIButton!
+    @IBOutlet weak var cancelBtn: UIButton!
+    @IBOutlet weak var categoryPopupBtn: UIButton!
     
     func setupUI() {
-        TitleStackView.layer.borderWidth = 1
-        TitleStackView.layer.masksToBounds = true
+        if (!isProvider) {
+            return
+        }
+        
+        if pricingPopupBtn != nil {
+            let pricingPopupClosure = {(action : UIAction) in
+                print(action.title)
+            }
+            pricingPopupBtn.menu = UIMenu(children: [
+                UIAction(title: "Hourly", state: .on, handler: pricingPopupClosure),
+                UIAction(title: "Fixed", handler: pricingPopupClosure)
+            ])
+            pricingPopupBtn.showsMenuAsPrimaryAction = true
+            pricingPopupBtn.changesSelectionAsPrimaryAction = true
+        }
+        
+        if categoryPopupBtn != nil {
+            let categoryPopupClosure = {(action : UIAction) in
+            print(action)}
+            var actions: [UIAction] = []
+            for action in categories {
+                actions.append(UIAction(title: action, handler: categoryPopupClosure))
+            }
+            categoryPopupBtn.menu = UIMenu(children: actions)
+            categoryPopupBtn.showsMenuAsPrimaryAction = true
+            categoryPopupBtn.changesSelectionAsPrimaryAction = true
+        }
+        
+        if actionBtn != nil {
+            actionBtn.setTitle("Edit service", for: .normal)
+            actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
+        }
+        if cancelBtn != nil {
+            if isActivated {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "xmark.app")
+                config.title = "Deactivate"
+                config.baseBackgroundColor = UIColor.red
+                cancelBtn.configuration = config
+                
+            } else {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "repeat")
+                config.title = "Reactivate"
+                config.baseBackgroundColor = UIColor.systemTeal
+                cancelBtn.configuration = config
+            }
+        }
+        
+    }
+    
+    @IBAction func reportClicked(_ sender: Any) {
+        if isProvider {
+            isActivated = !isActivated
+            if isActivated {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "xmark.app")
+                config.title = "Deactivate"
+                config.baseBackgroundColor = UIColor.red
+                cancelBtn.configuration = config
+                
+            } else {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "repeat")
+                config.title = "Reactivate"
+                config.baseBackgroundColor = UIColor.systemTeal
+                cancelBtn.configuration = config
+            }
+            
+            return
+        }
+        
+        let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+        let controller = storyboard.instantiateViewController(withIdentifier: "reportPage")
+        controller.modalPresentationStyle = .popover
+        self.present(controller, animated: true)
+    }
+    
+    
+    @IBAction func actionClicked(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+        
+        if !isProvider {
+            let controller = storyboard.instantiateViewController(withIdentifier: "serviceBookingViewController")
+            controller.modalPresentationStyle = .fullScreen
+            self.present(controller, animated: true)
+            return
+        }
+        
+        let controller2 = storyboard.instantiateViewController(withIdentifier: "editServiceView")
+        controller2.modalPresentationStyle = .fullScreen
+        self.present(controller2, animated: true)
+    }
+    
+    // 1. Enable user interaction on the ImageView
+    @IBOutlet weak var returnImageView: UIImageView! {
+        didSet {
+            returnImageView.isUserInteractionEnabled = true
+            
+            // 2. Add tap gesture recognizer
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleReturnTap))
+            returnImageView.addGestureRecognizer(tapGesture)
+        }
+    }
+
+    // 3. Handle the tap action
+    @objc private func handleReturnTap() {
+        // Perform your return action
+        //navigationController?.popViewController(animated: true)
+        
+        // Or if presented modally:
+        dismiss(animated: true, completion: nil)
     }
 }
