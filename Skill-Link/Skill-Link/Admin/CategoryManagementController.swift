@@ -14,8 +14,9 @@ class CategoryManagementController: BaseViewController,
     @IBOutlet weak var tableView: UITableView!
     
     @IBAction func addCategoryTapped(_ sender: UIButton) {
-//        categories.append(Category(name: "New Category"))
+        categories.append(Category(name: "New Category"))
 //        tableView.reloadData()
+        
     }
 
 
