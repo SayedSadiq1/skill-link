@@ -13,11 +13,12 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
         let imageName: String
         let destination: String
     }
+    var isCashOnDelivery: Bool = false
 
     private let paymentMethods: [PaymentMethod] = [
-        PaymentMethod(name: "Cash",       imageName: "cash",       destination: "rate"),
-        PaymentMethod(name: "Visa - 1231",       imageName: "visa",       destination: "success"),
-        PaymentMethod(name: "BenefitPay", imageName: "benefitpay", destination: "success"),
+        PaymentMethod(name: "Cash", imageName: "cash", destination: "confirmOrder"),
+        PaymentMethod(name: "Visa - 1231", imageName: "visa", destination: "confirmPayment"),
+        PaymentMethod(name: "BenefitPay", imageName: "benefitpay", destination:"confirmPayment"),
         PaymentMethod(name: "Add Card", imageName: "new_card", destination: "addCard")
     ]
 
@@ -32,6 +33,12 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
         // Optional UI polish (recommended)
         paymentMethodTable.separatorStyle = .none
         paymentMethodTable.backgroundColor = .clear
+    
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        isCashOnDelivery = false
     }
 
     // MARK: - UITableViewDataSource
@@ -59,13 +66,23 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
 
         
         switch method.destination {
-            case "confirm":
-                performSegue(withIdentifier: "confirmPayment", sender: self)
+            case "confirmPayment":
+                performSegue(withIdentifier: "ConfirmPayment", sender: self)
             case "addCard":
                 performSegue(withIdentifier: "addCard", sender: self)
+            case "confirmOrder":
+            isCashOnDelivery = true
+            performSegue(withIdentifier: "ConfirmPayment", sender: self)
         default:
             break
         }
     }
-
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ConfirmPayment" {
+            if let destinationVC = segue.destination as? PaymentViewController {
+                destinationVC.isCashOnDelivery = isCashOnDelivery
+            }
+        }
+    }
 }
