@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Firebase
 
 class AdminViewController: BaseViewController {
     
@@ -15,11 +16,24 @@ class AdminViewController: BaseViewController {
     @IBOutlet weak var reportedCasesLabel: UILabel!
     @IBOutlet weak var pendingVerificationsLabel: UILabel!
 
-
     override func viewDidLoad() {
         super.viewDidLoad()
+        print(FirebaseApp.app() != nil ? "Firebase connected" : "Firebase not connected")
+        
+        db.collection("User").getDocuments { snapshot, error in
+            if let error = error {
+                print("Error: \(error)")
+                return
+            }
 
-        totalUsersLabel.text = "100"
+            let userCount = snapshot?.documents.count ?? 0
+
+            DispatchQueue.main.async {
+                self.totalUsersLabel.text = "\(userCount)"
+            }
+        }
+
+        
         activeProvidersLabel.text = "87"
         activeBookingsLabel.text = "42"
         reportedCasesLabel.text = "3"
