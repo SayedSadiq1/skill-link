@@ -79,16 +79,6 @@
 			path = "Skill-Link";
 			sourceTree = "<group>";
 		};
-		76C2A8B22EDDB62C005608E6 /* Skill-LinkTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Skill-LinkTests";
-			sourceTree = "<group>";
-		};
-		76C2A8BC2EDDB62C005608E6 /* Skill-LinkUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Skill-LinkUITests";
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,8 +116,6 @@
 		76C2A8902EDDB62A005608E6 = {
 			isa = PBXGroup;
 			children = (
-				76C2A8B22EDDB62C005608E6 /* Skill-LinkTests */,
-				76C2A8BC2EDDB62C005608E6 /* Skill-LinkUITests */,
 				76C2A89A2EDDB62A005608E6 /* Products */,
 				76C2A89B2EDDB62A005608E6 /* Skill-Link */,
 				53C670042EF7CFDA0070F5F7 /* Login-Controller */,
@@ -190,9 +178,6 @@
 			dependencies = (
 				76C2A8B12EDDB62C005608E6 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				76C2A8B22EDDB62C005608E6 /* Skill-LinkTests */,
-			);
 			name = "Skill-LinkTests";
 			packageProductDependencies = (
 			);
@@ -212,9 +197,6 @@
 			);
 			dependencies = (
 				76C2A8BB2EDDB62C005608E6 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				76C2A8BC2EDDB62C005608E6 /* Skill-LinkUITests */,
 			);
 			name = "Skill-LinkUITests";
 			packageProductDependencies = (

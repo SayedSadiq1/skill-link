@@ -23,7 +23,7 @@ class TransactionCell : UITableViewCell {
        }
 
        func configure(with transaction: Transaction) {
-           serviceLabel.text = "Payment - "+transaction.serviceId
+           serviceLabel.text = "Payment - " + transaction.serviceName
            paymentMethodLabel.text = "Paid via: "+transaction.method
            dateLabel.text = transaction.createdAt
            amountLabel.text = String(format: "%.2f BD", transaction.amount)
