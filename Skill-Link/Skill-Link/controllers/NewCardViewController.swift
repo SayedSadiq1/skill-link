@@ -6,7 +6,7 @@
 //
 
 import UIKit
-
+import FirebaseAuth
 class NewCardViewController : BaseViewController,UITextFieldDelegate {
     
     @IBOutlet weak var holderNameTextField: UITextField!
@@ -20,7 +20,7 @@ class NewCardViewController : BaseViewController,UITextFieldDelegate {
     }
     
     private func setupTextFields() {
-        // Set up text field delegates for real-time validation
+
         holderNameTextField.delegate = self
         cardNumberTextField.delegate = self
         cvvTExtField.delegate = self
@@ -40,7 +40,9 @@ class NewCardViewController : BaseViewController,UITextFieldDelegate {
             return
         }
         Task{
-            try await PaymentController.shared.addCard(id: "NViU6b1yviSGEbw8l43H", cardHolderName: holderNameTextField.text!, cardNumber: cardNumberTextField.text!, cvv: cvvTExtField.text!)
+            guard let uid = Auth.auth().currentUser?.uid else {return}
+
+            try await PaymentController.shared.addCard(id: uid, cardHolderName: holderNameTextField.text!, cardNumber: cardNumberTextField.text!, cvv: cvvTExtField.text!)
         }
     }
     
@@ -134,8 +136,6 @@ class NewCardViewController : BaseViewController,UITextFieldDelegate {
                 textField.text = formattedText
             }
         }
-        
-        // Enable/disable confirm button based on validation
         updateConfirmButtonState()
     }
     
@@ -185,7 +185,7 @@ class NewCardViewController : BaseViewController,UITextFieldDelegate {
             return allowedCharacters.isSuperset(of: characterSet)
             
         } else if textField == cvvTExtField {
-            // Limit CVV to 3 digits (standard for Visa/MasterCard)
+            // Limit CVV to 3 digits
             if newText.count > 3 {
                 return false
             }

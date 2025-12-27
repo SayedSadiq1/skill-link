@@ -5,7 +5,7 @@
 //  Created by Sayed on 21/12/2025.
 //
 import UIKit
-
+import FirebaseAuth
 class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITableViewDataSource {
 
     var isCashOnDelivery: Bool = false
@@ -86,9 +86,9 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
     
     func loadData() async throws{
         do{
-//            guard let uid = Auth.auth().currentUser?.uid else {
-//                return
-            let userCards = try await PaymentController.shared.getPaymentMethods(id: "NViU6b1yviSGEbw8l43H")
+            guard let uid = Auth.auth().currentUser?.uid else {return}
+            
+            let userCards = try await PaymentController.shared.getPaymentMethods(id: uid)
                 paymentMethods += userCards
                 paymentMethodTable.reloadData()
             }catch{
