@@ -1,9 +1,13 @@
-import Foundation
+enum UserRole: String, Codable {
+    case provider
+    case seeker
+}
 
-struct UserProfile {
+struct UserProfile: Codable {
     var name: String
     var skills: [String]
     var brief: String
     var contact: String
-    var imageData: Data?
+    var imageURL: String?
+    var role: UserRole
 }

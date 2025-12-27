@@ -17,8 +17,7 @@ final class ProfileProviderViewController: BaseViewController {
 
     private var successBanner: UIView?
 
-    
-    // ✅ Profile data (TEMP now, later Firebase)
+    // ✅ TEMP profile (later Firestore)
     var currentProfile = UserProfile(
         name: "Ammar Yaser Ahmed Rabeea",
         skills: ["Trading", "Crypto", "Plumbing"],
@@ -28,7 +27,8 @@ final class ProfileProviderViewController: BaseViewController {
         and dependable results.
         """,
         contact: "ammar.yaser@example.com",
-        imageData: nil
+        imageURL: nil,
+        role: .provider
     )
 
     override func viewDidLoad() {
@@ -65,13 +65,11 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.layer.borderColor = UIColor.systemGray4.cgColor
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
-        // ✅ Fill UI from currentProfile
         applyProfileToUI()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // ✅ Make image circular reliably (after layout)
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
@@ -84,11 +82,26 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.text = currentProfile.brief
         showSkills(currentProfile.skills)
 
-        if let data = currentProfile.imageData, let img = UIImage(data: data) {
-            profileImageView.image = img
+        // ✅ Load Cloudinary image if exists
+        if let urlString = currentProfile.imageURL,
+           let url = URL(string: urlString) {
+            loadImage(from: url)
         } else {
-            profileImageView.image = UIImage(systemName: "person.circle.fill") // optional fallback
+            profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
+    }
+
+    // ✅ Simple URL image loader (no libs)
+    private func loadImage(from url: URL) {
+        profileImageView.image = UIImage(systemName: "person.circle.fill")
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self else { return }
+            guard let data, let img = UIImage(data: data) else { return }
+            DispatchQueue.main.async {
+                self.profileImageView.image = img
+            }
+        }.resume()
     }
 
     // ✅ Connect Edit button to this IBAction
@@ -158,9 +171,9 @@ final class ProfileProviderViewController: BaseViewController {
             )
         }
     }
-    
+
+    // ✅ Banner (1 second)
     private func showSuccessBanner() {
-        // remove old one if exists
         successBanner?.removeFromSuperview()
 
         let banner = UIView()
@@ -180,7 +193,6 @@ final class ProfileProviderViewController: BaseViewController {
         successBanner = banner
 
         NSLayoutConstraint.activate([
-            // under the nav bar / top safe area
             banner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
             banner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             banner.heightAnchor.constraint(equalToConstant: 40),
@@ -192,12 +204,10 @@ final class ProfileProviderViewController: BaseViewController {
             label.trailingAnchor.constraint(lessThanOrEqualTo: banner.trailingAnchor, constant: -12)
         ])
 
-        // fade in
         UIView.animate(withDuration: 0.2) {
             banner.alpha = 1
         }
 
-        // stay 1 sec, fade out, remove
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             UIView.animate(withDuration: 0.2, animations: {
                 banner.alpha = 0
@@ -207,5 +217,4 @@ final class ProfileProviderViewController: BaseViewController {
             })
         }
     }
-
 }
