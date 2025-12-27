@@ -23,6 +23,4 @@ class PaymentVerficationController : UIViewController {
         }
     }
 
-
-    
 }

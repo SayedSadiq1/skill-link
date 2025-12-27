@@ -39,15 +39,9 @@ class NewCardViewController : BaseViewController,UITextFieldDelegate {
         guard validateAllFields() else {
             return
         }
-        
-        // All validation passed
-        print(
-            "Card Holder: \(holderNameTextField.text ?? "")",
-            "Card Number: \(cardNumberTextField.text ?? "")",
-            "CVV: \(cvvTExtField.text ?? "")"
-        )
-        
-        // Proceed with your logic (e.g., API call, navigation, etc.)
+        Task{
+            try await PaymentController.shared.addCard(id: "NViU6b1yviSGEbw8l43H", cardHolderName: holderNameTextField.text!, cardNumber: cardNumberTextField.text!, cvv: cvvTExtField.text!)
+        }
     }
     
     // MARK: - Validation Methods
