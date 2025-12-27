@@ -179,8 +179,8 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
             skills: skillsArray,
             brief: briefFinal,
             contact: contact,
-            imageURL: imageURL,
-            role: .provider
+            imageURL: imageURL
+//            role: .provider
         )
 
         vc.currentProfile = profile

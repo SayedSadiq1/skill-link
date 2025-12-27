@@ -109,8 +109,8 @@ final class EditProfileViewController: BaseViewController {
                         skills: skillsArray,
                         brief: self.briefTextView.text ?? "",
                         contact: self.contactTextField.text ?? "",
-                        imageURL: urlString,
-                        role: oldProfile.role
+                        imageURL: urlString
+//                        role: oldProfile.role
                     )
                     self.onSave?(updated)
                     self.navigationController?.popViewController(animated: true)
@@ -126,8 +126,8 @@ final class EditProfileViewController: BaseViewController {
                 skills: skillsArray,
                 brief: briefTextView.text ?? "",
                 contact: contactTextField.text ?? "",
-                imageURL: selectedImageURL,
-                role: oldProfile.role
+                imageURL: selectedImageURL
+//                role: oldProfile.role
             )
 
             onSave?(updated)

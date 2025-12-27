@@ -27,8 +27,8 @@ final class ProfileProviderViewController: BaseViewController {
         and dependable results.
         """,
         contact: "ammar.yaser@example.com",
-        imageURL: nil,
-        role: .provider
+        imageURL: nil
+//        role: .provider
     )
 
     override func viewDidLoad() {
