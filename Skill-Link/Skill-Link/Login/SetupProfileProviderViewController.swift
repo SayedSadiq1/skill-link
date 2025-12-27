@@ -1,6 +1,6 @@
 import UIKit
 
-class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate {
+final class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate {
 
     @IBOutlet weak var fullNameTextField: UITextField!
     @IBOutlet weak var skillsTextField: UITextField!
@@ -8,44 +8,47 @@ class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate
 
     @IBOutlet weak var briefContainerView: UIView!
     @IBOutlet weak var briefTextView: UITextView!
-    
+
     @IBOutlet weak var profileImageView: UIImageView!
 
     private var photoPicker: PhotoPickerHelper?
-    private var selectedImageData: Data?   // store chosen photo
+    private var selectedImage: UIImage?      // preview only
+    private var isSaving = false             // avoid double tap
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
+        // Image tap
         profileImageView.isUserInteractionEnabled = true
-        let tap = UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped))
-        profileImageView.addGestureRecognizer(tap)
+        profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
 
-        
-        //making image rounded
-        profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
-            profileImageView.clipsToBounds = true
-            profileImageView.contentMode = .scaleAspectFill
-        
-        // ✅ Make the container look like a big text field
+        profileImageView.clipsToBounds = true
+        profileImageView.contentMode = .scaleAspectFill
+
+        // Container like big text field
         briefContainerView.layer.cornerRadius = 10
         briefContainerView.layer.borderWidth = 1
         briefContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         briefContainerView.backgroundColor = .white
         briefContainerView.clipsToBounds = true
 
-        // ✅ Make the text view look clean inside it
+        // TextView styling
         briefTextView.backgroundColor = .clear
         briefTextView.font = .systemFont(ofSize: 15)
         briefTextView.textColor = .label
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
-        // ✅ Placeholder behavior (optional but nice)
+        // Placeholder behavior
         briefTextView.delegate = self
         setBriefPlaceholderIfNeeded()
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
+    }
+
+    // MARK: - Placeholder
     private func setBriefPlaceholderIfNeeded() {
         if briefTextView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             briefTextView.text = "Brief..."
@@ -65,15 +68,42 @@ class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate
             setBriefPlaceholderIfNeeded()
         }
     }
-    
+
+    // MARK: - Continue
     @IBAction func continueTapped(_ sender: UIButton) {
-        if validateRequiredFields() {
-            // ✅ All good → go to next screen
-            goToProfileScreen()
+        guard !isSaving else { return }
+        guard validateRequiredFields() else { return }
+
+        isSaving = true
+        sender.isEnabled = false
+
+        // If user picked a photo → upload first
+        if let image = selectedImage {
+            showSavingHUD(true)
+
+            CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
+                guard let self else { return }
+
+                DispatchQueue.main.async {
+                    self.showSavingHUD(false)
+                    sender.isEnabled = true
+                    self.isSaving = false
+
+                    switch result {
+                    case .success(let url):
+                        self.goToProfileScreen(imageURL: url)
+                    case .failure(let error):
+                        self.showAlert(message: "Failed to upload image:\n\(error.localizedDescription)")
+                    }
+                }
+            }
+        } else {
+            sender.isEnabled = true
+            isSaving = false
+            goToProfileScreen(imageURL: nil)
         }
     }
 
-    
     private func validateRequiredFields() -> Bool {
         let fullName = fullNameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let skills = skillsTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -83,35 +113,50 @@ class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate
             showAlert(message: "Please enter your full name.")
             return false
         }
-
         if skills.isEmpty {
             showAlert(message: "Please enter at least one skill.")
             return false
         }
-
         if contact.isEmpty {
             showAlert(message: "Please enter your contact information.")
             return false
         }
-
         return true
     }
 
-    
     private func showAlert(message: String) {
-        let alert = UIAlertController(
-            title: "Missing Information",
-            message: message,
-            preferredStyle: .alert
-        )
+        let alert = UIAlertController(title: "Missing Information", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
 
-    private func goToProfileScreen() {
+    // MARK: - Saving HUD
+    private var savingAlert: UIAlertController?
+
+    private func showSavingHUD(_ show: Bool) {
+        if show {
+            let alert = UIAlertController(title: nil, message: "Saving...", preferredStyle: .alert)
+            let spinner = UIActivityIndicatorView(style: .medium)
+            spinner.translatesAutoresizingMaskIntoConstraints = false
+            spinner.startAnimating()
+            alert.view.addSubview(spinner)
+
+            NSLayoutConstraint.activate([
+                spinner.centerXAnchor.constraint(equalTo: alert.view.centerXAnchor),
+                spinner.bottomAnchor.constraint(equalTo: alert.view.bottomAnchor, constant: -20)
+            ])
+
+            savingAlert = alert
+            present(alert, animated: true)
+        } else {
+            savingAlert?.dismiss(animated: true)
+            savingAlert = nil
+        }
+    }
+
+    private func goToProfileScreen(imageURL: String?) {
         let sb = UIStoryboard(name: "login", bundle: nil)
 
-        // ✅ MUST match storyboard ID + class
         guard let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController") as? ProfileProviderViewController else {
             fatalError("❌ Could not find ProfileProviderViewController in storyboard. Check Storyboard ID + Custom Class.")
         }
@@ -124,39 +169,31 @@ class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        let briefFinal: String
-        if briefTextView.textColor == .systemGray3 {
-            briefFinal = ""   // placeholder
-        } else {
-            briefFinal = briefTextView.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
+        let briefFinal: String =
+            (briefTextView.textColor == .systemGray3)
+            ? ""
+            : briefTextView.text.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // ✅ PASS image too
         let profile = UserProfile(
             name: name,
             skills: skillsArray,
             brief: briefFinal,
             contact: contact,
-            imageData: selectedImageData
+            imageURL: imageURL,
+            role: .provider
         )
 
         vc.currentProfile = profile
         navigationController?.pushViewController(vc, animated: true)
     }
 
-
-    
+    // MARK: - Photo picking
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image
-
-            // compress for storage (good enough for now)
-            self.selectedImageData = image.jpegData(compressionQuality: 0.8)
+            self.selectedImage = image
         }
         photoPicker?.presentPicker()
     }
-
-
-    
 }
