@@ -15,13 +15,8 @@ class ReviewsViewController: BaseViewController, UITableViewDataSource, UITableV
     @IBOutlet weak var starsSummaryStackView: UIStackView!
 
     private let emptyMessageLabel = UILabel()
-
-    private var reviews: [Review] = [
-        
-         Review(name: "Ahmed", message: "Very professional and fast service.", rating: 5),
-         Review(name: "Sara", message: "Good, but can improve communication.", rating: 4),
-         Review(name: "Omar", message: "Average experience.", rating: 3)
-    ]
+    private var reviews: [Review] = []
+    var serviceID: String?
 
     // MARK: - Lifecycle
 
@@ -35,8 +30,12 @@ class ReviewsViewController: BaseViewController, UITableViewDataSource, UITableV
         reviewsTableView.rowHeight = UITableView.automaticDimension
         reviewsTableView.estimatedRowHeight = 100
 
-        updateHeader()
-    }
+        Task {
+                do {
+                    try await loadData()
+                }
+            }
+        }
 
     // MARK: - Empty Message Setup
 
@@ -76,7 +75,6 @@ class ReviewsViewController: BaseViewController, UITableViewDataSource, UITableV
         ))
 
         emptyMessageLabel.attributedText = text
-
         emptyMessageLabel.alpha = 0
         emptyMessageLabel.isHidden = false
 
@@ -144,5 +142,15 @@ class ReviewsViewController: BaseViewController, UITableViewDataSource, UITableV
 
         cell.configure(with: reviews[indexPath.row])
         return cell
+    }
+    
+    func loadData() async throws {
+        let fetchedReviews = try await ReviewController.shared.getReviews(serviceID: self.serviceID ?? "")
+            
+            await MainActor.run {
+                self.reviews = fetchedReviews
+                self.reviewsTableView.reloadData()
+                self.updateHeader()
+            }
     }
 }

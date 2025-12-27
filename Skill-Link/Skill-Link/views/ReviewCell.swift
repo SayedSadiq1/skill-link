@@ -30,7 +30,6 @@ class ReviewCell : UITableViewCell{
         for i in 1...5 {
             let imageName = i <= rating ? "starfill" : "star"
             let starImageView = UIImageView(image: UIImage(named: imageName))
-            
             starImageView.contentMode = .scaleAspectFit
             starImageView.translatesAutoresizingMaskIntoConstraints = false
             starsContainer.addArrangedSubview(starImageView)

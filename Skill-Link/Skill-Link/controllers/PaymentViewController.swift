@@ -26,12 +26,6 @@ class PaymentViewController: BaseViewController {
         paymentButton.setTitle(isCashOnDelivery ? "Confirm" : "Pay Now", for: .normal)
         print(isCashOnDelivery)
     }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "paymentVerfication" {
-            segue.destination.modalPresentationStyle = .fullScreen
-        }
-    }
 
 }
 

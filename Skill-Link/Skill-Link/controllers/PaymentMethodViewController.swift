@@ -5,19 +5,13 @@
 //  Created by Sayed on 21/12/2025.
 //
 import UIKit
-
+import FirebaseAuth
 class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITableViewDataSource {
 
-    struct PaymentMethod {
-        let name: String
-        let imageName: String
-        let destination: String
-    }
     var isCashOnDelivery: Bool = false
 
-    private let paymentMethods: [PaymentMethod] = [
+    private var paymentMethods: [PaymentMethod] = [
         PaymentMethod(name: "Cash", imageName: "cash", destination: "confirmOrder"),
-        PaymentMethod(name: "Visa - 1231", imageName: "visa", destination: "confirmPayment"),
         PaymentMethod(name: "BenefitPay", imageName: "benefitpay", destination:"confirmPayment"),
         PaymentMethod(name: "Add Card", imageName: "new_card", destination: "addCard")
     ]
@@ -39,6 +33,10 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         isCashOnDelivery = false
+        
+        Task{
+            try await loadData()
+        }
     }
 
     // MARK: - UITableViewDataSource
@@ -85,4 +83,18 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
             }
         }
     }
-}
+    
+    func loadData() async throws{
+        do{
+            guard let uid = Auth.auth().currentUser?.uid else {return}
+            
+            let userCards = try await PaymentController.shared.getPaymentMethods(id: uid)
+                paymentMethods += userCards
+                paymentMethodTable.reloadData()
+            }catch{
+                print("DEBUG: Error loading Cards: \(error)")
+            }
+        }
+    }
+
+

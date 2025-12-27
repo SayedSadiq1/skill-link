@@ -4,56 +4,56 @@
 //
 //  Created by Sayed on 20/12/2025.
 //
+
 import UIKit
+import FirebaseAuth
 
-class TransactionHistoryController: BaseViewController , UITableViewDelegate, UITableViewDataSource {
-    
+final class TransactionHistoryController: BaseViewController, UITableViewDelegate, UITableViewDataSource {
+
     @IBOutlet weak var tableView: UITableView!
+    private var transactions: [Transaction] = []
 
-        private var transactions: [Transaction] = []
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupTableView()
 
-        override func viewDidLoad() {
-            super.viewDidLoad()
-            setupTableView()
-            loadDummyData()
+        Task {
+            await loadData()
         }
+    }
 
-        private func setupTableView() {
-            tableView.delegate = self
-            tableView.dataSource = self
-            tableView.separatorStyle = .none
+    private func setupTableView() {
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.separatorStyle = .none
+    }
+
+    private func loadData() async {
+        do {
+            guard let uid = Auth.auth().currentUser?.uid else {
+                return
+            }
+
+            let transactionsData = try await TransactionsController.shared.getTransactions(id: uid)
+            self.transactions = transactionsData
+            self.tableView.reloadData()
+
+        } catch {
+            print("DEBUG: Error loading transactions: \(error)")
         }
+    }
 
-        private func loadDummyData() {
-            transactions = [
-                Transaction(id: "1", amount: 25.0, serviceName: "Plumbing", method: "Visa", createdAt: "20 Dec 2025"),
-                Transaction(id: "2", amount: 15.5, serviceName: "Cleaning", method: "Cash", createdAt: "18 Dec 2025"),
-                Transaction(id: "3", amount: 40.0, serviceName: "Electrical", method: "Apple Pay", createdAt: "15 Dec 2025"),
-                Transaction(id: "1", amount: 25.0, serviceName: "Plumbing", method: "Visa", createdAt: "20 Dec 2025"),
-                Transaction(id: "2", amount: 15.5, serviceName: "Cleaning", method: "Cash", createdAt: "18 Dec 2025"),
-                Transaction(id: "3", amount: 40.0, serviceName: "Electrical", method: "Apple Pay", createdAt: "15 Dec 2025"),
-                Transaction(id: "1", amount: 25.0, serviceName: "Plumbing", method: "Visa", createdAt: "20 Dec 2025"),
-                Transaction(id: "2", amount: 15.5, serviceName: "Cleaning", method: "Cash", createdAt: "18 Dec 2025"),
-                Transaction(id: "3", amount: 40.0, serviceName: "Electrical", method: "Apple Pay", createdAt: "15 Dec 2025")
-            ]
-
-            tableView.reloadData()
-        }
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-           return transactions.count
-       }
+        transactions.count
+    }
 
-       func tableView(_ tableView: UITableView,
-                      cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView,
+                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-           let cell = tableView.dequeueReusableCell(
-               withIdentifier: "TransactionCell",
-               for: indexPath
-           ) as! TransactionCell
-
-           cell.configure(with: transactions[indexPath.row])
-           cell.selectionStyle = .none
-           return cell
-       }
+        let cell = tableView.dequeueReusableCell(withIdentifier: "TransactionCell",
+                                                 for: indexPath) as! TransactionCell
+        cell.configure(with: transactions[indexPath.row])
+        cell.selectionStyle = .none
+        return cell
+    }
 }

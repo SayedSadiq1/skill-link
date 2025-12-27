@@ -24,6 +24,7 @@ class RateFormController : BaseViewController {
     
     var message: String?
     var rating: Int?
+    var serviceID: String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,7 +55,10 @@ class RateFormController : BaseViewController {
             setStarsImage(buttonNumber: selectedRating)
     }
     @IBAction func submitTapped() {
-        //handleSubmit
+        
+        Task {
+            try await ReviewController.shared.makeReview(senderName: /*will fix when auth is implemeted*/"", ServiceID: self.serviceID ?? "", content: self.reviewField.text!, rating: self.rating ?? 0)
+        }
     }
     
 }
