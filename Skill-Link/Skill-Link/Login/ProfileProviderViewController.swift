@@ -1,4 +1,6 @@
 import UIKit
+import FirebaseAuth
+import FirebaseFirestore
 
 final class ProfileProviderViewController: BaseViewController {
 
@@ -16,31 +18,20 @@ final class ProfileProviderViewController: BaseViewController {
     @IBOutlet weak var profileImageView: UIImageView!
 
     private var successBanner: UIView?
+    private let db = Firestore.firestore()
 
-    // ✅ TEMP profile (later Firestore)
-    var currentProfile = UserProfile(
-        name: "Ammar Yaser Ahmed Rabeea",
-        skills: ["Trading", "Crypto", "Plumbing"],
-        brief: """
-        Experienced in trading, crypto, and mining services.
-        I provide clear guidance, fast communication,
-        and dependable results.
-        """,
-        contact: "ammar.yaser@example.com",
-        imageURL: nil
-//        role: .provider
-    )
+    // ✅ holds loaded data
+    private var currentProfile: UserProfile?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("✅ ProfileProviderViewController loaded")
 
         // Skills container styling
         skillsContainerView.layer.cornerRadius = 10
         skillsContainerView.layer.borderWidth = 1
         skillsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
 
-        // Contact container styling (display-only)
+        // Contact container styling
         contactContainerView.layer.cornerRadius = 8
         contactContainerView.layer.borderWidth = 1
         contactContainerView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -49,11 +40,11 @@ final class ProfileProviderViewController: BaseViewController {
         contactLabel.font = .systemFont(ofSize: 16)
         contactLabel.textColor = .label
 
-        // Name (display-only)
+        // Name styling
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
         nameLabel.textColor = .label
 
-        // Brief (UITextView display-only)
+        // Brief display-only
         briefTextView.isEditable = false
         briefTextView.isSelectable = false
         briefTextView.isScrollEnabled = true
@@ -65,7 +56,8 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.layer.borderColor = UIColor.systemGray4.cgColor
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
-        applyProfileToUI()
+        // ✅ Load profile from Firestore
+        loadProfileFromFirestore()
     }
 
     override func viewDidLayoutSubviews() {
@@ -75,14 +67,53 @@ final class ProfileProviderViewController: BaseViewController {
         profileImageView.contentMode = .scaleAspectFill
     }
 
-    // ✅ Apply model → UI
+    // MARK: - Firestore load
+    private func loadProfileFromFirestore() {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            showSimpleAlert(title: "Error", message: "No logged in user. Please login again.")
+            return
+        }
+
+        db.collection("User").document(uid).getDocument { [weak self] snap, err in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                if let err = err {
+                    self.showSimpleAlert(title: "Error", message: "Failed to load profile: \(err.localizedDescription)")
+                    return
+                }
+
+                let data = snap?.data() ?? [:]
+
+                let name = (data["fullName"] as? String ?? "")
+                let contact = (data["contact"] as? String ?? "")
+                let brief = (data["brief"] as? String ?? "")
+                let imageURL = (data["imageURL"] as? String)
+
+                let skills = data["skills"] as? [String] ?? []
+
+                self.currentProfile = UserProfile(
+                    name: name,
+                    skills: skills,
+                    brief: brief,
+                    contact: contact,
+                    imageURL: imageURL
+                )
+
+                self.applyProfileToUI()
+            }
+        }
+    }
+
+    // MARK: - Apply to UI
     private func applyProfileToUI() {
-        nameLabel.text = currentProfile.name
-        contactLabel.text = currentProfile.contact
-        briefTextView.text = currentProfile.brief
+        guard let currentProfile else { return }
+
+        nameLabel.text = currentProfile.name.isEmpty ? "No Name" : currentProfile.name
+        contactLabel.text = currentProfile.contact.isEmpty ? "-" : currentProfile.contact
+        briefTextView.text = currentProfile.brief.isEmpty ? "-" : currentProfile.brief
         showSkills(currentProfile.skills)
 
-        // ✅ Load Cloudinary image if exists
         if let urlString = currentProfile.imageURL,
            let url = URL(string: urlString) {
             loadImage(from: url)
@@ -91,7 +122,7 @@ final class ProfileProviderViewController: BaseViewController {
         }
     }
 
-    // ✅ Simple URL image loader (no libs)
+    // MARK: - URL image loader
     private func loadImage(from url: URL) {
         profileImageView.image = UIImage(systemName: "person.circle.fill")
 
@@ -104,20 +135,25 @@ final class ProfileProviderViewController: BaseViewController {
         }.resume()
     }
 
-    // ✅ Connect Edit button to this IBAction
+    // MARK: - Edit
     @IBAction func editTapped(_ sender: UIButton) {
+        guard let currentProfile else {
+            showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
+            return
+        }
+
         let sb = UIStoryboard(name: "login", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "EditProfileViewController") as! EditProfileViewController
 
-        // ✅ PASS DATA
         vc.profile = currentProfile
 
-        // ✅ RECEIVE UPDATED DATA
         vc.onSave = { [weak self] updated in
-            guard let self = self else { return }
+            guard let self else { return }
             self.currentProfile = updated
             self.applyProfileToUI()
             self.showSuccessBanner()
+
+            // ✅ (Later) you should also update Firestore inside Edit screen save
         }
 
         navigationController?.pushViewController(vc, animated: true)
@@ -128,6 +164,12 @@ final class ProfileProviderViewController: BaseViewController {
         skillsStackView.arrangedSubviews.forEach {
             skillsStackView.removeArrangedSubview($0)
             $0.removeFromSuperview()
+        }
+
+        if skills.isEmpty {
+            let chip = makeChip(text: "No skills")
+            skillsStackView.addArrangedSubview(chip)
+            return
         }
 
         for skill in skills {
@@ -172,7 +214,14 @@ final class ProfileProviderViewController: BaseViewController {
         }
     }
 
-    // ✅ Banner (1 second)
+    // MARK: - Alerts
+    private func showSimpleAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    // MARK: - Banner
     private func showSuccessBanner() {
         successBanner?.removeFromSuperview()
 
@@ -204,9 +253,7 @@ final class ProfileProviderViewController: BaseViewController {
             label.trailingAnchor.constraint(lessThanOrEqualTo: banner.trailingAnchor, constant: -12)
         ])
 
-        UIView.animate(withDuration: 0.2) {
-            banner.alpha = 1
-        }
+        UIView.animate(withDuration: 0.2) { banner.alpha = 1 }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             UIView.animate(withDuration: 0.2, animations: {

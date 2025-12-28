@@ -1,4 +1,6 @@
 import UIKit
+import FirebaseAuth
+import FirebaseFirestore
 
 final class EditProfileViewController: BaseViewController {
 
@@ -14,15 +16,18 @@ final class EditProfileViewController: BaseViewController {
     var profile: UserProfile?
     var onSave: ((UserProfile) -> Void)?
 
+    private let db = Firestore.firestore()
     private var photoPicker: PhotoPickerHelper?
 
     // Cloudinary
     private let cloudName = "dgamwyki7"
-    private let uploadPreset = "mobile_unsigned" // <-- change if yours is different
+    private let uploadPreset = "mobile_unsigned"
 
     // image state
-    private var selectedImageData: Data?        // chosen new image (pending upload)
-    private var selectedImageURL: String?       // existing or uploaded url
+    private var selectedImageData: Data?        // new image (pending upload)
+    private var selectedImageURL: String?       // current URL (existing or uploaded)
+
+    private var isSaving = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,13 +59,13 @@ final class EditProfileViewController: BaseViewController {
             return
         }
 
-        // ✅ Fill text fields
+        // ✅ Fill fields
         nameTextField.text = profile.name
         skillsTextField.text = profile.skills.joined(separator: ", ")
         briefTextView.text = profile.brief
         contactTextField.text = profile.contact
 
-        // ✅ Show existing image URL
+        // ✅ Image URL
         selectedImageURL = profile.imageURL
         if let urlString = profile.imageURL, let url = URL(string: urlString) {
             loadImage(from: url)
@@ -86,52 +91,104 @@ final class EditProfileViewController: BaseViewController {
     }
 
     @IBAction func saveTapped(_ sender: UIButton) {
-        guard let oldProfile = profile else { return }
+        guard !isSaving else { return }
+        guard let uid = Auth.auth().currentUser?.uid else {
+            showAlert(title: "Error", message: "No logged in user. Please login again.")
+            return
+        }
+
+        isSaving = true
+        setSavingUI(true)
+
+        let fullName = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let brief = briefTextView.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         let skillsArray = (skillsTextField.text ?? "")
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        // If user picked a new image => upload first then save
+        // 1) If image changed -> upload to Cloudinary -> then save Firestore
         if let imgData = selectedImageData {
-            setSavingUI(true)
-
             uploadToCloudinary(imageData: imgData) { [weak self] result in
                 guard let self else { return }
-                self.setSavingUI(false)
 
                 switch result {
                 case .success(let urlString):
                     self.selectedImageURL = urlString
-                    let updated = UserProfile(
-                        name: self.nameTextField.text ?? "",
+                    self.saveToFirestore(
+                        uid: uid,
+                        fullName: fullName,
+                        contact: contact,
+                        brief: brief,
                         skills: skillsArray,
-                        brief: self.briefTextView.text ?? "",
-                        contact: self.contactTextField.text ?? "",
                         imageURL: urlString
-//                        role: oldProfile.role
                     )
-                    self.onSave?(updated)
-                    self.navigationController?.popViewController(animated: true)
 
                 case .failure(let error):
+                    self.isSaving = false
+                    self.setSavingUI(false)
                     self.showAlert(title: "Upload Failed", message: error.localizedDescription)
                 }
             }
         } else {
-            // No new image picked => just save existing URL
-            let updated = UserProfile(
-                name: nameTextField.text ?? "",
+            // 2) No new image -> just save Firestore with existing URL
+            saveToFirestore(
+                uid: uid,
+                fullName: fullName,
+                contact: contact,
+                brief: brief,
                 skills: skillsArray,
-                brief: briefTextView.text ?? "",
-                contact: contactTextField.text ?? "",
                 imageURL: selectedImageURL
-//                role: oldProfile.role
             )
+        }
+    }
 
-            onSave?(updated)
-            navigationController?.popViewController(animated: true)
+    // MARK: - Firestore save
+    private func saveToFirestore(uid: String,
+                                 fullName: String,
+                                 contact: String,
+                                 brief: String,
+                                 skills: [String],
+                                 imageURL: String?) {
+
+        var data: [String: Any] = [
+            "fullName": fullName,
+            "contact": contact,
+            "brief": brief,
+            "skills": skills,
+            "profileCompleted": true
+        ]
+
+        if let imageURL = imageURL, !imageURL.isEmpty {
+            data["imageURL"] = imageURL
+        }
+
+        db.collection("User").document(uid).setData(data, merge: true) { [weak self] err in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                self.isSaving = false
+                self.setSavingUI(false)
+
+                if let err = err {
+                    self.showAlert(title: "Error", message: "Failed to save profile: \(err.localizedDescription)")
+                    return
+                }
+
+                // ✅ Build updated local object too (for your onSave callback)
+                let updated = UserProfile(
+                    name: fullName,
+                    skills: skills,
+                    brief: brief,
+                    contact: contact,
+                    imageURL: imageURL
+                )
+
+                self.onSave?(updated)
+                self.navigationController?.popViewController(animated: true)
+            }
         }
     }
 
@@ -159,10 +216,7 @@ final class EditProfileViewController: BaseViewController {
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         var body = Data()
-
-        func append(_ string: String) {
-            body.append(string.data(using: .utf8)!)
-        }
+        func append(_ string: String) { body.append(string.data(using: .utf8)!) }
 
         // upload_preset
         append("--\(boundary)\r\n")
@@ -175,12 +229,11 @@ final class EditProfileViewController: BaseViewController {
         append("Content-Type: image/jpeg\r\n\r\n")
         body.append(imageData)
         append("\r\n")
-
         append("--\(boundary)--\r\n")
 
         request.httpBody = body
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { data, _, error in
             if let error = error {
                 DispatchQueue.main.async { completion(.failure(error)) }
                 return
@@ -193,13 +246,14 @@ final class EditProfileViewController: BaseViewController {
 
             do {
                 let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-
-                // Cloudinary returns secure_url
                 if let secureURL = json?["secure_url"] as? String {
                     DispatchQueue.main.async { completion(.success(secureURL)) }
                 } else {
                     let message = (json?["error"] as? [String: Any])?["message"] as? String ?? "Unknown Cloudinary error"
-                    DispatchQueue.main.async { completion(.failure(NSError(domain: "Cloudinary", code: -2, userInfo: [NSLocalizedDescriptionKey: message]))) }
+                    DispatchQueue.main.async {
+                        completion(.failure(NSError(domain: "Cloudinary", code: -2,
+                                                   userInfo: [NSLocalizedDescriptionKey: message])))
+                    }
                 }
             } catch {
                 DispatchQueue.main.async { completion(.failure(error)) }
