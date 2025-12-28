@@ -58,7 +58,8 @@ class BookingsTableViewCell: UITableViewCell {
         case .Completed:
             cellContextMenu.menu = UIMenu(children: [
                 UIAction(title: "See Details", state: .off, handler: closure),
-                UIAction(title: "Rate", image: UIImage.init(systemName: "star"), handler: closure)
+                UIAction(title: "Favorite", image: UIImage(systemName: "star"), handler: closure),
+                UIAction(title: "Rate", handler: closure)
             ])
         default:
             cellContextMenu.menu = UIMenu(children: [
