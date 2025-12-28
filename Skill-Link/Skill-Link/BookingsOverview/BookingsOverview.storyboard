@@ -191,6 +191,7 @@
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="bookingCategory" destination="Yoi-dx-Fzg" id="q8z-Ng-iXr"/>
+                                            <outlet property="cellContextMenu" destination="xYC-hb-iq7" id="AWp-aA-xug"/>
                                             <outlet property="date" destination="0R4-We-oNn" id="rSb-3k-wkT"/>
                                             <outlet property="location" destination="1jg-hW-kpG" id="XmS-29-Sea"/>
                                             <outlet property="price" destination="BfO-O7-8yt" id="uXx-Ec-2Ti"/>
@@ -397,6 +398,7 @@
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="bookingCategory" destination="Lv4-uN-drH" id="SIo-rx-giJ"/>
+                                            <outlet property="cellContextMenu" destination="a8t-mp-jKZ" id="aXa-sF-Stm"/>
                                             <outlet property="date" destination="8sa-9n-IDQ" id="KQ3-tR-nE8"/>
                                             <outlet property="location" destination="sVN-D5-cmd" id="eRo-qy-tqE"/>
                                             <outlet property="price" destination="TFG-nS-ClT" id="Hq7-OW-ba2"/>
@@ -580,6 +582,7 @@
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="bookingCategory" destination="KYe-N1-z2a" id="K2Y-em-avK"/>
+                                            <outlet property="cellContextMenu" destination="aXT-sL-pxv" id="Ng5-F3-6Nl"/>
                                             <outlet property="date" destination="cfS-dF-rcu" id="3fK-kb-YTY"/>
                                             <outlet property="location" destination="L1P-ru-Adq" id="PZV-Xn-owE"/>
                                             <outlet property="price" destination="phi-v1-Ux5" id="JWv-DJ-UXO"/>
@@ -707,6 +710,9 @@
                                                                         </children>
                                                                     </menu>
                                                                     <state key="normal" image="ellipsis" catalog="system"/>
+                                                                    <connections>
+                                                                        <action selector="cellContextMenu:" destination="FfL-g3-rmA" eventType="touchUpInside" id="Zr7-uS-nAw"/>
+                                                                    </connections>
                                                                 </button>
                                                             </subviews>
                                                             <constraints>
@@ -836,6 +842,7 @@
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="bookingCategory" destination="50O-iK-xtv" id="6bp-Tf-yX3"/>
+                                            <outlet property="cellContextMenu" destination="T7i-6V-d1s" id="HK5-hE-36d"/>
                                             <outlet property="date" destination="nst-j5-ps3" id="aOF-oK-DFA"/>
                                             <outlet property="location" destination="Qlb-AY-JI6" id="xWi-v2-03B"/>
                                             <outlet property="price" destination="Hn4-Hr-iJ0" id="apW-Rs-hBw"/>

@@ -140,6 +140,8 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                     stateLabel.setBackgroundColor(UIColor.orange)
             }
             
+        cell.setupContextMenu(state: currentState)
+        
             return cell
         }
     
