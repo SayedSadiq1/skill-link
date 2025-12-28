@@ -7,20 +7,35 @@
 
 import Foundation
 
-struct Booking {
-    let service: BookedService
+class Booking {
+    var service: BookedService
     let user: UserProfile
     let provider: UserProfile
+    
+    init(service: BookedService, user: UserProfile, provider: UserProfile) {
+        self.service = service
+        self.user = user
+        self.provider = provider
+    }
 }
 
-struct BookedService {
+class BookedService {
     let id: UUID = UUID.init()
-    let state: BookedServiceStatus
+    var state: BookedServiceStatus
     let title: String
     let date: Date
     let time: String
     let location: String
     let totalPrice: Double
+    
+    init(state: BookedServiceStatus, title: String, date: Date, time: String, location: String, totalPrice: Double) {
+        self.state = state
+        self.title = title
+        self.date = date
+        self.time = time
+        self.location = location
+        self.totalPrice = totalPrice
+    }
 }
 
 enum BookedServiceStatus: String {

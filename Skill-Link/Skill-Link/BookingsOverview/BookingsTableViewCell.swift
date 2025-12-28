@@ -7,6 +7,11 @@
 
 import UIKit
 
+protocol BookingsTableViewCellDelegate: AnyObject {
+    func didTapApprove(for serviceId: UUID)
+    func didTapDecline(for serviceId: UUID)
+}
+
 class BookingsTableViewCell: UITableViewCell {
 
     @IBOutlet weak var serviceTitle: UILabel!
@@ -16,6 +21,10 @@ class BookingsTableViewCell: UITableViewCell {
     @IBOutlet weak var time: UILabel!
     @IBOutlet weak var location: UILabel!
     @IBOutlet weak var price: UILabel!
+    var serviceId: UUID!
+    
+    weak var delegate: BookingsTableViewCellDelegate?
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
@@ -27,4 +36,11 @@ class BookingsTableViewCell: UITableViewCell {
         // Configure the view for the selected state
     }
 
+    @IBAction func approveBtnTap(_ sender: UIButton) {
+        delegate?.didTapApprove(for: serviceId)
+    }
+    
+    @IBAction func declineBtnTap(_ sender: UIButton) {
+        delegate?.didTapDecline(for: serviceId)
+    }
 }

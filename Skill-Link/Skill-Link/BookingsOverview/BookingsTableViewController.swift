@@ -1,6 +1,6 @@
 import UIKit
 
-class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSource, UITableViewDelegate {
+class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSource, UITableViewDelegate, BookingsTableViewCellDelegate {
     
     @IBOutlet weak var table: UITableView!
     override func viewDidLoad() {
@@ -631,10 +631,43 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         }
     }
     
+    func didTapApprove(for serviceId: UUID) {
+        print("BEFORE APPROVE")
+        printAllBookings()
+        
+        BookingDataManager.shared.updateBookingState(serviceId: serviceId, newState: .Upcoming)
+        showAlert(message: "Booking approved successfully!")
+        
+        print("AFTER APPROVE")
+        printAllBookings()
+        table.reloadData()
+        refreshTabs()
+    }
+    
+    func didTapDecline(for serviceId: UUID) {
+        BookingDataManager.shared.updateBookingState(serviceId: serviceId, newState: .Canceled)
+        showAlert(message: "Booking declined")
+        table.reloadData()
+        refreshTabs()
+    }
+    
+    private func showAlert(message: String) {
+            let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        }
+    
+    func printAllBookings() {
+        print("=== ALL BOOKINGS ===")
+        for booking in BookingDataManager.shared.getAllBookings() {
+            print("ID: \(booking.service.id), State: \(booking.service.state), Title: \(booking.service.title)")
+        }
+    }
+    
     // MARK: - UITableViewDataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return filteredData.count
+        return BookingDataManager.shared.getBookings(for: currentState).count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -642,7 +675,9 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                 return UITableViewCell()
             }
             
-            let booking = filteredData[indexPath.row]  // Use filteredData
+            let booking = BookingDataManager.shared.getBookings(for: currentState)[indexPath.row]  // Use filteredData
+        
+        cell.delegate = self
             
             // Format the date
             let dateFormatter = DateFormatter()
@@ -663,6 +698,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         cell.time?.text = booking.service.time
         cell.location?.text = booking.service.location
         cell.price?.text = "\(booking.service.totalPrice)BD"
+        cell.serviceId = booking.service.id
             
             let stateLabel = cell.bookingCategory as! CardLabel
             stateLabel.alpha = CGFloat(0.65)
@@ -724,7 +760,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                 
                 
                 // Filter the data
-                filteredData = data.filter { $0.service.state == currentState }
+                filteredData = BookingDataManager.shared.getBookings(for: currentState)
                 
                 // Reload table
                 table.reloadData()
@@ -733,4 +769,19 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                 print("Tab \(index): Showing \(filteredData.count) \(currentState.rawValue) services")
             }
         }
+    
+    private func refreshTabs() {
+        if let tabBarController = self.navigationController?.tabBarController {
+                tabBarController.viewControllers?.forEach { viewController in
+                    if let nav = viewController as? UINavigationController,
+                       let bookingVC = nav.viewControllers.first as? BookingsOverviewTableViewController,
+                       bookingVC != self {
+                        bookingVC.table.reloadData()
+                    } else if let bookingVC = viewController as? BookingsOverviewTableViewController,
+                              bookingVC != self {
+                        bookingVC.table.reloadData()
+                    }
+                }
+            }
+    }
 }
