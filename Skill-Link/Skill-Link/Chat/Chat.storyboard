@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Y6W-OH-hqX">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Chat View Controller-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController id="Y6W-OH-hqX" customClass="ChatViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="paM-Gl-bUk">
+                                <rect key="frame" x="12" y="211" width="361" height="493"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="ChatCell" rowHeight="48" id="sdB-B4-LAY" customClass="ChatCell" customModule="Skill_Link" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="50" width="361" height="48"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="sdB-B4-LAY" id="I08-7c-rql">
+                                            <rect key="frame" x="0.0" y="0.0" width="361" height="48"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="r7k-CA-ZBR">
+                                                    <rect key="frame" x="10" y="8" width="341" height="32"/>
+                                                    <subviews>
+                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="khV-Tx-LcQ">
+                                                            <rect key="frame" x="15.000000000000004" y="0.0" width="41.333333333333343" height="32"/>
+                                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                            <nil key="textColor"/>
+                                                            <nil key="highlightedColor"/>
+                                                        </label>
+                                                    </subviews>
+                                                    <color key="backgroundColor" systemColor="linkColor"/>
+                                                    <constraints>
+                                                        <constraint firstItem="khV-Tx-LcQ" firstAttribute="leading" secondItem="r7k-CA-ZBR" secondAttribute="leading" constant="15" id="Jnd-pT-vDo"/>
+                                                        <constraint firstAttribute="trailing" secondItem="khV-Tx-LcQ" secondAttribute="trailing" constant="284.66666666666663" id="SN3-ij-WNP"/>
+                                                        <constraint firstAttribute="bottom" secondItem="khV-Tx-LcQ" secondAttribute="bottom" id="eXi-qR-bNt"/>
+                                                        <constraint firstItem="khV-Tx-LcQ" firstAttribute="top" secondItem="r7k-CA-ZBR" secondAttribute="top" id="fzv-o4-jUN"/>
+                                                    </constraints>
+                                                </view>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="r7k-CA-ZBR" firstAttribute="leading" secondItem="I08-7c-rql" secondAttribute="leading" constant="60" id="CI7-cO-n9a"/>
+                                                <constraint firstItem="r7k-CA-ZBR" firstAttribute="leading" secondItem="I08-7c-rql" secondAttribute="leading" constant="10" id="Edu-TA-X3C"/>
+                                                <constraint firstAttribute="trailing" secondItem="r7k-CA-ZBR" secondAttribute="trailing" constant="61" id="fXn-ta-exn"/>
+                                                <constraint firstAttribute="trailing" secondItem="r7k-CA-ZBR" secondAttribute="trailing" constant="10" id="k3F-gJ-vHf"/>
+                                                <constraint firstItem="r7k-CA-ZBR" firstAttribute="top" secondItem="I08-7c-rql" secondAttribute="top" constant="8" id="mUm-V7-Im6"/>
+                                                <constraint firstAttribute="bottom" secondItem="r7k-CA-ZBR" secondAttribute="bottom" constant="8" id="smg-Ep-Zru"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="bubbleView" destination="r7k-CA-ZBR" id="6Q9-3c-KrE"/>
+                                            <outlet property="leadingConstraint" destination="CI7-cO-n9a" id="E9T-D0-JnT"/>
+                                            <outlet property="messageLabel" destination="khV-Tx-LcQ" id="g97-lJ-0KQ"/>
+                                            <outlet property="trailingConstraint" destination="fXn-ta-exn" id="h1b-Qb-mK0"/>
+                                        </connections>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                    <connections>
+                        <outlet property="tableView" destination="paM-Gl-bUk" id="DPf-Yu-dsJ"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="452.67175572519085" y="-92.253521126760575"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="linkColor">
+            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

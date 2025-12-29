@@ -64,11 +64,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		53C670042EF7CFDA0070F5F7 /* Login-Controller */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Login-Controller";
-			sourceTree = "<group>";
-		};
 		76C2A89B2EDDB62A005608E6 /* Skill-Link */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -118,7 +113,6 @@
 			children = (
 				76C2A89A2EDDB62A005608E6 /* Products */,
 				76C2A89B2EDDB62A005608E6 /* Skill-Link */,
-				53C670042EF7CFDA0070F5F7 /* Login-Controller */,
 			);
 			sourceTree = "<group>";
 		};
@@ -148,7 +142,6 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				53C670042EF7CFDA0070F5F7 /* Login-Controller */,
 				76C2A89B2EDDB62A005608E6 /* Skill-Link */,
 			);
 			name = "Skill-Link";
