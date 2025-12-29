@@ -2,7 +2,7 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
-final class RoleSelectionViewController: UIViewController {
+final class RoleSelectionViewController: BaseViewController {
 
     private let db = Firestore.firestore()
     private var isSaving = false

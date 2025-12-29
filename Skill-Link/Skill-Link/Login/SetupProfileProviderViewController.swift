@@ -4,7 +4,6 @@ import FirebaseFirestore
 
 final class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate {
 
-    // ✅ full name now comes from Firestore (label)
     @IBOutlet weak var fullNameLabel: UILabel!
 
     @IBOutlet weak var skillsTextField: UITextField!
@@ -20,39 +19,38 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     private var selectedImage: UIImage?
     private var isSaving = false
 
-    private var loadedFullName: String = ""   // ✅ fetched from Firestore
+    private var loadedFullName: String = ""
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // optional: hide back
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
-        // Image tap
+        // ✅ default image if user doesn't pick one
+        if profileImageView.image == nil {
+            profileImageView.image = UIImage(systemName: "person.circle.fill")
+        }
+
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
 
-        // Container
         briefContainerView.layer.cornerRadius = 10
         briefContainerView.layer.borderWidth = 1
         briefContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         briefContainerView.backgroundColor = .white
         briefContainerView.clipsToBounds = true
 
-        // TextView styling
         briefTextView.backgroundColor = .clear
         briefTextView.font = .systemFont(ofSize: 15)
         briefTextView.textColor = .label
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
-        // Placeholder
         briefTextView.delegate = self
         setBriefPlaceholderIfNeeded()
 
-        // ✅ Load full name from Firestore
         loadFullNameFromFirestore()
     }
 
@@ -61,7 +59,6 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
     }
 
-    // MARK: - Load name
     private func loadFullNameFromFirestore() {
         guard let uid = Auth.auth().currentUser?.uid else {
             fullNameLabel.text = "No user"
@@ -86,7 +83,6 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         }
     }
 
-    // MARK: - Placeholder
     private func setBriefPlaceholderIfNeeded() {
         if briefTextView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             briefTextView.text = "Brief..."
@@ -120,7 +116,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         sender.isEnabled = false
         showSavingHUD(true)
 
-        // upload photo if exists
+        // upload photo if user selected one
         if let image = selectedImage {
             CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
                 guard let self else { return }
@@ -135,7 +131,8 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
                 }
             }
         } else {
-            saveProviderProfile(uid: uid, imageURL: nil, sender: sender)
+            // ✅ no photo selected -> save with no imageURL
+            self.saveProviderProfile(uid: uid, imageURL: nil, sender: sender)
         }
     }
 
@@ -174,10 +171,10 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
                     return
                 }
 
-                self.finishSaving(sender: sender)
-
-                // Navigate to the ProfileProviderViewController
-                self.goToProfileProvider()
+                // ✅ IMPORTANT: dismiss HUD first, THEN navigate
+                self.finishSaving(sender: sender) {
+                    self.goToProfileProvider()
+                }
             }
         }
     }
@@ -192,22 +189,37 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         navigationController?.pushViewController(vc, animated: true)
     }
 
-
-
     private func validateRequiredFields() -> Bool {
         if loadedFullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             showAlert(message: "Your name is missing in Firebase. Go back and register again.")
             return false
         }
 
-        let skills = skillsTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let skillsArray = (skillsTextField.text ?? "")
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
         let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        if skills.isEmpty { showAlert(message: "Please enter at least one skill."); return false }
-        if contact.isEmpty { showAlert(message: "Please enter your contact information."); return false }
+        if skillsArray.isEmpty {
+            showAlert(message: "Please enter at least one skill.")
+            return false
+        }
+
+        if skillsArray.count > 3 {
+            showAlert(message: "You can enter a maximum of 3 skills only.")
+            return false
+        }
+
+        if contact.isEmpty {
+            showAlert(message: "Please enter your contact information.")
+            return false
+        }
 
         return true
     }
+
 
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "Setup Profile", message: message, preferredStyle: .alert)
@@ -239,10 +251,15 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         }
     }
 
-    private func finishSaving(sender: UIButton) {
-        showSavingHUD(false)
-        isSaving = false
-        sender.isEnabled = true
+    // ✅ UPDATED: dismiss alert with completion
+    private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
+        savingAlert?.dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            self.savingAlert = nil
+            self.isSaving = false
+            sender.isEnabled = true
+            completion?()
+        }
     }
 
     // MARK: - Photo picking

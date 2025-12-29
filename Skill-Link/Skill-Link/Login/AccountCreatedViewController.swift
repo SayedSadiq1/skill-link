@@ -2,7 +2,7 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
-final class AccountCreatedViewController: UIViewController {
+final class AccountCreatedViewController: BaseViewController {
 
     private let db = Firestore.firestore()
 
@@ -36,21 +36,24 @@ final class AccountCreatedViewController: UIViewController {
 
             let role = (snap?.data()?["role"] as? String ?? "").lowercased()
 
+            let sb = UIStoryboard(name: "login", bundle: nil)
+
             if role == "provider" {
-                // ✅ Go to provider setup/profile (your current provider setup screen)
-                let sb = UIStoryboard(name: "login", bundle: nil)
+                // ✅ Provider: go to provider setup/profile screen
                 let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController1")
                 self.navigationController?.pushViewController(vc, animated: true)
 
             } else if role == "seeker" {
-                // ✅ for now (since seeker screen not made)
-                self.showAlert("Seeker setup is not ready yet.")
+                // ✅ Seeker: go to seeker setup profile screen
+                let vc = sb.instantiateViewController(withIdentifier: "SetupProfileSeekerViewController")
+                self.navigationController?.pushViewController(vc, animated: true)
 
             } else {
                 self.showAlert("Role is missing. Please select role again.")
             }
         }
     }
+
 
     private func showAlert(_ msg: String) {
         let alert = UIAlertController(title: "Account Created", message: msg, preferredStyle: .alert)

@@ -2,7 +2,7 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
-final class RegisterViewController: UIViewController {
+final class RegisterViewController: BaseViewController {
 
     @IBOutlet weak var fullNameTextField: UITextField!
     @IBOutlet weak var emailTextField: UITextField!

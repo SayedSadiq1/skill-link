@@ -40,7 +40,8 @@ final class LoginPageController: BaseViewController {
     }
 
     private func checkUserProfileAndRoute(uid: String) {
-        db.collection("users").document(uid).getDocument { [weak self] snap, error in
+        // ✅ FIX: use "User" (same as your setup screens)
+        db.collection("User").document(uid).getDocument { [weak self] snap, error in
             guard let self else { return }
 
             if let error = error {
@@ -50,8 +51,6 @@ final class LoginPageController: BaseViewController {
 
             // ✅ 1) Check if user exists in Firestore
             guard let data = snap?.data() else {
-                // user authenticated but no profile doc in Firestore
-                // => tell them to register (your flow handles setup on register)
                 self.showAlert(title: "Profile Not Found",
                                message: "We couldn't find your profile. Please register first.")
                 try? Auth.auth().signOut()
@@ -59,7 +58,7 @@ final class LoginPageController: BaseViewController {
             }
 
             // ✅ 2) Validate role then go to correct homepage
-            let roleString = (data["role"] as? String) ?? ""
+            let roleString = (data["role"] as? String ?? "").lowercased()
 
             if roleString == UserRole.provider.rawValue {
                 self.goToProviderHome()
@@ -74,14 +73,12 @@ final class LoginPageController: BaseViewController {
 
     private func goToProviderHome() {
         let sb = UIStoryboard(name: "login", bundle: nil)
-        // ✅ change this ID to your real Provider Home storyboard ID
         let home = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
         navigationController?.setViewControllers([home], animated: true)
     }
 
     private func goToSeekerHome() {
         let sb = UIStoryboard(name: "login", bundle: nil)
-        // ✅ change this ID to your real Seeker Home storyboard ID
         let home = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
         navigationController?.setViewControllers([home], animated: true)
     }

@@ -11,16 +11,9 @@ import FirebaseFirestore
 
 final class SetupProfileSeekerViewController: BaseViewController {
 
-    // ✅ full name now comes from Firestore (label)
     @IBOutlet weak var fullNameLabel: UILabel!
-
-    // ✅ Seeker: Interests (like provider skills)
     @IBOutlet weak var interestsTextField: UITextField!
-
-    // ✅ Seeker: Contact
     @IBOutlet weak var contactTextField: UITextField!
-
-    // ✅ optional photo (same flow as provider)
     @IBOutlet weak var profileImageView: UIImageView!
 
     private let db = Firestore.firestore()
@@ -28,16 +21,18 @@ final class SetupProfileSeekerViewController: BaseViewController {
     private var selectedImage: UIImage?
     private var isSaving = false
 
-    private var loadedFullName: String = ""   // ✅ fetched from Firestore
+    private var loadedFullName: String = ""
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
-        
-        // optional: hide back
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+
+        // ✅ default image if user doesn't pick one
+        if profileImageView.image == nil {
+            profileImageView.image = UIImage(systemName: "person.circle.fill")
+        }
 
         // Image tap
         profileImageView.isUserInteractionEnabled = true
@@ -45,7 +40,6 @@ final class SetupProfileSeekerViewController: BaseViewController {
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
 
-        // ✅ Load full name from Firestore
         loadFullNameFromFirestore()
     }
 
@@ -54,7 +48,6 @@ final class SetupProfileSeekerViewController: BaseViewController {
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
     }
 
-    // MARK: - Load name
     private func loadFullNameFromFirestore() {
         guard let uid = Auth.auth().currentUser?.uid else {
             fullNameLabel.text = "No user"
@@ -93,7 +86,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
         sender.isEnabled = false
         showSavingHUD(true)
 
-        // upload photo if exists
+        // upload photo if user selected one
         if let image = selectedImage {
             CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
                 guard let self else { return }
@@ -108,12 +101,12 @@ final class SetupProfileSeekerViewController: BaseViewController {
                 }
             }
         } else {
-            saveSeekerProfile(uid: uid, imageURL: nil, sender: sender)
+            // ✅ no photo selected -> save with no imageURL
+            self.saveSeekerProfile(uid: uid, imageURL: nil, sender: sender)
         }
     }
 
     private func saveSeekerProfile(uid: String, imageURL: String?, sender: UIButton) {
-        // ✅ interests separated by commas
         let interestsArray = (interestsTextField.text ?? "")
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -142,8 +135,10 @@ final class SetupProfileSeekerViewController: BaseViewController {
                     return
                 }
 
-                self.finishSaving(sender: sender)
-                self.goToProfileSeeker()
+                // ✅ IMPORTANT: dismiss HUD first, THEN navigate
+                self.finishSaving(sender: sender) {
+                    self.goToProfileSeeker()
+                }
             }
         }
     }
@@ -164,11 +159,20 @@ final class SetupProfileSeekerViewController: BaseViewController {
             return false
         }
 
-        let interests = interestsTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let interestsArray = (interestsTextField.text ?? "")
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
         let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        if interests.isEmpty {
+        if interestsArray.isEmpty {
             showAlert(message: "Please enter at least one interest (separate by commas).")
+            return false
+        }
+
+        if interestsArray.count > 3 {
+            showAlert(message: "You can select a maximum of 3 interests only.")
             return false
         }
 
@@ -186,7 +190,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
         present(alert, animated: true)
     }
 
-    // MARK: - Saving HUD (same as provider)
+    // MARK: - Saving HUD
     private var savingAlert: UIAlertController?
 
     private func showSavingHUD(_ show: Bool) {
@@ -210,13 +214,17 @@ final class SetupProfileSeekerViewController: BaseViewController {
         }
     }
 
-    private func finishSaving(sender: UIButton) {
-        showSavingHUD(false)
-        isSaving = false
-        sender.isEnabled = true
+    // ✅ UPDATED: dismiss alert with completion
+    private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
+        savingAlert?.dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            self.savingAlert = nil
+            self.isSaving = false
+            sender.isEnabled = true
+            completion?()
+        }
     }
 
-    // MARK: - Photo picking
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
