@@ -9,5 +9,6 @@ struct UserProfile: Codable {
     var brief: String
     var contact: String
     var imageURL: String?
+    var id: String? = nil
 //    var role: UserRole
 }

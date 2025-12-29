@@ -72,15 +72,19 @@ final class LoginPageController: BaseViewController {
     }
 
     private func goToProviderHome() {
-        let sb = UIStoryboard(name: "login", bundle: nil)
+        let sb = UIStoryboard(name: "HomePage", bundle: nil)
         let home = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
-        navigationController?.setViewControllers([home], animated: true)
+        home.modalPresentationStyle = .fullScreen
+        present(home, animated: true)
+        //navigationController?.setViewControllers([home], animated: true)
     }
 
     private func goToSeekerHome() {
-        let sb = UIStoryboard(name: "login", bundle: nil)
+        let sb = UIStoryboard(name: "HomePage", bundle: nil)
         let home = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
-        navigationController?.setViewControllers([home], animated: true)
+        home.modalPresentationStyle = .fullScreen
+        present(home, animated: true)
+        //navigationController?.setViewControllers([home], animated: true)
     }
 
     private func showAlert(title: String, message: String) {
