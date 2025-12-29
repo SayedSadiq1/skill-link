@@ -11,7 +11,7 @@
         <!--View Controller-->
         <scene sceneID="o7w-rr-kh8">
             <objects>
-                <viewController id="f9e-Qm-sPd" customClass="ViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="StartPage" useStoryboardIdentifierAsRestorationIdentifier="YES" id="f9e-Qm-sPd" customClass="ViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="2bC-9C-WAC">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
