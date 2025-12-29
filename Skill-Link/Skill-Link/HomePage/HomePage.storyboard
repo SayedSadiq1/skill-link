@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="1Zf-IB-rYH">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="LNJ-em-Ey2">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
@@ -1930,11 +1930,11 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="eqI-Je-3EG" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1834.3511450381679" y="1235.2112676056338"/>
+            <point key="canvasLocation" x="-1721" y="1227"/>
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="e0H-nt-ENt"/>
+        <segue reference="A4D-SY-ty7"/>
         <segue reference="TQm-CE-KAe"/>
         <segue reference="b8D-kW-Xfb"/>
         <segue reference="JaX-CC-8NX"/>
