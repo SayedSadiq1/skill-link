@@ -9,7 +9,7 @@ import Foundation
 
 
 class Service {
-    let id: UUID = UUID.init()
+    var id: UUID
     let title: String
     let description: String
     let category: String
@@ -20,7 +20,8 @@ class Service {
     let available: Bool
     let disclaimers: [String]
     
-    init(title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, provider: UserProfile, available: Bool, disclaimers: [String]) {
+    init(id: UUID, title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, provider: UserProfile, available: Bool, disclaimers: [String]) {
+        self.id = id
         self.title = title
         self.description = description
         self.category = category
@@ -33,7 +34,7 @@ class Service {
     }
 }
 
-enum PriceType {
+enum PriceType: String {
     case fixed
     case hourly
 }
