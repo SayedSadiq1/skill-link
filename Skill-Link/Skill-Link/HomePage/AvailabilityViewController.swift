@@ -7,23 +7,27 @@
 
 import UIKit
 
-class AvailabilityViewController: BaseViewController {
+final class AvailabilityViewController: BaseViewController {
+
+    var filters = SearchFilters()
+    var onApply: ((SearchFilters) -> Void)?
+
+    @IBOutlet weak var datePicker: UIDatePicker!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
+        // If already chosen before, show it
+        if let date = filters.availabilityDate {
+            datePicker.date = date
+        }
     }
+
+    @IBAction func applyTapped(_ sender: UIButton) {
+        filters.availabilityDate = datePicker.date
+        onApply?(filters)
+        navigationController?.popViewController(animated: true)
+    }
+
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
