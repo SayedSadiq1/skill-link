@@ -1,3 +1,4 @@
+
 import UIKit
 import FirebaseAuth
 import FirebaseFirestore
@@ -6,8 +7,13 @@ final class SettingsViewController: BaseViewController {
 
     private let db = Firestore.firestore()
 
+    // MARK: - Data Sharing Preferences Switch
+    @IBOutlet weak var dataSharingSwitch: UISwitch!  // Connect this to your Data Sharing toggle
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Sync the data sharing switch with the stored preference in UserDefaults
+        syncDataSharingSwitchState()
     }
 
     // MARK: - App Permissions
@@ -94,7 +100,7 @@ final class SettingsViewController: BaseViewController {
             fatalError("StartPageViewController not found. Check storyboard ID.")
         }
 
-        // Reset navigation stack so user cant go back
+        // Reset navigation stack so user can't go back
         navigationController?.setViewControllers([startVC], animated: true)
     }
 
@@ -103,5 +109,39 @@ final class SettingsViewController: BaseViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+
+    // MARK: - Data Sharing Switch Action
+    @IBAction func dataSharingSwitchChanged(_ sender: UISwitch) {
+        if sender.isOn {
+            enableDataSharing()
+        } else {
+            disableDataSharing()
+        }
+    }
+
+    // MARK: - Enable Data Sharing
+    private func enableDataSharing() {
+        // Store the user's preference to allow data sharing
+        UserDefaults.standard.set(true, forKey: "dataSharingEnabled")
+        
+        // Show an alert confirming the action
+        showAlert(title: "Data Sharing Enabled", message: "Your data will be used for internal analytics and may be shared with third parties.")
+    }
+
+    // MARK: - Disable Data Sharing
+    private func disableDataSharing() {
+        // Store the user's preference to disable data sharing
+        UserDefaults.standard.set(false, forKey: "dataSharingEnabled")
+        
+        // Show an alert confirming the action
+        showAlert(title: "Data Sharing Disabled", message: "Your data will no longer be shared for analytics or with third parties.")
+    }
+
+    // MARK: - Sync Data Sharing Switch State
+    private func syncDataSharingSwitchState() {
+        // Check the stored value in UserDefaults and update the switch state accordingly
+        let isDataSharingEnabled = UserDefaults.standard.bool(forKey: "dataSharingEnabled")
+        dataSharingSwitch.setOn(isDataSharingEnabled, animated: false)
     }
 }

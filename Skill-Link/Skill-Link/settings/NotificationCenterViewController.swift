@@ -7,73 +7,100 @@ class NotificationCenterViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        syncSwitchWithSystemSettings()
+        syncSwitchWithSystemSettings()  // Sync the switch with current notification settings
     }
 
     // MARK: - Push Switch Action
     @IBAction func pushSwitchChanged(_ sender: UISwitch) {
         if sender.isOn {
+            // When the switch is turned ON, request permission
             requestPushPermission()
         } else {
-            showDisableInfo()
+            // If the switch is turned OFF, guide them to settings (optional)
+            openNotificationSettings()
         }
     }
 
-    // MARK: - Request Permission
+    // MARK: - Request Push Permission
     private func requestPushPermission() {
+        // Disable the switch while the permission is being requested
         pushSwitch.isEnabled = false
 
-        UNUserNotificationCenter.current()
-            .requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, _ in
-
-                DispatchQueue.main.async {
-                    guard let self = self else { return }
-                    self.pushSwitch.isEnabled = true
-
-                    if granted {
-                        UIApplication.shared.registerForRemoteNotifications()
-                        self.pushSwitch.setOn(true, animated: true)
-                    } else {
-                        self.pushSwitch.setOn(false, animated: true)
-                        self.showAlert(
-                            title: "Notifications Disabled",
-                            message: "Please allow notifications in Settings to receive alerts."
-                        )
-                    }
-                }
-            }
-    }
-
-    // MARK: - Sync Switch State
-    private func syncSwitchWithSystemSettings() {
-        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { [weak self] granted, error in
             DispatchQueue.main.async {
-                let enabled =
-                    settings.authorizationStatus == .authorized ||
-                    settings.authorizationStatus == .provisional
-                self?.pushSwitch.setOn(enabled, animated: false)
+                guard let self = self else { return }
+
+                // Enable the switch back once the request is done
+                self.pushSwitch.isEnabled = true
+
+                if granted {
+                    // If permission is granted, register for remote notifications
+                    UIApplication.shared.registerForRemoteNotifications()
+
+                    // Set the switch to ON since permission is granted
+                    self.pushSwitch.setOn(true, animated: true)
+
+                    // Show alert informing user they will start receiving notifications
+                    self.showNotificationEnabledAlert()
+                } else {
+                    // If permission is denied, set the switch to OFF
+                    self.pushSwitch.setOn(false, animated: true)
+
+                    // Show alert to guide user to enable notifications in settings
+                    self.showAlertToEnableNotifications()
+                }
             }
         }
     }
 
-    // MARK: - Disable Info
-    private func showDisableInfo() {
+    // MARK: - Show Alert when Notifications are Enabled
+    private func showNotificationEnabledAlert() {
         let alert = UIAlertController(
-            title: "Turn Off Notifications",
-            message: "You can disable notifications from the iPhone Settings.",
+            title: "Notifications Enabled",
+            message: "You will start receiving notifications from today onward.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+
+        // Show the alert
+        present(alert, animated: true)
+    }
+
+    // MARK: - Open Notification Settings if User Denies Permission
+    private func openNotificationSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
+
+    // MARK: - Alert to Enable Notifications
+    private func showAlertToEnableNotifications() {
+        let alert = UIAlertController(
+            title: "Notifications Disabled",
+            message: "Please allow notifications in Settings to receive alerts.",
             preferredStyle: .alert
         )
 
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
-            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-            UIApplication.shared.open(url)
+            self.openNotificationSettings()
         })
 
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-            self?.syncSwitchWithSystemSettings()
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            self.pushSwitch.setOn(false, animated: true)  // Keep the switch OFF if denied
         })
 
         present(alert, animated: true)
+    }
+
+    // MARK: - Sync Switch State with System Settings
+    private func syncSwitchWithSystemSettings() {
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            DispatchQueue.main.async {
+                // Sync the switch to match system notification settings
+                let enabled = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
+                self?.pushSwitch.setOn(enabled, animated: false)
+            }
+        }
     }
 
     // MARK: - Alert Helper
