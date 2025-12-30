@@ -7,13 +7,17 @@
 
 import UIKit
 
-class ServiceDetailsViewController: UIViewController {
+class ServiceDetailsViewController: BaseViewController {
     
     // MARK: - Outlets
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var actionBtn: UIButton!
+    @IBOutlet weak var cancelBtn: UIButton!
     
     // MARK: - Properties
     var service: Service2!
+    let isProvider: Bool = false
+    var isActivated: Bool = true
     
     // MARK: - Cell Identifiers
     private enum CellIdentifier: String {
@@ -42,6 +46,7 @@ class ServiceDetailsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadMockService()
+        setupUI()
     }
     
     // MARK: - Mock Data
@@ -72,6 +77,81 @@ class ServiceDetailsViewController: UIViewController {
             durationMaxHours: 1.5
         )
     }
+    
+    func setupUI() {
+            if (!isProvider) {
+                return
+            }
+        
+            if actionBtn != nil {
+                actionBtn.setTitle("Edit service", for: .normal)
+                actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
+            }
+            if cancelBtn != nil {
+                if isActivated {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "xmark.app")
+                    config.title = "Deactivate"
+                    config.baseBackgroundColor = UIColor.red
+                    cancelBtn.configuration = config
+                    
+                } else {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "repeat")
+                    config.title = "Reactivate"
+                    config.baseBackgroundColor = UIColor.systemTeal
+                    cancelBtn.configuration = config
+                }
+            }
+            
+        }
+    
+    @IBAction func reportClicked(_ sender: Any) {
+            if isProvider {
+                isActivated = !isActivated
+                if isActivated {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "xmark.app")
+                    config.title = "Deactivate"
+                    config.baseBackgroundColor = UIColor.red
+                    cancelBtn.configuration = config
+                    
+                } else {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "repeat")
+                    config.title = "Reactivate"
+                    config.baseBackgroundColor = UIColor.systemTeal
+                    cancelBtn.configuration = config
+                }
+                
+                return
+            }
+            
+        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "reportPage") else {
+            return
+        }
+            controller.modalPresentationStyle = .fullScreen
+        self.navigationController?.pushViewController(controller, animated: true)
+        }
+    
+    @IBAction func actionClicked(_ sender: Any) {
+            if !isProvider {
+                guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "BookingPage") else {
+                    return
+                }
+                controller.modalPresentationStyle = .fullScreen
+                controller.navigationItem.title = "Confirm Booking"
+                self.navigationController?.pushViewController(controller, animated: true)
+                return
+            }
+            
+        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "EditView") else {
+            return
+        }
+        controller.modalPresentationStyle = .fullScreen
+        controller.navigationItem.title = "Edit Service Details"
+        self.navigationController?.pushViewController(controller, animated: true)
+        }
 }
 
 // MARK: - UITableViewDataSource
@@ -192,31 +272,9 @@ extension ServiceDetailsViewController: UITableViewDelegate {
         case .disclaimers:
             return UITableView.automaticDimension
         case .additionalInfo:
-            return UITableView.automaticDimension
-        }
-    }
-    
-    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard let section = Section(rawValue: indexPath.section) else {
             return 100
         }
-        
-        switch section {
-        case .header:
-            return 180
-        case .provider:
-            return 120
-        case .description:
-            return 200
-        case .details:
-            return 100
-        case .disclaimers:
-            return 60
-        case .additionalInfo:
-            return 80
-        }
     }
-    
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return Section(rawValue: section)?.title
     }
