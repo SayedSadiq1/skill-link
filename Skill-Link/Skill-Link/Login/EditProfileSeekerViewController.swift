@@ -2,70 +2,55 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
-final class EditProfileViewController: BaseViewController {
+final class EditProfileSeekerViewController: BaseViewController {
 
+    // Text fields for user input
     @IBOutlet weak var nameTextField: UITextField!
-    @IBOutlet weak var skillsTextField: UITextField!
-    @IBOutlet weak var briefTextView: UITextView!
+    @IBOutlet weak var interestsTextField: UITextField!
     @IBOutlet weak var contactTextField: UITextField!
 
-    @IBOutlet weak var briefContainerView: UIView!
-    @IBOutlet weak var skillsContainerView: UIView!
+    // Profile image view
     @IBOutlet weak var profileImageView: UIImageView!
 
-    var profile: UserProfile?
-    var onSave: ((UserProfile) -> Void)?
+    var profile: SeekerProfile?  // Seeker profile passed from ProfileSeekerViewController
+    var onSave: ((SeekerProfile) -> Void)?  // Callback to notify the parent controller after save
 
-    private let db = Firestore.firestore()
-    private var photoPicker: PhotoPickerHelper?
+    private let db = Firestore.firestore()  // Firestore reference for saving profile data
+    private var photoPicker: PhotoPickerHelper?  // Helper for selecting photos
 
     // Cloudinary credentials for image upload
     private let cloudName = "dgamwyki7"
     private let uploadPreset = "mobile_unsigned"
 
-    // Image state
-    private var selectedImageData: Data?        // new image (pending upload)
-    private var selectedImageURL: String?       // current URL (existing or uploaded)
+    // Variables for image upload
+    private var selectedImageData: Data?  // Data for selected image
+    private var selectedImageURL: String?  // URL for the uploaded image
 
-    private var isSaving = false
+    private var isSaving = false  // Flag to prevent multiple save attempts
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // ✅ Image tap
+        // Style the text fields for input
+        styleTextField(nameTextField)
+        styleTextField(interestsTextField)
+        styleTextField(contactTextField)
+
+        // Enable image tapping to change photo
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
 
-        // ✅ Style containers
-        skillsContainerView.layer.cornerRadius = 10
-        skillsContainerView.layer.borderWidth = 1
-        skillsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
-
-        briefContainerView.layer.cornerRadius = 10
-        briefContainerView.layer.borderWidth = 1
-        briefContainerView.layer.borderColor = UIColor.systemGray4.cgColor
-
-        // ✅ Brief styling
-        briefTextView.isEditable = true
-        briefTextView.isSelectable = true
-        briefTextView.isScrollEnabled = true
-        briefTextView.font = .systemFont(ofSize: 15)
-        briefTextView.textColor = .label
-        briefTextView.backgroundColor = .clear
-        briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-
         guard let profile = profile else {
-            print("❌ EditProfileViewController: profile is nil (not passed)")
+            print("❌ EditProfileSeekerViewController: profile is nil (not passed)")
             return
         }
 
-        // ✅ Fill fields
+        // Pre-fill the text fields with the existing profile data
         nameTextField.text = profile.name
-        skillsTextField.text = profile.skills.joined(separator: ", ")
-        briefTextView.text = profile.brief
+        interestsTextField.text = profile.interests.joined(separator: ", ")
         contactTextField.text = profile.contact
 
-        // ✅ Image URL
+        // Load the image if it exists in the profile
         selectedImageURL = profile.imageURL
         if let urlString = profile.imageURL, let url = URL(string: urlString) {
             loadImage(from: url)
@@ -76,23 +61,37 @@ final class EditProfileViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        // Make the profile image circular
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
     }
 
-    // MARK: - Image Picker
+    // MARK: - Styling the text fields
+    private func styleTextField(_ tf: UITextField) {
+        tf.layer.cornerRadius = 8
+        tf.layer.borderWidth = 1
+        tf.layer.borderColor = UIColor.systemGray4.cgColor
+        tf.backgroundColor = .white
+
+        // Add padding to the left of text fields
+        let padding = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 44))
+        tf.leftView = padding
+        tf.leftViewMode = .always
+    }
+
+    // MARK: - Photo picker action
     @objc private func changePhotoTapped() {
-        // Present photo picker to select a new profile image
+        // Initialize the photo picker helper
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image
             self.selectedImageData = image.jpegData(compressionQuality: 0.8)
         }
-        photoPicker?.presentPicker()
+        photoPicker?.presentPicker()  // Present the photo picker
     }
 
-    // MARK: - Save Action
+    // MARK: - Save button action
     @IBAction func saveTapped(_ sender: UIButton) {
         guard !isSaving else { return }  // Prevent multiple save attempts
         guard let uid = Auth.auth().currentUser?.uid else {
@@ -100,19 +99,25 @@ final class EditProfileViewController: BaseViewController {
             return
         }
 
-        isSaving = true
-        setSavingUI(true)
-
+        // Retrieve and clean user inputs
         let fullName = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let brief = briefTextView.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        let skillsArray = (skillsTextField.text ?? "")
+        // Validate the inputs
+        let interestsArray = (interestsTextField.text ?? "")
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        // 1) If image changed -> upload to Cloudinary -> then save Firestore
+        // Ensure required fields are filled
+        if fullName.isEmpty { showAlert(title: "Missing", message: "Please enter your name."); return }
+        if contact.isEmpty { showAlert(title: "Missing", message: "Please enter your contact."); return }
+        if interestsArray.isEmpty { showAlert(title: "Missing", message: "Please enter at least one interest (separate by commas)."); return }
+
+        isSaving = true
+        setSavingUI(true)
+
+        // If a new image is selected, upload it
         if let imgData = selectedImageData {
             uploadToCloudinary(imageData: imgData) { [weak self] result in
                 guard let self else { return }
@@ -120,47 +125,27 @@ final class EditProfileViewController: BaseViewController {
                 switch result {
                 case .success(let urlString):
                     self.selectedImageURL = urlString
-                    self.saveToFirestore(
-                        uid: uid,
-                        fullName: fullName,
-                        contact: contact,
-                        brief: brief,
-                        skills: skillsArray,
-                        imageURL: urlString
-                    )
-
+                    self.saveToFirestore(uid: uid, fullName: fullName, contact: contact, interests: interestsArray, imageURL: urlString)
                 case .failure(let error):
-                    self.isSaving = false
-                    self.setSavingUI(false)
-                    self.showAlert(title: "Upload Failed", message: error.localizedDescription)
+                    DispatchQueue.main.async {
+                        self.isSaving = false
+                        self.setSavingUI(false)
+                        self.showAlert(title: "Upload Failed", message: error.localizedDescription)
+                    }
                 }
             }
         } else {
-            // 2) No new image -> just save Firestore with existing URL
-            saveToFirestore(
-                uid: uid,
-                fullName: fullName,
-                contact: contact,
-                brief: brief,
-                skills: skillsArray,
-                imageURL: selectedImageURL
-            )
+            // No new image, save without the image URL
+            saveToFirestore(uid: uid, fullName: fullName, contact: contact, interests: interestsArray, imageURL: selectedImageURL)
         }
     }
 
     // MARK: - Firestore save
-    private func saveToFirestore(uid: String,
-                                 fullName: String,
-                                 contact: String,
-                                 brief: String,
-                                 skills: [String],
-                                 imageURL: String?) {
-
+    private func saveToFirestore(uid: String, fullName: String, contact: String, interests: [String], imageURL: String?) {
         var data: [String: Any] = [
             "fullName": fullName,
             "contact": contact,
-            "brief": brief,
-            "skills": skills,
+            "interests": interests,
             "profileCompleted": true
         ]
 
@@ -168,6 +153,7 @@ final class EditProfileViewController: BaseViewController {
             data["imageURL"] = imageURL
         }
 
+        // Save profile data to Firestore
         db.collection("User").document(uid).setData(data, merge: true) { [weak self] err in
             guard let self else { return }
 
@@ -180,17 +166,10 @@ final class EditProfileViewController: BaseViewController {
                     return
                 }
 
-                // ✅ Build updated local object too (for your onSave callback)
-                let updated = UserProfile(
-                    name: fullName,
-                    skills: skills,
-                    brief: brief,
-                    contact: contact,
-                    imageURL: imageURL
-                )
-
-                self.onSave?(updated)  // Callback to notify parent controller
-                self.navigationController?.popViewController(animated: true)
+                // If save is successful, update the local profile data
+                let updated = SeekerProfile(name: fullName, interests: interests, contact: contact, imageURL: imageURL)
+                self.onSave?(updated)  // Call the onSave closure
+                self.navigationController?.popViewController(animated: true)  // Go back to the previous screen
             }
         }
     }
@@ -202,9 +181,7 @@ final class EditProfileViewController: BaseViewController {
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
             guard let self else { return }
             guard let data, let img = UIImage(data: data) else { return }
-            DispatchQueue.main.async {
-                self.profileImageView.image = img
-            }
+            DispatchQueue.main.async { self.profileImageView.image = img }
         }.resume()
     }
 
@@ -221,12 +198,10 @@ final class EditProfileViewController: BaseViewController {
         var body = Data()
         func append(_ string: String) { body.append(string.data(using: .utf8)!) }
 
-        // upload_preset
         append("--\(boundary)\r\n")
         append("Content-Disposition: form-data; name=\"upload_preset\"\r\n\r\n")
         append("\(uploadPreset)\r\n")
 
-        // file
         append("--\(boundary)\r\n")
         append("Content-Disposition: form-data; name=\"file\"; filename=\"profile.jpg\"\r\n")
         append("Content-Type: image/jpeg\r\n\r\n")
@@ -237,15 +212,8 @@ final class EditProfileViewController: BaseViewController {
         request.httpBody = body
 
         URLSession.shared.dataTask(with: request) { data, _, error in
-            if let error = error {
-                DispatchQueue.main.async { completion(.failure(error)) }
-                return
-            }
-
-            guard let data = data else {
-                DispatchQueue.main.async { completion(.failure(NSError(domain: "NoData", code: -1))) }
-                return
-            }
+            if let error = error { DispatchQueue.main.async { completion(.failure(error)) }; return }
+            guard let data = data else { DispatchQueue.main.async { completion(.failure(NSError(domain: "NoData", code: -1))) }; return }
 
             do {
                 let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]

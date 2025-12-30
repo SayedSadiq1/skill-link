@@ -15,7 +15,7 @@ final class LoginPageController: BaseViewController {
         let password = passwordTextField.text ?? ""
 
         guard !email.isEmpty, !password.isEmpty else {
-            showAlert(title: "Missing", message: "Please enter email and password.")
+            showAlert(title: "Login", message: "Please enter email and password.")
             return
         }
 
@@ -35,12 +35,12 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
-            self.checkUserProfileAndRoute(uid: uid)
+            self.loadUserAndRoute(uid: uid)
         }
     }
 
-    private func checkUserProfileAndRoute(uid: String) {
-        db.collection("users").document(uid).getDocument { [weak self] snap, error in
+    private func loadUserAndRoute(uid: String) {
+        db.collection("User").document(uid).getDocument { [weak self] snap, error in
             guard let self else { return }
 
             if let error = error {
@@ -48,42 +48,76 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
-            // ✅ 1) Check if user exists in Firestore
             guard let data = snap?.data() else {
-                // user authenticated but no profile doc in Firestore
-                // => tell them to register (your flow handles setup on register)
-                self.showAlert(title: "Profile Not Found",
-                               message: "We couldn't find your profile. Please register first.")
+                self.showAlert(title: "Error", message: "User profile not found.")
                 try? Auth.auth().signOut()
+                self.clearLocalData()
                 return
             }
 
-            // ✅ 2) Validate role then go to correct homepage
-            let roleString = (data["role"] as? String) ?? ""
+            // Check if user is suspended
+            let isSuspended = data["isSuspended"] as? Bool ?? false
+            if isSuspended {
+                self.showAlert(
+                    title: "Account Suspended",
+                    message: "Your account has been suspended. Please contact support."
+                )
 
-            if roleString == UserRole.provider.rawValue {
+                try? Auth.auth().signOut()
+                self.clearLocalData()
+                return
+            }
+
+            // Save profile localy
+            let profile = UserProfile(
+                name: data["fullName"] as? String ?? "",
+                skills: data["skills"] as? [String] ?? [],
+                brief: data["brief"] as? String ?? "",
+                contact: data["contact"] as? String ?? "",
+                imageURL: data["imageURL"] as? String,
+                id: snap?.documentID
+            )
+            self.saveUserProfileLocally(profile)
+
+            // Route based on role
+            let role = (data["role"] as? String ?? "").lowercased()
+
+            if role == UserRole.provider.rawValue {
                 self.goToProviderHome()
-            } else if roleString == UserRole.seeker.rawValue {
+            } else if role == UserRole.seeker.rawValue {
                 self.goToSeekerHome()
             } else {
-                self.showAlert(title: "Missing Role",
-                               message: "Your account role is missing. Please contact support or re-register.")
+                self.showAlert(
+                    title: "Role Missing",
+                    message: "Your account role is not set yet."
+                )
             }
         }
     }
 
+    private func saveUserProfileLocally(_ profile: UserProfile) {
+        if let data = try? JSONEncoder().encode(profile) {
+            UserDefaults.standard.set(data, forKey: "userProfile")
+        }
+    }
+
+    private func clearLocalData() {
+        UserDefaults.standard.removeObject(forKey: "userProfile")
+        UserDefaults.standard.removeObject(forKey: "userRole")
+    }
+
     private func goToProviderHome() {
-        let sb = UIStoryboard(name: "login", bundle: nil)
-        // ✅ change this ID to your real Provider Home storyboard ID
-        let home = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
-        navigationController?.setViewControllers([home], animated: true)
+        let sb = UIStoryboard(name: "HomePage", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
     }
 
     private func goToSeekerHome() {
-        let sb = UIStoryboard(name: "login", bundle: nil)
-        // ✅ change this ID to your real Seeker Home storyboard ID
-        let home = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
-        navigationController?.setViewControllers([home], animated: true)
+        let sb = UIStoryboard(name: "HomePage", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
     }
 
     private func showAlert(title: String, message: String) {

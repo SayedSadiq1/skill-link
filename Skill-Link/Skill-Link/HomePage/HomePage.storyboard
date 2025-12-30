@@ -25,10 +25,10 @@
             </objects>
             <point key="canvasLocation" x="-1882" y="-9"/>
         </scene>
-        <!--View Controller-->
+        <!--Seeker Home View Controller-->
         <scene sceneID="s0d-6b-0kx">
             <objects>
-                <viewController modalPresentationStyle="fullScreen" id="Y6W-OH-hqX" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="SeekerHomeViewController" modalPresentationStyle="fullScreen" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Y6W-OH-hqX" customClass="SeekerHomeViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -325,7 +325,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="lzV-DA-9lh">
                         <barButtonItem key="rightBarButtonItem" style="plain" id="lPk-zj-MI2">
-                            <button key="customView" opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" id="hDF-mR-d3M">
+                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" id="hDF-mR-d3M">
                                 <rect key="frame" x="290" y="5.6666666666666679" width="87" height="33"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
@@ -338,10 +338,10 @@
             </objects>
             <point key="canvasLocation" x="-883.20610687022895" y="-9.1549295774647899"/>
         </scene>
-        <!--View Controller-->
+        <!--Profile Provider View Controller-->
         <scene sceneID="giQ-PG-eQH">
             <objects>
-                <viewController id="T9n-7r-UJt" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ProviderHomeViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="T9n-7r-UJt" customClass="ProfileProviderViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="WKo-XH-Xip">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1975,7 +1975,7 @@
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="tintColor">
-            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

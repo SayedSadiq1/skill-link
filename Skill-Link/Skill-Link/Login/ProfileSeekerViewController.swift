@@ -2,87 +2,69 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
-final class ProfileProviderViewController: BaseViewController {
+final class ProfileSeekerViewController: BaseViewController {
 
-    @IBOutlet weak var skillsStackView: UIStackView!
-    @IBOutlet weak var skillsContainerView: UIView!
+    // Interests container (same as skills container)
+    @IBOutlet weak var interestsStackView: UIStackView!
+    @IBOutlet weak var interestsContainerView: UIView!
 
+    // Contact container
     @IBOutlet weak var contactContainerView: UIView!
     @IBOutlet weak var contactLabel: UILabel!
 
+    // Name + image
     @IBOutlet weak var nameLabel: UILabel!
-
-    @IBOutlet weak var briefContainerView: UIView!
-    @IBOutlet weak var briefTextView: UITextView!
-
     @IBOutlet weak var profileImageView: UIImageView!
 
-    private var successBanner: UIView?
-    private let db = Firestore.firestore()
+    private var successBanner: UIView?  // For showing success banner after profile update
+    private let db = Firestore.firestore()  // Firestore reference for saving/loading data
 
-    // Holds the current loaded profile data
-    private var currentProfile: UserProfile?
+    // Holds the current profile data
+    private var currentProfile: SeekerProfile?
 
-    override var shouldShowBackButton: Bool { false }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Styling for the skills container
-        skillsContainerView.layer.cornerRadius = 10
-        skillsContainerView.layer.borderWidth = 1
-        skillsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
+        // Set up UI for interests and contact containers
+        interestsContainerView.layer.cornerRadius = 10
+        interestsContainerView.layer.borderWidth = 1
+        interestsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
 
-        // Styling for the contact container
         contactContainerView.layer.cornerRadius = 8
         contactContainerView.layer.borderWidth = 1
         contactContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         contactContainerView.backgroundColor = .white
 
-        // Styling for the contact label
         contactLabel.font = .systemFont(ofSize: 16)
         contactLabel.textColor = .label
 
-        // Styling for the name label
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
         nameLabel.textColor = .label
 
-        // Brief text view styling (display-only)
-        briefTextView.isEditable = false
-        briefTextView.isSelectable = false
-        briefTextView.isScrollEnabled = true
-        briefTextView.font = .systemFont(ofSize: 15)
-        briefTextView.textColor = .label
-        briefTextView.backgroundColor = UIColor.systemGray6
-        briefTextView.layer.cornerRadius = 8
-        briefTextView.layer.borderWidth = 1
-        briefTextView.layer.borderColor = UIColor.systemGray4.cgColor
-        briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-
-        // Load the profile data from Firestore
+        // Load profile data from Firestore
         loadProfileFromFirestore()
     }
     
+    override var shouldShowBackButton: Bool { false }
     
-
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Make the profile image circular
+        // Make profile image a circle
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
     }
 
-    // MARK: - Firestore Data Loading
+    // MARK: - Firestore Load
     private func loadProfileFromFirestore() {
-        // Ensure the user is logged in
+        // Get current user UID
         guard let uid = Auth.auth().currentUser?.uid else {
-            showSimpleAlert(title: "Error", message: "No logged-in user. Please login again.")
+            showSimpleAlert(title: "Error", message: "No logged in user. Please login again.")
             return
         }
 
-        // Retrieve the profile data from Firestore
+        // Fetch user profile from Firestore
         db.collection("User").document(uid).getDocument { [weak self] snap, err in
             guard let self else { return }
 
@@ -92,29 +74,27 @@ final class ProfileProviderViewController: BaseViewController {
                     return
                 }
 
-                // Parse the data from Firestore
+                // Parse Firestore data
                 let data = snap?.data() ?? [:]
-
                 let name = (data["fullName"] as? String ?? "")
                 let contact = (data["contact"] as? String ?? "")
-                let brief = (data["brief"] as? String ?? "")
                 let imageURL = (data["imageURL"] as? String)
 
-                let skills = data["skills"] as? [String] ?? []
+                // Seeker uses interests (array)
+                let interests = data["interests"] as? [String] ?? []
 
-                // Save the profile to the currentProfile variable
-                self.currentProfile = UserProfile(
+                // Populate the current profile with data
+                self.currentProfile = SeekerProfile(
                     name: name,
-                    skills: skills,
-                    brief: brief,
+                    interests: interests,
                     contact: contact,
                     imageURL: imageURL
                 )
 
-                // Update the UI with the loaded data
+                // Apply the profile data to the UI
                 self.applyProfileToUI()
 
-                // Save the profile data locally for future use
+                // Save the profile data locally
                 self.saveUserProfileLocally()
             }
         }
@@ -124,13 +104,12 @@ final class ProfileProviderViewController: BaseViewController {
     private func applyProfileToUI() {
         guard let currentProfile else { return }
 
-        // Update the UI elements with the loaded profile data
+        // Update labels with the loaded data
         nameLabel.text = currentProfile.name.isEmpty ? "No Name" : currentProfile.name
         contactLabel.text = currentProfile.contact.isEmpty ? "-" : currentProfile.contact
-        briefTextView.text = currentProfile.brief.isEmpty ? "-" : currentProfile.brief
 
-        // Display the skills
-        showSkills(currentProfile.skills)
+        // Display the interests
+        showInterests(currentProfile.interests)
 
         // Load the profile image if available
         if let urlString = currentProfile.imageURL,
@@ -143,6 +122,7 @@ final class ProfileProviderViewController: BaseViewController {
 
     // MARK: - URL Image Loader
     private func loadImage(from url: URL) {
+        // Set default image while loading
         profileImageView.image = UIImage(systemName: "person.circle.fill")
 
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
@@ -156,14 +136,13 @@ final class ProfileProviderViewController: BaseViewController {
 
     // MARK: - Save Profile Locally
     private func saveUserProfileLocally() {
-        // Ensure there is a profile to save
+        // Save the current profile data locally using UserDefaults
         guard let currentProfile else { return }
 
-        // Create a UserProfile object
         let userProfile = UserProfile(
             name: currentProfile.name,
-            skills: currentProfile.skills,
-            brief: currentProfile.brief,
+            skills: currentProfile.interests,
+            brief: "",  // No brief for seeker profile
             contact: currentProfile.contact,
             imageURL: currentProfile.imageURL,
             id: Auth.auth().currentUser?.uid
@@ -175,72 +154,29 @@ final class ProfileProviderViewController: BaseViewController {
         }
     }
 
-    // MARK: - Continue Button Action
-    @IBAction func continueTapped(_ sender: UIButton) {
-        // Check if current profile is loaded
-        guard let currentProfile else {
-            showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
-            return
-        }
-
-        // Navigate to the Provider Home page
-        let sb = UIStoryboard(name: "HomePage", bundle: nil)
-        if let providerHomeVC = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController") as? ProviderHomeViewController {
-            // You can pass any necessary data to the home page here (if needed)
-            navigationController?.pushViewController(providerHomeVC, animated: true)
-        }
-    }
-
-    // MARK: - Edit Profile
-    @IBAction func editTapped(_ sender: UIButton) {
-        guard let currentProfile else {
-            showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
-            return
-        }
-
-        let sb = UIStoryboard(name: "login", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "EditProfileViewController") as! EditProfileViewController
-
-        // Pass the current profile to the EditProfileViewController
-        vc.profile = currentProfile
-
-        // Callback when profile is saved in EditProfileViewController
-        vc.onSave = { [weak self] updated in
-            guard let self else { return }
-            self.currentProfile = updated
-            self.applyProfileToUI()  // Update UI with the updated profile
-            self.showSuccessBanner()  // Show success banner after saving
-
-            // Save the updated profile locally
-            self.saveUserProfileLocally()
-        }
-
-        navigationController?.pushViewController(vc, animated: true)
-    }
-
-    // MARK: - Skills Chips
-    private func showSkills(_ skills: [String]) {
-        skillsStackView.arrangedSubviews.forEach {
-            skillsStackView.removeArrangedSubview($0)
+    // MARK: - Interests Chips
+    private func showInterests(_ interests: [String]) {
+        interestsStackView.arrangedSubviews.forEach {
+            interestsStackView.removeArrangedSubview($0)
             $0.removeFromSuperview()
         }
 
-        // Display "No skills" if the skills array is empty
-        if skills.isEmpty {
-            let chip = makeChip(text: "No skills")
-            skillsStackView.addArrangedSubview(chip)
+        // If no interests, show a placeholder chip
+        if interests.isEmpty {
+            let chip = makeChip(text: "No interests")
+            interestsStackView.addArrangedSubview(chip)
             return
         }
 
-        // Create and display chips for each skill
-        for skill in skills {
-            let chip = makeChip(text: skill)
-            skillsStackView.addArrangedSubview(chip)
+        // Create and display chips for each interest
+        for interest in interests {
+            let chip = makeChip(text: interest)
+            interestsStackView.addArrangedSubview(chip)
         }
     }
 
     private func makeChip(text: String) -> UILabel {
-        // Create a label styled as a chip for each skill
+        // Create a styled label for each interest chip
         let label = PaddingLabel()
         label.text = text
         label.font = .systemFont(ofSize: 14, weight: .medium)
@@ -276,6 +212,49 @@ final class ProfileProviderViewController: BaseViewController {
         }
     }
 
+    // MARK: - Continue Button Action
+    @IBAction func continueTapped(_ sender: UIButton) {
+        // Check if current profile is loaded
+        guard let currentProfile else {
+            showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
+            return
+        }
+
+        // Navigate to the Seeker Home page
+        let sb = UIStoryboard(name: "HomePage", bundle: nil)
+        if let seekerHomeVC = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController") as? SeekerHomeViewController {
+            // You can pass any necessary data to the home page here (if needed)
+            navigationController?.pushViewController(seekerHomeVC, animated: true)
+        }
+    }
+
+    // MARK: - Edit Profile
+    @IBAction func editTapped(_ sender: UIButton) {
+        guard let currentProfile else {
+            showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
+            return
+        }
+
+        let sb = UIStoryboard(name: "login", bundle: nil)
+
+        guard let vc = sb.instantiateViewController(withIdentifier: "EditProfileSeekerViewController") as? EditProfileSeekerViewController else {
+            fatalError("Could not find EditProfileSeekerViewController in storyboard.")
+        }
+
+        // Pass current seeker profile to the next screen
+        vc.profile = currentProfile
+
+        // Callback after saving the profile from the edit screen
+        vc.onSave = { [weak self] updated in
+            guard let self else { return }
+            self.currentProfile = updated
+            self.applyProfileToUI()  // Apply the updated profile data to the UI
+            self.showSuccessBanner()  // Show success banner
+        }
+
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
     // MARK: - Alerts
     private func showSimpleAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
@@ -293,7 +272,7 @@ final class ProfileProviderViewController: BaseViewController {
         banner.alpha = 0
 
         let label = UILabel()
-        label.text = "✅ Profile Updated Successfully"
+        label.text = "Profile Updated Successfully"
         label.textColor = .white
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -326,4 +305,12 @@ final class ProfileProviderViewController: BaseViewController {
             })
         }
     }
+}
+
+// Simple model for seeker profile
+struct SeekerProfile {
+    let name: String
+    let interests: [String]
+    let contact: String
+    let imageURL: String?
 }
