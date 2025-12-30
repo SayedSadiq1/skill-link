@@ -12,6 +12,9 @@ class ChatViewController: BaseViewController,
                           UITableViewDelegate {
 
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var messageTextField: UITextField!
+    @IBOutlet weak var sendButton: UIButton!
+
 
     struct Message {
         let text: String
@@ -36,6 +39,8 @@ class ChatViewController: BaseViewController,
         tableView.estimatedRowHeight = 80
         tableView.rowHeight = UITableView.automaticDimension
         tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
+        
+        messageTextField.delegate = self
     }
 
     func tableView(_ tableView: UITableView,
@@ -55,5 +60,37 @@ class ChatViewController: BaseViewController,
         cell.configure(message: msg.text, isSender: msg.isMine)
         print("cell created")
         return cell
+    }
+    
+    @IBAction func sendTapped(_ sender: UIButton) {
+        guard let text = messageTextField.text?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty else {
+            return
+        }
+
+        sendButton.isEnabled = false
+
+        let newMessage = Message(text: text, isMine: true)
+        messages.append(newMessage)
+
+        messageTextField.text = ""
+
+        let indexPath = IndexPath(row: messages.count - 1, section: 0)
+        tableView.insertRows(at: [indexPath], with: .automatic)
+
+        tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+
+        sendButton.isEnabled = true
+    }
+    
+    
+
+}
+
+extension ChatViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        sendTapped(sendButton)
+        return true
     }
 }

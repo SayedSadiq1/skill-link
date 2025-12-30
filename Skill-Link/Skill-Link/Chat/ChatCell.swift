@@ -20,6 +20,9 @@ class ChatCell: UITableViewCell {
         messageLabel.numberOfLines = 0
         backgroundColor = .clear
         contentView.backgroundColor = .clear
+        
+        bubbleView.layer.cornerRadius = 16
+        bubbleView.layer.masksToBounds = true
     }
     
     func configure(message: String, isSender: Bool) {
@@ -30,6 +33,20 @@ class ChatCell: UITableViewCell {
         
         bubbleView.backgroundColor = isSender ? .systemBlue : .systemGray5
         messageLabel.textColor = isSender ? .white : .black
+        
+        if isSender {
+            bubbleView.layer.maskedCorners = [
+                .layerMinXMinYCorner,
+                .layerMaxXMinYCorner,
+                .layerMinXMaxYCorner
+            ]
+        } else {
+            bubbleView.layer.maskedCorners = [
+                .layerMinXMinYCorner,
+                .layerMaxXMinYCorner,
+                .layerMaxXMaxYCorner
+            ]
+        }
         
         layoutIfNeeded()
     }
