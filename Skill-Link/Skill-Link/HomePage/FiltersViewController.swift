@@ -4,6 +4,8 @@
 //
 //  Created by BP-36-201-14 on 28/12/2025.
 //
+
+
 import UIKit
 
 final class FiltersViewController: BaseViewController {
@@ -30,7 +32,6 @@ final class FiltersViewController: BaseViewController {
         navigationController?.popViewController(animated: true)
     }
 
-    // Optional (only if you have a reset button)
     @IBAction func resetTapped(_ sender: UIButton) {
         filters = SearchFilters()
         updateUI()
@@ -61,11 +62,9 @@ final class FiltersViewController: BaseViewController {
 
         sortValueLabel.text = sortParts.isEmpty ? "None" : sortParts.joined(separator: " + ")
 
-        // Availability
-        if let date = filters.availabilityDate {
-            let df = DateFormatter()
-            df.dateStyle = .medium
-            availabilityValueLabel.text = df.string(from: date)
+        // Availability (show slot)
+        if let slot = filters.availabilitySlot {
+            availabilityValueLabel.text = slot
         } else {
             availabilityValueLabel.text = "Any"
         }
@@ -74,8 +73,8 @@ final class FiltersViewController: BaseViewController {
     // MARK: - Navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 
-        if segue.identifier == "toCategory" {
-            guard let vc = segue.destination as? CategoryViewController else { return }
+        if segue.identifier == "toCategory",
+           let vc = segue.destination as? CategoryViewController {
             vc.filters = filters
             vc.onApply = { [weak self] updated in
                 self?.filters = updated
@@ -83,8 +82,8 @@ final class FiltersViewController: BaseViewController {
             }
         }
 
-        if segue.identifier == "toSortBy" {
-            guard let vc = segue.destination as? SortByViewController else { return }
+        if segue.identifier == "toSortBy",
+           let vc = segue.destination as? SortByViewController {
             vc.filters = filters
             vc.onApply = { [weak self] updated in
                 self?.filters = updated
@@ -92,8 +91,8 @@ final class FiltersViewController: BaseViewController {
             }
         }
 
-        if segue.identifier == "toAvailability" {
-            guard let vc = segue.destination as? AvailabilityViewController else { return }
+        if segue.identifier == "toAvailability",
+           let vc = segue.destination as? AvailabilityViewController {
             vc.filters = filters
             vc.onApply = { [weak self] updated in
                 self?.filters = updated

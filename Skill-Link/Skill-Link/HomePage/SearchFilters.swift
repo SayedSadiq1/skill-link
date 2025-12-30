@@ -5,9 +5,10 @@
 //  Created by BP-36-212-05 on 29/12/2025.
 //
 
+
 import Foundation
 
-struct SearchFilters {
+struct SearchFilters: Codable {
     var selectedCategories: [String] = []
 
     // Price: choose one direction or nil
@@ -16,11 +17,14 @@ struct SearchFilters {
     // Rating: can be ON/OFF independently
     var sortByRating: Bool = false
 
-    // If set, we’ll filter to available == true (simple version)
+    // user-picked date/time (optional - useful for display/debug)
     var availabilityDate: Date? = nil
+
+    // derived slot shown in chips (Morning/Afternoon/Evening/Night)
+    var availabilitySlot: String? = nil
 }
 
-enum PriceSort: String {
+enum PriceSort: String, Codable {
     case lowToHigh
     case highToLow
 }
