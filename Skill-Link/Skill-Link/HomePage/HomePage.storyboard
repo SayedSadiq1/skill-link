@@ -1034,7 +1034,7 @@
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Search"/>
                                 <connections>
-                                    <segue destination="1Zf-IB-rYH" kind="show" id="e0H-nt-ENt"/>
+                                    <action selector="searchTapped:" destination="IfO-en-lGX" eventType="touchUpInside" id="hO2-iA-qQm"/>
                                 </connections>
                             </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Ocu-QA-0xG">
@@ -1181,7 +1181,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tnD-Fv-v25">
-                                <rect key="frame" x="127" y="598" width="140" height="35"/>
+                                <rect key="frame" x="216" y="598" width="140" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" red="0.11372549830000001" green="0.18039217590000001" blue="0.3686274886" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -1212,6 +1212,17 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ryV-nu-O9m">
+                                <rect key="frame" x="32" y="598" width="140" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.7192382812" green="0.7250976562" blue="0.736328125" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                <color key="tintColor" red="0.11529540269999999" green="0.18200685080000001" blue="0.36718752980000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Reset"/>
+                                <connections>
+                                    <action selector="resetTapped:" destination="3hm-DJ-sE9" eventType="touchUpInside" id="QAZ-t0-qSH"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="lSB-Ux-JRL"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -1313,7 +1324,7 @@
                                         <color key="textColor" red="0.89803922179999995" green="0.90588235859999999" blue="0.91764706370000004" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="MZb-T7-IzE">
+                                    <switch opaque="NO" tag="3" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="MZb-T7-IzE">
                                         <rect key="frame" x="246" y="196" width="49" height="31"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <connections>
@@ -1355,32 +1366,32 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="2I0-Gg-zts">
+                                    <switch opaque="NO" tag="1" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="2I0-Gg-zts">
                                         <rect key="frame" x="246" y="90" width="49" height="31"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <connections>
                                             <action selector="categorySwitchChanged:" destination="QB7-sn-rES" eventType="valueChanged" id="Msf-yU-1RB"/>
                                         </connections>
                                     </switch>
-                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="8yH-GF-YJa">
-                                        <rect key="frame" x="246" y="259" width="49" height="31"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <connections>
-                                            <action selector="categorySwitchChanged:" destination="QB7-sn-rES" eventType="valueChanged" id="Tax-pe-rga"/>
-                                        </connections>
-                                    </switch>
-                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Ujf-tB-gXH">
+                                    <switch opaque="NO" tag="5" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Ujf-tB-gXH">
                                         <rect key="frame" x="246" y="320" width="49" height="31"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <connections>
                                             <action selector="categorySwitchChanged:" destination="QB7-sn-rES" eventType="valueChanged" id="FMS-iS-BKy"/>
                                         </connections>
                                     </switch>
-                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="wp8-Ep-B15">
+                                    <switch opaque="NO" tag="2" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="wp8-Ep-B15">
                                         <rect key="frame" x="246" y="145" width="49" height="31"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <connections>
                                             <action selector="categorySwitchChanged:" destination="QB7-sn-rES" eventType="valueChanged" id="68A-Hh-InS"/>
+                                        </connections>
+                                    </switch>
+                                    <switch opaque="NO" tag="4" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="8yH-GF-YJa">
+                                        <rect key="frame" x="246" y="255" width="49" height="31"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <connections>
+                                            <action selector="categorySwitchChanged:" destination="QB7-sn-rES" eventType="valueChanged" id="Tax-pe-rga"/>
                                         </connections>
                                     </switch>
                                 </subviews>
@@ -1392,12 +1403,12 @@
                     </view>
                     <navigationItem key="navigationItem" id="FVQ-oR-GLe"/>
                     <connections>
-                        <outlet property="codingSwitch" destination="Ujf-tB-gXH" id="ur2-CT-ICi"/>
-                        <outlet property="electricianSwitch" destination="2I0-Gg-zts" id="7ed-D2-ykE"/>
-                        <outlet property="landscapingSwitch" destination="wp8-Ep-B15" id="TWt-cL-gnl"/>
-                        <outlet property="plumbingSwitch" destination="CMi-kX-5Ip" id="GoK-cm-BlI"/>
-                        <outlet property="tutoringSwitch" destination="MZb-T7-IzE" id="TOs-qZ-ZVi"/>
-                        <outlet property="uiuxSwitch" destination="8yH-GF-YJa" id="Gfr-Vk-qsh"/>
+                        <outletCollection property="categorySwitches" destination="CMi-kX-5Ip" collectionClass="NSMutableArray" id="Of5-nb-d9Z"/>
+                        <outletCollection property="categorySwitches" destination="2I0-Gg-zts" collectionClass="NSMutableArray" id="LUL-2b-2Hd"/>
+                        <outletCollection property="categorySwitches" destination="wp8-Ep-B15" collectionClass="NSMutableArray" id="p6M-xm-1z3"/>
+                        <outletCollection property="categorySwitches" destination="MZb-T7-IzE" collectionClass="NSMutableArray" id="RCb-6W-px7"/>
+                        <outletCollection property="categorySwitches" destination="8yH-GF-YJa" collectionClass="NSMutableArray" id="eAd-l4-wmU"/>
+                        <outletCollection property="categorySwitches" destination="Ujf-tB-gXH" collectionClass="NSMutableArray" id="DWn-gn-cVT"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ojz-Xm-fAA" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -1437,13 +1448,6 @@
                                         <color key="textColor" red="0.89803922179999995" green="0.90588235859999999" blue="0.91764706370000004" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="9Gf-DQ-buo">
-                                        <rect key="frame" x="246" y="140" width="49" height="31"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <connections>
-                                            <action selector="ratingSwitchChanged:" destination="ZnY-CV-grd" eventType="valueChanged" id="Kpt-ZE-n1b"/>
-                                        </connections>
-                                    </switch>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Price Low &gt; High" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m88-aa-KWZ">
                                         <rect key="frame" x="26" y="80" width="149" height="43"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -1455,7 +1459,7 @@
                                         <rect key="frame" x="246" y="28" width="49" height="31"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <connections>
-                                            <action selector="priceSwitchChanged:" destination="ZnY-CV-grd" eventType="valueChanged" id="HBe-HD-QQ4"/>
+                                            <action selector="priceHighToLowChanged:" destination="ZnY-CV-grd" eventType="valueChanged" id="0TJ-AI-huG"/>
                                         </connections>
                                     </switch>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Price High &gt; Low" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ic4-vO-Y6P">
@@ -1469,7 +1473,7 @@
                                         <rect key="frame" x="246" y="86" width="49" height="31"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <connections>
-                                            <action selector="priceSwitchChanged:" destination="ZnY-CV-grd" eventType="valueChanged" id="UIb-Z1-4TG"/>
+                                            <action selector="priceLowToHighChanged:" destination="ZnY-CV-grd" eventType="valueChanged" id="hd7-qd-aMo"/>
                                         </connections>
                                     </switch>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Rating High &gt; Low" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="a5W-Na-x9j">
@@ -1479,6 +1483,13 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
+                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="9Gf-DQ-buo">
+                                        <rect key="frame" x="246" y="140" width="49" height="31"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <connections>
+                                            <action selector="ratingHighToLowChanged:" destination="ZnY-CV-grd" eventType="valueChanged" id="Jyp-GV-rzm"/>
+                                        </connections>
+                                    </switch>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
@@ -1506,9 +1517,9 @@
                     </view>
                     <navigationItem key="navigationItem" id="5MZ-Da-RNk"/>
                     <connections>
-                        <outlet property="priceHighLowSwitch" destination="Tka-Q7-Z6h" id="7NV-KU-PJW"/>
-                        <outlet property="priceLowHighSwitch" destination="ttp-2F-hRf" id="dqu-Pj-DRn"/>
-                        <outlet property="ratingHighLowSwitch" destination="9Gf-DQ-buo" id="Xa7-Nk-Vc9"/>
+                        <outlet property="priceHighToLowSwitch" destination="Tka-Q7-Z6h" id="R7p-db-D4b"/>
+                        <outlet property="priceLowToHighSwitch" destination="ttp-2F-hRf" id="DdK-XR-fNJ"/>
+                        <outlet property="ratingHighToLowSwitch" destination="9Gf-DQ-buo" id="DTu-pq-FKn"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="bOK-Da-RjT" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -1591,7 +1602,7 @@
         <!--Search Result View Controller-->
         <scene sceneID="ejY-hc-abF">
             <objects>
-                <viewController modalPresentationStyle="fullScreen" id="1Zf-IB-rYH" customClass="SearchResultViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="SearchResultViewController" modalPresentationStyle="fullScreen" useStoryboardIdentifierAsRestorationIdentifier="YES" id="1Zf-IB-rYH" customClass="SearchResultViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="qaT-6t-fCC">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1707,17 +1718,12 @@
                                     <outlet property="delegate" destination="1Zf-IB-rYH" id="xB1-7M-Z0U"/>
                                 </connections>
                             </tableView>
-                            <stackView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" distribution="fillProportionally" translatesAutoresizingMaskIntoConstraints="NO" id="dF3-Uk-04f">
-                                <rect key="frame" x="16" y="192" width="361" height="115"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="9Ic-49-Ndc"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
                     <navigationItem key="navigationItem" id="eFu-7W-xgk"/>
                     <connections>
-                        <outlet property="chipsStackView" destination="dF3-Uk-04f" id="BiD-m5-s2Y"/>
                         <outlet property="tableView" destination="Qwh-J3-Mv5" id="6OA-my-575"/>
                     </connections>
                 </viewController>
@@ -1727,8 +1733,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="A4D-SY-ty7"/>
-        <segue reference="s7A-wF-yi8"/>
+        <segue reference="TQm-CE-KAe"/>
     </inferredMetricsTieBreakers>
     <resources>
         <image name="5a30616b-0044-488d-b686-8895cfce0475 1" width="101" height="101"/>

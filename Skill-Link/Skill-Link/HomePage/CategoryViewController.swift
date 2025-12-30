@@ -9,54 +9,48 @@ import UIKit
 
 final class CategoryViewController: BaseViewController {
 
-    // MARK: - Data
     var filters = SearchFilters()
     var onApply: ((SearchFilters) -> Void)?
 
-    // MARK: - Outlets
-    @IBOutlet weak var plumbingSwitch: UISwitch!
-    @IBOutlet weak var electricianSwitch: UISwitch!
-    @IBOutlet weak var landscapingSwitch: UISwitch!
-    @IBOutlet weak var tutoringSwitch: UISwitch!
-    @IBOutlet weak var uiuxSwitch: UISwitch!
-    @IBOutlet weak var codingSwitch: UISwitch!
+    private let categories = ["Plumbing", "Electrician", "Landscaping", "Tutoring", "UI/UX Design", "Coding"]
+
+    @IBOutlet var categorySwitches: [UISwitch]?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-       syncSwitchesFromFilters()
+        syncUI()
     }
 
-    // MARK: - Switch changed
+    private func syncUI() {
+        guard let switches = categorySwitches else { return }
+
+        // sort by tag so mapping is stable
+        let sorted = switches.sorted { $0.tag < $1.tag }
+
+        for sw in sorted {
+            let idx = sw.tag
+            guard idx >= 0, idx < categories.count else { continue }
+            let cat = categories[idx]
+            sw.isOn = filters.selectedCategories.contains(cat)
+        }
+    }
+
     @IBAction func categorySwitchChanged(_ sender: UISwitch) {
-        filters.selectedCategories = currentSelectedCategories()
+        let idx = sender.tag
+        guard idx >= 0, idx < categories.count else { return }
+        let cat = categories[idx]
+
+        if sender.isOn {
+            if !filters.selectedCategories.contains(cat) {
+                filters.selectedCategories.append(cat)
+            }
+        } else {
+            filters.selectedCategories.removeAll { $0 == cat }
+        }
     }
 
-    // MARK: - Apply
     @IBAction func applyTapped(_ sender: UIButton) {
-        filters.selectedCategories = currentSelectedCategories()
         onApply?(filters)
         navigationController?.popViewController(animated: true)
-    }
-
-    // MARK: - Helpers
-    private func syncSwitchesFromFilters() {
-        let selected = Set(filters.selectedCategories)
-        plumbingSwitch.isOn = selected.contains("Plumbing")
-        electricianSwitch.isOn = selected.contains("Electrician")
-        landscapingSwitch.isOn = selected.contains("Landscaping")
-        tutoringSwitch.isOn = selected.contains("Tutoring")
-        uiuxSwitch.isOn = selected.contains("UI/UX Design")
-        codingSwitch.isOn = selected.contains("Coding")
-    }
-
-    private func currentSelectedCategories() -> [String] {
-        var result: [String] = []
-        if plumbingSwitch.isOn { result.append("Plumbing") }
-        if electricianSwitch.isOn { result.append("Electrician") }
-        if landscapingSwitch.isOn { result.append("Landscaping") }
-        if tutoringSwitch.isOn { result.append("Tutoring") }
-        if uiuxSwitch.isOn { result.append("UI/UX Design") }
-        if codingSwitch.isOn { result.append("Coding") }
-        return result
     }
 }

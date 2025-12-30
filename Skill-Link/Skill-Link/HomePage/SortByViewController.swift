@@ -9,49 +9,60 @@ import UIKit
 
 final class SortByViewController: BaseViewController {
 
-    // MARK: - Data
     var filters = SearchFilters()
     var onApply: ((SearchFilters) -> Void)?
 
-    // MARK: - Outlets
-    @IBOutlet weak var priceLowHighSwitch: UISwitch!
-    @IBOutlet weak var priceHighLowSwitch: UISwitch!
-    @IBOutlet weak var ratingHighLowSwitch: UISwitch!
+    @IBOutlet weak var priceHighToLowSwitch: UISwitch?
+    @IBOutlet weak var priceLowToHighSwitch: UISwitch?
+    @IBOutlet weak var ratingHighToLowSwitch: UISwitch?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        syncFromFilters()
+        syncUI()
     }
 
-    // Price radio behavior (only one can be ON at a time)
-    @IBAction func priceSwitchChanged(_ sender: UISwitch) {
-        if sender == priceLowHighSwitch && sender.isOn {
-            priceHighLowSwitch.isOn = false
-            filters.priceSort = .lowToHigh
-        } else if sender == priceHighLowSwitch && sender.isOn {
-            priceLowHighSwitch.isOn = false
-            filters.priceSort = .highToLow
-        }
+    private func syncUI() {
+        priceHighToLowSwitch?.isOn = (filters.priceSort == .highToLow)
+        priceLowToHighSwitch?.isOn = (filters.priceSort == .lowToHigh)
+        ratingHighToLowSwitch?.isOn = filters.sortByRating
+    }
 
-        // if both OFF => no price sort
-        if !priceLowHighSwitch.isOn && !priceHighLowSwitch.isOn {
+    @IBAction func priceHighToLowChanged(_ sender: UISwitch) {
+        if sender.isOn {
+            priceLowToHighSwitch?.setOn(false, animated: true)
+        }
+    }
+
+    @IBAction func priceLowToHighChanged(_ sender: UISwitch) {
+        if sender.isOn {
+            priceHighToLowSwitch?.setOn(false, animated: true)
+        }
+    }
+
+    @IBAction func ratingHighToLowChanged(_ sender: UISwitch) {
+        // no extra logic needed
+    }
+
+    // ✅ IMPORTANT: We compute the filter values here from actual switch states
+    @IBAction func applyTapped(_ sender: UIButton) {
+
+        let highToLow = priceHighToLowSwitch?.isOn ?? false
+        let lowToHigh = priceLowToHighSwitch?.isOn ?? false
+        let ratingHighToLow = ratingHighToLowSwitch?.isOn ?? false
+
+        // price sort
+        if highToLow {
+            filters.priceSort = .highToLow
+        } else if lowToHigh {
+            filters.priceSort = .lowToHigh
+        } else {
             filters.priceSort = nil
         }
-    }
 
-    // Rating independent (can be ON with price)
-    @IBAction func ratingSwitchChanged(_ sender: UISwitch) {
-        filters.sortByRating = sender.isOn
-    }
+        // rating sort
+        filters.sortByRating = ratingHighToLow
 
-    @IBAction func applyTapped(_ sender: UIButton) {
         onApply?(filters)
         navigationController?.popViewController(animated: true)
-    }
-
-    private func syncFromFilters() {
-        priceLowHighSwitch.isOn = (filters.priceSort == .lowToHigh)
-        priceHighLowSwitch.isOn = (filters.priceSort == .highToLow)
-        ratingHighLowSwitch.isOn = filters.sortByRating
     }
 }

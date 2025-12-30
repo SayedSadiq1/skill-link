@@ -7,8 +7,6 @@
 
 
 
-
-
 import UIKit
 
 final class SearchServiceViewController: BaseViewController {
@@ -17,13 +15,13 @@ final class SearchServiceViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // ✅ Remove the white navigation bar title/area
         navigationItem.title = ""
         navigationController?.navigationBar.topItem?.title = ""
+    }
 
-        // If you still see a bar, you can hide it completely:
-        // navigationController?.setNavigationBarHidden(true, animated: false)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        currentFilters = FiltersStore.load()
     }
 
     @IBAction func filtersTapped(_ sender: UIButton) {
@@ -31,7 +29,12 @@ final class SearchServiceViewController: BaseViewController {
     }
 
     @IBAction func searchTapped(_ sender: UIButton) {
-        performSegue(withIdentifier: "toSearchResults", sender: nil)
+        currentFilters = FiltersStore.load()
+
+        // ✅ Push SearchResult without segue identifier
+        let vc = storyboard?.instantiateViewController(withIdentifier: "SearchResultViewController") as! SearchResultViewController
+        vc.currentFilters = currentFilters
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -46,17 +49,11 @@ final class SearchServiceViewController: BaseViewController {
                 self.currentFilters = updated
                 FiltersStore.save(updated)
             }
-        }
 
-        if segue.identifier == "toSearchResults",
-           let vc = segue.destination as? SearchResultViewController {
-
-            vc.currentFilters = currentFilters
-
-            // ✅ so SearchResult can notify SearchService when user removes a chip
-            vc.onFiltersChanged = { [weak self] updated in
-                self?.currentFilters = updated
-                FiltersStore.save(updated)
+            vc.onReset = { [weak self] in
+                guard let self = self else { return }
+                self.currentFilters = SearchFilters()
+                FiltersStore.clear()
             }
         }
     }
