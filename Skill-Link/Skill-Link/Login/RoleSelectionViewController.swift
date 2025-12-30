@@ -4,78 +4,118 @@ import FirebaseFirestore
 
 final class RoleSelectionViewController: BaseViewController {
 
-    private let db = Firestore.firestore() // Firestore database reference
-    private var isSaving = false // Flag to prevent multiple role saving requests
+    @IBOutlet weak var providerCardView: UIView!
+    @IBOutlet weak var seekerCardView: UIView!
 
-    
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        // Disable the back button and swipe gesture to prevent users from navigating away
-        navigationItem.hidesBackButton = true
-        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
-    }
-    
+    private let db = Firestore.firestore()
+    private var isSaving = false
+
     override var shouldShowBackButton: Bool { false }
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
 
-    // Action when the "Provider" button is tapped
-    // Connect this action to the "Provider" button in the storyboard
+        // Stop user from going back from here
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+
+        // Style the 2 cards so they look like the figma ones
+        styleCard(providerCardView)
+        styleCard(seekerCardView)
+    }
+
+    // MARK: - Card Style
+    private func styleCard(_ view: UIView) {
+        // Rounded corners like the design
+        view.layer.cornerRadius = 28
+        view.layer.masksToBounds = false
+
+        // Border around the card
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+
+        // Shadow for depth (figma style)
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.18
+        view.layer.shadowRadius = 18
+        view.layer.shadowOffset = CGSize(width: 0, height: 10)
+
+        // If you want the card to clip inside content, use a subview for content
+        // Dont set masksToBounds = true here or the shadow will disapear
+    }
+
+    // MARK: - Button Actions
     @IBAction func providerTapped(_ sender: UIButton) {
-        setRole(role: "provider")  // Set the user's role to "provider"
+        setRole(role: "provider")
     }
 
-    // Action when the "Seeker" button is tapped
-    // Connect this action to the "Seeker" button in the storyboard
     @IBAction func seekerTapped(_ sender: UIButton) {
-        setRole(role: "seeker")  // Set the user's role to "seeker"
+        setRole(role: "seeker")
     }
 
-    // Function to save the selected role in Firestore for the currently logged-in user
+    // MARK: - Save role
     private func setRole(role: String) {
-        // Prevent multiple requests if the previous one is still in progress
         guard !isSaving else { return }
-        
-        // Check if a user is logged in; if not, prompt them to register
+
         guard let user = Auth.auth().currentUser else {
-            showAlert("No logged-in user found. Please register again.")
+            showAlert("No logged-in user found. Please login again.")
             return
         }
 
-        // Set the flag to indicate the saving process is in progress
         isSaving = true
 
-        // Prepare the data to save in Firestore
         let data: [String: Any] = [
-            "role": role,  // Set the role (either "provider" or "seeker")
-            "profileCompleted": false  // Indicate the profile is not completed yet
+            "role": role,
+            "profileCompleted": false
         ]
 
-        // Save the role data in Firestore under the current user's document
         db.collection("User").document(user.uid).setData(data, merge: true) { [weak self] error in
             guard let self else { return }
 
-            // Reset the saving flag once the operation is complete
             self.isSaving = false
 
-            // Handle any errors that occur during the Firestore write operation
             if let error = error {
                 self.showAlert("Failed to save role: \(error.localizedDescription)")
                 return
             }
 
-            // Navigation is handled by the storyboard segue, so no further action needed here
+            // Save role localy too so other screens can read it fast
+            self.saveRoleLocally(role: role, uid: user.uid)
+
+            // Navigation is still handled by your storyboard segue
         }
     }
 
-    // Function to display an alert with a custom message
-    private func showAlert(_ message: String) {
-        let alert = UIAlertController(
-            title: "Role Selection",
-            message: message,
-            preferredStyle: .alert
+    // MARK: - Local save
+    private func saveRoleLocally(role: String, uid: String) {
+        // Load current local profile if it exists, then update role fields
+        var localProfile = loadLocalUserProfile() ?? UserProfile(
+            name: "",
+            skills: [],
+            brief: "",
+            contact: "",
+            imageURL: nil,
+            id: uid
         )
+
+        localProfile.id = uid
+
+        // We dont have role in UserProfile struct, so we store it as a seperate key
+        UserDefaults.standard.set(role, forKey: "userRole")
+
+        // Save profile too (even if empty for now)
+        if let data = try? JSONEncoder().encode(localProfile) {
+            UserDefaults.standard.set(data, forKey: "userProfile")
+        }
+    }
+
+    private func loadLocalUserProfile() -> UserProfile? {
+        guard let data = UserDefaults.standard.data(forKey: "userProfile") else { return nil }
+        return try? JSONDecoder().decode(UserProfile.self, from: data)
+    }
+
+    // MARK: - Alert
+    private func showAlert(_ message: String) {
+        let alert = UIAlertController(title: "Role Selection", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
