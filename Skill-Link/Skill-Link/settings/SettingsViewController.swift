@@ -1,6 +1,10 @@
 import UIKit
+import FirebaseAuth
+import FirebaseFirestore
 
-class SettingsViewController: BaseViewController {
+final class SettingsViewController: BaseViewController {
+
+    private let db = Firestore.firestore()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,71 +24,78 @@ class SettingsViewController: BaseViewController {
     private func showDeleteAccountConfirmation() {
         let alert = UIAlertController(
             title: "Delete Account",
-            message: "This will permanently remove your account from this device. This action cannot be undone.",
-            preferredStyle: .actionSheet
+            message: "This will permanently delete your account. This action cannot be undone.",
+            preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-            self?.deleteAccount()
-        })
-
+        // Cancel action
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
-        // iPad support
-        if let popover = alert.popoverPresentationController {
-            popover.sourceView = self.view
-            popover.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 1, height: 1)
-        }
+        // Confirm delete
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            self?.deleteAccountCompletely()
+        })
 
         present(alert, animated: true)
     }
 
-    private func deleteAccount() {
-        // If you have no backend, this can be "true" directly.
-        deleteAccountFromServer { [weak self] success in
-            DispatchQueue.main.async {
-                guard let self else { return }
-
-                if success {
-                    self.clearLocalUserData()
-                    self.goToLoginScreen()
-                } else {
-                    self.showAlert(title: "Error", message: "Failed to delete account. Please try again.")
-                }
-            }
+    private func deleteAccountCompletely() {
+        guard let user = Auth.auth().currentUser else {
+            showAlert(title: "Error", message: "User not found. Please login again.")
+            return
         }
-    }
 
-    // MARK: - Mock delete (replace with real API if needed)
-    private func deleteAccountFromServer(completion: @escaping (Bool) -> Void) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
-            completion(true)
+        let uid = user.uid
+
+        // Step 1: delete user data from Firestore
+        db.collection("User").document(uid).delete { [weak self] error in
+            guard let self else { return }
+
+            if let error = error {
+                self.showAlert(title: "Error", message: "Failed to delete user data. \(error.localizedDescription)")
+                return
+            }
+
+            // Step 2: delete user from Firebase Auth
+            user.delete { authError in
+                if let authError = authError {
+                    self.showAlert(
+                        title: "Error",
+                        message: "Please re-login before deleting your account. \(authError.localizedDescription)"
+                    )
+                    return
+                }
+
+                // Step 3: clear local data
+                self.clearLocalUserData()
+
+                // Step 4: go back to start page
+                self.goToStartPage()
+            }
         }
     }
 
     // MARK: - Clear Local Data
     private func clearLocalUserData() {
-        let defaults = UserDefaults.standard
-        defaults.removeObject(forKey: "authToken")
-        defaults.removeObject(forKey: "userId")
-        defaults.removeObject(forKey: "isLoggedIn")
-        defaults.synchronize()
+        // Remove locally saved user profile
+        UserDefaults.standard.removeObject(forKey: "userProfile")
 
+        // Remove any cached data
         URLCache.shared.removeAllCachedResponses()
     }
 
-    // MARK: - Go to Login
-    private func goToLoginScreen() {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let loginVC = storyboard.instantiateViewController(withIdentifier: "LoginViewController")
+    // MARK: - Navigation
+    private func goToStartPage() {
+        let sb = UIStoryboard(name: "login", bundle: nil)
 
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.rootViewController = UINavigationController(rootViewController: loginVC)
-            window.makeKeyAndVisible()
-        } else {
-            navigationController?.setViewControllers([loginVC], animated: true)
+        guard let startVC = sb.instantiateViewController(
+            withIdentifier: "StartPageViewController"
+        ) as? UIViewController else {
+            fatalError("StartPageViewController not found. Check storyboard ID.")
         }
+
+        // Reset navigation stack so user cant go back
+        navigationController?.setViewControllers([startVC], animated: true)
     }
 
     // MARK: - Alert Helper
