@@ -8,16 +8,17 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Start Page View Controller-->
         <scene sceneID="o7w-rr-kh8">
             <objects>
-                <viewController storyboardIdentifier="StartPage" useStoryboardIdentifierAsRestorationIdentifier="YES" id="f9e-Qm-sPd" customClass="ViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="StartPageViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="f9e-Qm-sPd" customClass="StartPageViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="2bC-9C-WAC">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Yrb-Hu-0k2">
-                                <rect key="frame" x="100" y="594" width="193" height="39"/>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Yrb-Hu-0k2">
+                                <rect key="frame" x="100" y="652" width="193" height="39"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Continue">
                                     <backgroundConfiguration key="background">
@@ -29,53 +30,39 @@
                                     <segue destination="ScE-9U-pod" kind="show" id="xgN-6E-Ufm"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Welcome" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yzu-df-elq">
-                                <rect key="frame" x="116" y="411" width="160" height="48"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Welcome" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yzu-df-elq">
+                                <rect key="frame" x="116" y="323" width="160" height="48"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="40"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="image 3" translatesAutoresizingMaskIntoConstraints="NO" id="qgb-qR-eKd">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" ambiguous="YES" image="image 3" translatesAutoresizingMaskIntoConstraints="NO" id="qgb-qR-eKd">
                                 <rect key="frame" x="136" y="34" width="120" height="120"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="120" id="5TX-Mh-J8g"/>
                                     <constraint firstAttribute="height" constant="120" id="Y0a-Wv-ELI"/>
                                 </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Find or offer services in your community." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sGf-NZ-jvY">
-                                <rect key="frame" x="100" y="490.66666666666674" width="193" height="50.333333333333258"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="21"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cnX-d1-bBP">
-                                <rect key="frame" x="114" y="672" width="165" height="39"/>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cnX-d1-bBP">
+                                <rect key="frame" x="114" y="745" width="165" height="39"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Admin? Login here"/>
                                 <connections>
                                     <segue destination="TgQ-BH-fAJ" kind="show" id="cHd-z7-ubv"/>
                                 </connections>
                             </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Find or offer services in your community." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sGf-NZ-jvY">
+                                <rect key="frame" x="100" y="447" width="193" height="50.333333333333336"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="21"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="UrL-fi-oZO"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <constraints>
-                            <constraint firstItem="Yrb-Hu-0k2" firstAttribute="top" secondItem="sGf-NZ-jvY" secondAttribute="bottom" constant="311" id="0fn-UC-4H7"/>
-                            <constraint firstItem="UrL-fi-oZO" firstAttribute="trailing" secondItem="sGf-NZ-jvY" secondAttribute="trailing" constant="100" id="4y6-JF-rke"/>
-                            <constraint firstItem="UrL-fi-oZO" firstAttribute="trailing" secondItem="yzu-df-elq" secondAttribute="trailing" constant="117" id="7U5-Cr-SKH"/>
-                            <constraint firstItem="cnX-d1-bBP" firstAttribute="leading" secondItem="UrL-fi-oZO" secondAttribute="leading" constant="114" id="BKH-H1-uIN"/>
-                            <constraint firstItem="qgb-qR-eKd" firstAttribute="leading" secondItem="2bC-9C-WAC" secondAttribute="leading" constant="136" id="PKf-dj-4FO"/>
-                            <constraint firstItem="Yrb-Hu-0k2" firstAttribute="leading" secondItem="UrL-fi-oZO" secondAttribute="leading" constant="100" id="Pvg-ta-sDk"/>
-                            <constraint firstItem="sGf-NZ-jvY" firstAttribute="leading" secondItem="UrL-fi-oZO" secondAttribute="leading" constant="100" id="Qt7-Pc-b69"/>
-                            <constraint firstItem="yzu-df-elq" firstAttribute="leading" secondItem="UrL-fi-oZO" secondAttribute="leading" constant="116" id="Syk-WG-MRH"/>
-                            <constraint firstItem="UrL-fi-oZO" firstAttribute="trailing" secondItem="cnX-d1-bBP" secondAttribute="trailing" constant="114" id="TiV-vB-5yJ"/>
-                            <constraint firstItem="UrL-fi-oZO" firstAttribute="bottom" secondItem="cnX-d1-bBP" secondAttribute="bottom" constant="141" id="Xm1-by-16N"/>
-                            <constraint firstAttribute="trailing" secondItem="qgb-qR-eKd" secondAttribute="trailing" constant="137" id="bfl-ib-L6C"/>
-                            <constraint firstItem="UrL-fi-oZO" firstAttribute="trailing" secondItem="Yrb-Hu-0k2" secondAttribute="trailing" constant="100" id="cNY-FC-hcD"/>
-                            <constraint firstItem="qgb-qR-eKd" firstAttribute="top" secondItem="2bC-9C-WAC" secondAttribute="top" constant="34" id="fbX-vc-dVt"/>
-                            <constraint firstItem="cnX-d1-bBP" firstAttribute="top" secondItem="Yrb-Hu-0k2" secondAttribute="bottom" constant="219" id="sVy-ph-cL3"/>
-                            <constraint firstItem="yzu-df-elq" firstAttribute="top" secondItem="UrL-fi-oZO" secondAttribute="top" constant="411" id="y3w-Nf-oW4"/>
-                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="sPv-td-dAD"/>
                 </viewController>
