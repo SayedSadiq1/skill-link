@@ -22,6 +22,7 @@ final class RegisterViewController: BaseViewController {
         let email = (emailTextField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let password = (passwordTextField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
 
+        // Basic input checks before register
         guard !fullName.isEmpty else { showAlert("Please enter your full name."); return }
         guard !email.isEmpty else { showAlert("Please enter your email."); return }
         guard !password.isEmpty else { showAlert("Please enter your password."); return }
@@ -47,11 +48,16 @@ final class RegisterViewController: BaseViewController {
                 return
             }
 
-            // Save user data to Firestore
+            // Create firestore user document
             let userDoc: [String: Any] = [
                 "email": email,
                 "fullName": fullName,
-                "role": "",                 // Empty for now, will be set after role selection
+                "role": "",
+                "profileCompleted": false,
+
+                // Suspension flag (default is active user)
+                "isSuspended": false,
+
                 "createdAt": FieldValue.serverTimestamp()
             ]
 
@@ -60,36 +66,34 @@ final class RegisterViewController: BaseViewController {
                 sender.isEnabled = true
 
                 if let err = err {
-                    self.showAlert("Saved auth user, but Firestore failed: \(err.localizedDescription)")
+                    self.showAlert("Saved auth user, but firestore failed: \(err.localizedDescription)")
                     return
                 }
 
-                // Save profile locally
-                let userProfile = UserProfile(
+                // Save base profile localy
+                let profile = UserProfile(
                     name: fullName,
-                    skills: [], // No skills on registration, can update later
-                    brief: "",   // Empty brief for now
+                    skills: [],
+                    brief: "",
                     contact: email,
                     imageURL: nil,
                     id: uid
                 )
-                self.saveUserProfileLocally(userProfile)
+                self.saveUserProfileLocally(profile)
 
-                // Navigate to RoleSelection screen
+                // Go to role selection
                 self.goToRoleSelection()
             }
         }
     }
 
     private func saveUserProfileLocally(_ profile: UserProfile) {
-        // Save the user profile to UserDefaults
-        if let encodedProfile = try? JSONEncoder().encode(profile) {
-            UserDefaults.standard.set(encodedProfile, forKey: "userProfile")
+        if let data = try? JSONEncoder().encode(profile) {
+            UserDefaults.standard.set(data, forKey: "userProfile")
         }
     }
 
     private func goToRoleSelection() {
-        // Navigate to RoleSelection screen
         let sb = UIStoryboard(name: "login", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "RoleSelectionViewController")
         navigationController?.pushViewController(vc, animated: true)
