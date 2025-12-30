@@ -1,17 +1,24 @@
-//
-//  BaseViewController.swift
-//  Skill-Link
-//
-//  Created by Sayed on 20/12/2025.
-//
 import UIKit
 
 class BaseViewController: UIViewController {
 
+    // Screens can override this and return false to hide the custom back button
+    var shouldShowBackButton: Bool { true }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Set the background image for all screens using this base class
         setBackgroundImage(named: "smaller_background")
+
+        // Setup the navigation bar style for this screen
+        setupNavigationItemStyle()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // Re-apply style when coming back to the screen (ios sometimes resets it)
         setupNavigationItemStyle()
     }
 
@@ -20,7 +27,8 @@ class BaseViewController: UIViewController {
         bg.contentMode = .scaleAspectFill
         bg.translatesAutoresizingMaskIntoConstraints = false
 
-        view.insertSubview(bg, at: 0) // behind everything
+        // Put it behind evreything
+        view.insertSubview(bg, at: 0)
 
         NSLayoutConstraint.activate([
             bg.topAnchor.constraint(equalTo: view.topAnchor),
@@ -30,14 +38,15 @@ class BaseViewController: UIViewController {
         ])
     }
 
-
     private func setupNavigationItemStyle() {
         guard let navBar = navigationController?.navigationBar else { return }
 
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .clear    // transparent over background image
-        appearance.shadowColor = .clear        // remove bottom line
+
+        // Make nav bar transparent so background image shows
+        appearance.backgroundColor = .clear
+        appearance.shadowColor = .clear
 
         // Title style
         appearance.titleTextAttributes = [
@@ -45,7 +54,7 @@ class BaseViewController: UIViewController {
             .font: UIFont.systemFont(ofSize: 18, weight: .semibold)
         ]
 
-        // Large title (if used anywhere)
+        // Large title style (if used)
         appearance.largeTitleTextAttributes = [
             .foregroundColor: UIColor.white,
             .font: UIFont.systemFont(ofSize: 32, weight: .bold)
@@ -54,29 +63,42 @@ class BaseViewController: UIViewController {
         navBar.standardAppearance = appearance
         navBar.scrollEdgeAppearance = appearance
         navBar.compactAppearance = appearance
-
         navBar.tintColor = .white
+
+        // This hides the default iOS back arrow (we are using our own)
         navigationItem.hidesBackButton = true
 
+        // Show / hide the custom back button based on the screen need
+        if shouldShowBackButton {
+            navigationItem.leftBarButtonItem = makeBackButton()
+        } else {
+            navigationItem.leftBarButtonItem = nil
+        }
+    }
+
+    private func makeBackButton() -> UIBarButtonItem {
         let backButton = UIBarButtonItem(
-                    title: "←",
-                    style: .plain,
-                    target: self,
-                    action: #selector(handleBack)
-                )
+            title: "←",
+            style: .plain,
+            target: self,
+            action: #selector(handleBack)
+        )
+
+        // Style for the arrow text
         backButton.setTitleTextAttributes([
-                 .foregroundColor: UIColor.white,
-                 .font: UIFont.systemFont(ofSize: 16, weight: .medium)
-             ], for: .normal)
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium)
+        ], for: .normal)
 
-             navigationItem.leftBarButtonItem = backButton
-         }
+        return backButton
+    }
 
-         @objc private func handleBack() {
-             navigationController?.popViewController(animated: true)
-         }
-    
-        func addBottomBorder(
+    @objc private func handleBack() {
+        // Goes back one screen in the navigation stack
+        navigationController?.popViewController(animated: true)
+    }
+
+    func addBottomBorder(
         to view: UIView,
         color: UIColor = .lightGray,
         height: CGFloat = 1
@@ -94,8 +116,7 @@ class BaseViewController: UIViewController {
             border.heightAnchor.constraint(equalToConstant: height)
         ])
     }
-    
-    
+
     func addTopBorder(
         to view: UIView,
         color: UIColor = .lightGray,
@@ -104,6 +125,7 @@ class BaseViewController: UIViewController {
         let border = UIView()
         border.backgroundColor = color
         border.translatesAutoresizingMaskIntoConstraints = false
+
         view.addSubview(border)
 
         NSLayoutConstraint.activate([
@@ -113,5 +135,4 @@ class BaseViewController: UIViewController {
             border.heightAnchor.constraint(equalToConstant: height)
         ])
     }
-    }
-
+}

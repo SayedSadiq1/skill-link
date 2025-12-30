@@ -1,10 +1,3 @@
-//
-//  SetupProfileSeekerViewController.swift
-//  Skill-Link
-//
-//  Created by BP-36-201-23 on 28/12/2025.
-//
-
 import UIKit
 import FirebaseAuth
 import FirebaseFirestore
@@ -16,38 +9,45 @@ final class SetupProfileSeekerViewController: BaseViewController {
     @IBOutlet weak var contactTextField: UITextField!
     @IBOutlet weak var profileImageView: UIImageView!
 
-    private let db = Firestore.firestore()
-    private var photoPicker: PhotoPickerHelper?
-    private var selectedImage: UIImage?
-    private var isSaving = false
+    private let db = Firestore.firestore()  // Firestore reference to save data
+    private var photoPicker: PhotoPickerHelper?  // Helper to pick photo
+    private var selectedImage: UIImage?  // Selected profile image
+    private var isSaving = false  // Flag to prevent multiple saves
 
-    private var loadedFullName: String = ""
+    private var loadedFullName: String = ""  // Loaded full name from Firestore
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Disable back navigation
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
-        // ✅ default image if user doesn't pick one
+        // Set default image if no image is selected
         if profileImageView.image == nil {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
 
-        // Image tap
+        // Enable image interaction
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
 
+        // Load full name from Firestore
         loadFullNameFromFirestore()
     }
+    
+    override var shouldShowBackButton: Bool { false }
+
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        // Make profile image circular
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
     }
 
+    // Load user's full name from Firestore
     private func loadFullNameFromFirestore() {
         guard let uid = Auth.auth().currentUser?.uid else {
             fullNameLabel.text = "No user"
@@ -59,7 +59,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
             DispatchQueue.main.async {
                 if let err = err {
                     self.fullNameLabel.text = "Error loading name"
-                    print("❌ load name error: \(err.localizedDescription)")
+                    print("Error loading name: \(err.localizedDescription)")
                     return
                 }
 
@@ -68,13 +68,33 @@ final class SetupProfileSeekerViewController: BaseViewController {
 
                 self.loadedFullName = name
                 self.fullNameLabel.text = name.isEmpty ? "Name not set" : name
+
+                // Save the full name locally
+                self.saveUserProfileLocally()
             }
         }
     }
 
-    // MARK: - Continue
+    // Save user profile data locally using UserDefaults
+    private func saveUserProfileLocally() {
+        let userProfile = UserProfile(
+            name: loadedFullName,
+            skills: [],
+            brief: "",
+            contact: contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+            imageURL: nil,  // Image URL will be saved if image is uploaded
+            id: Auth.auth().currentUser?.uid
+        )
+
+        // Encode and save the profile to UserDefaults
+        if let encodedProfile = try? JSONEncoder().encode(userProfile) {
+            UserDefaults.standard.set(encodedProfile, forKey: "userProfile")
+        }
+    }
+
+    // MARK: - Continue Button Action
     @IBAction func continueTapped(_ sender: UIButton) {
-        guard !isSaving else { return }
+        guard !isSaving else { return }  // Prevent multiple save operations
         guard validateRequiredFields() else { return }
 
         guard let uid = Auth.auth().currentUser?.uid else {
@@ -86,7 +106,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
         sender.isEnabled = false
         showSavingHUD(true)
 
-        // upload photo if user selected one
+        // If a photo is selected, upload it; otherwise, save the profile without an image
         if let image = selectedImage {
             CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
                 guard let self else { return }
@@ -101,11 +121,12 @@ final class SetupProfileSeekerViewController: BaseViewController {
                 }
             }
         } else {
-            // ✅ no photo selected -> save with no imageURL
+            // No photo selected, save profile without image URL
             self.saveSeekerProfile(uid: uid, imageURL: nil, sender: sender)
         }
     }
 
+    // Save the seeker profile data to Firestore
     private func saveSeekerProfile(uid: String, imageURL: String?, sender: UIButton) {
         let interestsArray = (interestsTextField.text ?? "")
             .split(separator: ",")
@@ -135,7 +156,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
                     return
                 }
 
-                // ✅ IMPORTANT: dismiss HUD first, THEN navigate
+                // Dismiss the saving HUD, then navigate
                 self.finishSaving(sender: sender) {
                     self.goToProfileSeeker()
                 }
@@ -143,16 +164,18 @@ final class SetupProfileSeekerViewController: BaseViewController {
         }
     }
 
+    // Navigate to the profile seeker screen after saving the data
     private func goToProfileSeeker() {
         let sb = UIStoryboard(name: "login", bundle: nil)
 
         guard let vc = sb.instantiateViewController(withIdentifier: "ProfileSeekerViewController") as? ProfileSeekerViewController else {
-            fatalError("❌ Could not find ProfileSeekerViewController in storyboard. Check Storyboard ID + Custom Class.")
+            fatalError("Could not find ProfileSeekerViewController in storyboard.")
         }
 
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    // Validate required fields (name, interests, contact)
     private func validateRequiredFields() -> Bool {
         if loadedFullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             showAlert(message: "Your name is missing in Firebase. Go back and register again.")
@@ -184,6 +207,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
         return true
     }
 
+    // Show an alert with a custom message
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "Setup Profile", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -214,7 +238,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
         }
     }
 
-    // ✅ UPDATED: dismiss alert with completion
+    // Dismiss the saving alert and handle completion
     private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
         savingAlert?.dismiss(animated: true) { [weak self] in
             guard let self else { return }
@@ -225,6 +249,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
         }
     }
 
+    // MARK: - Photo picking
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }

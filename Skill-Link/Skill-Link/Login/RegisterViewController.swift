@@ -47,11 +47,11 @@ final class RegisterViewController: BaseViewController {
                 return
             }
 
-            // ✅ Firestore doc id MUST = uid (for your rules)
+            // Save user data to Firestore
             let userDoc: [String: Any] = [
                 "email": email,
                 "fullName": fullName,
-                "role": "",                 // 👈 keep empty for now (set later after role selection)
+                "role": "",                 // Empty for now, will be set after role selection
                 "createdAt": FieldValue.serverTimestamp()
             ]
 
@@ -64,19 +64,33 @@ final class RegisterViewController: BaseViewController {
                     return
                 }
 
-                // ✅ Next step after register:
-                // Go to RoleSelection screen (recommended)
+                // Save profile locally
+                let userProfile = UserProfile(
+                    name: fullName,
+                    skills: [], // No skills on registration, can update later
+                    brief: "",   // Empty brief for now
+                    contact: email,
+                    imageURL: nil,
+                    id: uid
+                )
+                self.saveUserProfileLocally(userProfile)
+
+                // Navigate to RoleSelection screen
                 self.goToRoleSelection()
             }
         }
     }
 
-    private func goToRoleSelection() {
-        // Change this ID to your role selection screen storyboard ID
-        let sb = UIStoryboard(name: "login", bundle: nil)
+    private func saveUserProfileLocally(_ profile: UserProfile) {
+        // Save the user profile to UserDefaults
+        if let encodedProfile = try? JSONEncoder().encode(profile) {
+            UserDefaults.standard.set(encodedProfile, forKey: "userProfile")
+        }
+    }
 
-        // Example identifier: "RoleSelectionViewController"
-        // Put your real storyboard ID here:
+    private func goToRoleSelection() {
+        // Navigate to RoleSelection screen
+        let sb = UIStoryboard(name: "login", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "RoleSelectionViewController")
         navigationController?.pushViewController(vc, animated: true)
     }

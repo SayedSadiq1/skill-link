@@ -40,7 +40,6 @@ final class LoginPageController: BaseViewController {
     }
 
     private func checkUserProfileAndRoute(uid: String) {
-        // ✅ FIX: use "User" (same as your setup screens)
         db.collection("User").document(uid).getDocument { [weak self] snap, error in
             guard let self else { return }
 
@@ -49,15 +48,26 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
-            // ✅ 1) Check if user exists in Firestore
             guard let data = snap?.data() else {
                 self.showAlert(title: "Profile Not Found",
                                message: "We couldn't find your profile. Please register first.")
                 try? Auth.auth().signOut()
+                self.clearLocalData() // Clear any local data on failed profile retrieval
                 return
             }
 
-            // ✅ 2) Validate role then go to correct homepage
+            // Save profile data locally
+            let userProfile = UserProfile(
+                name: data["name"] as? String ?? "",
+                skills: data["skills"] as? [String] ?? [],
+                brief: data["brief"] as? String ?? "",
+                contact: data["contact"] as? String ?? "",
+                imageURL: data["imageURL"] as? String,
+                id: snap?.documentID
+            )
+            self.saveUserProfileLocally(userProfile)
+
+            // Validate role then go to correct homepage
             let roleString = (data["role"] as? String ?? "").lowercased()
 
             if roleString == UserRole.provider.rawValue {
@@ -71,12 +81,32 @@ final class LoginPageController: BaseViewController {
         }
     }
 
+    private func saveUserProfileLocally(_ profile: UserProfile) {
+        // Save the user profile to UserDefaults
+        if let encodedProfile = try? JSONEncoder().encode(profile) {
+            UserDefaults.standard.set(encodedProfile, forKey: "userProfile")
+        }
+    }
+
+    private func loadUserProfileFromLocal() -> UserProfile? {
+        // Load the user profile from UserDefaults
+        if let data = UserDefaults.standard.data(forKey: "userProfile"),
+           let profile = try? JSONDecoder().decode(UserProfile.self, from: data) {
+            return profile
+        }
+        return nil
+    }
+
+    private func clearLocalData() {
+        // Clear the locally stored user data
+        UserDefaults.standard.removeObject(forKey: "userProfile")
+    }
+
     private func goToProviderHome() {
         let sb = UIStoryboard(name: "HomePage", bundle: nil)
         let home = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
         home.modalPresentationStyle = .fullScreen
         present(home, animated: true)
-        //navigationController?.setViewControllers([home], animated: true)
     }
 
     private func goToSeekerHome() {
@@ -84,7 +114,6 @@ final class LoginPageController: BaseViewController {
         let home = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
         home.modalPresentationStyle = .fullScreen
         present(home, animated: true)
-        //navigationController?.setViewControllers([home], animated: true)
     }
 
     private func showAlert(title: String, message: String) {

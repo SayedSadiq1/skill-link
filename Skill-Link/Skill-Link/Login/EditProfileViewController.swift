@@ -19,11 +19,11 @@ final class EditProfileViewController: BaseViewController {
     private let db = Firestore.firestore()
     private var photoPicker: PhotoPickerHelper?
 
-    // Cloudinary
+    // Cloudinary credentials for image upload
     private let cloudName = "dgamwyki7"
     private let uploadPreset = "mobile_unsigned"
 
-    // image state
+    // Image state
     private var selectedImageData: Data?        // new image (pending upload)
     private var selectedImageURL: String?       // current URL (existing or uploaded)
 
@@ -81,7 +81,9 @@ final class EditProfileViewController: BaseViewController {
         profileImageView.contentMode = .scaleAspectFill
     }
 
+    // MARK: - Image Picker
     @objc private func changePhotoTapped() {
+        // Present photo picker to select a new profile image
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image
@@ -90,8 +92,9 @@ final class EditProfileViewController: BaseViewController {
         photoPicker?.presentPicker()
     }
 
+    // MARK: - Save Action
     @IBAction func saveTapped(_ sender: UIButton) {
-        guard !isSaving else { return }
+        guard !isSaving else { return }  // Prevent multiple save attempts
         guard let uid = Auth.auth().currentUser?.uid else {
             showAlert(title: "Error", message: "No logged in user. Please login again.")
             return
@@ -186,7 +189,7 @@ final class EditProfileViewController: BaseViewController {
                     imageURL: imageURL
                 )
 
-                self.onSave?(updated)
+                self.onSave?(updated)  // Callback to notify parent controller
                 self.navigationController?.popViewController(animated: true)
             }
         }

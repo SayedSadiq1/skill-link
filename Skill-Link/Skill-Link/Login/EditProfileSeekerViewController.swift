@@ -1,49 +1,42 @@
-//
-//  EditProfileSeekerViewController.swift
-//  Skill-Link
-//
-//  Created by BP-36-201-23 on 28/12/2025.
-//
-
 import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
 final class EditProfileSeekerViewController: BaseViewController {
 
-    // ✅ ONLY 3 textfields
+    // Text fields for user input
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var interestsTextField: UITextField!
     @IBOutlet weak var contactTextField: UITextField!
 
-    // image
+    // Profile image view
     @IBOutlet weak var profileImageView: UIImageView!
 
-    var profile: SeekerProfile?
-    var onSave: ((SeekerProfile) -> Void)?
+    var profile: SeekerProfile?  // Seeker profile passed from ProfileSeekerViewController
+    var onSave: ((SeekerProfile) -> Void)?  // Callback to notify the parent controller after save
 
-    private let db = Firestore.firestore()
-    private var photoPicker: PhotoPickerHelper?
+    private let db = Firestore.firestore()  // Firestore reference for saving profile data
+    private var photoPicker: PhotoPickerHelper?  // Helper for selecting photos
 
-    // Cloudinary (same as provider)
+    // Cloudinary credentials for image upload
     private let cloudName = "dgamwyki7"
     private let uploadPreset = "mobile_unsigned"
 
-    // image state
-    private var selectedImageData: Data?
-    private var selectedImageURL: String?
+    // Variables for image upload
+    private var selectedImageData: Data?  // Data for selected image
+    private var selectedImageURL: String?  // URL for the uploaded image
 
-    private var isSaving = false
+    private var isSaving = false  // Flag to prevent multiple save attempts
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // ✅ style textfields (since no container views)
+        // Style the text fields for input
         styleTextField(nameTextField)
         styleTextField(interestsTextField)
         styleTextField(contactTextField)
 
-        // ✅ image tap
+        // Enable image tapping to change photo
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
 
@@ -52,12 +45,12 @@ final class EditProfileSeekerViewController: BaseViewController {
             return
         }
 
-        // fill fields
+        // Pre-fill the text fields with the existing profile data
         nameTextField.text = profile.name
         interestsTextField.text = profile.interests.joined(separator: ", ")
         contactTextField.text = profile.contact
 
-        // image
+        // Load the image if it exists in the profile
         selectedImageURL = profile.imageURL
         if let urlString = profile.imageURL, let url = URL(string: urlString) {
             loadImage(from: url)
@@ -68,50 +61,55 @@ final class EditProfileSeekerViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        // Make the profile image circular
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
     }
 
-    // MARK: - UITextField styling (no container needed)
+    // MARK: - Styling the text fields
     private func styleTextField(_ tf: UITextField) {
         tf.layer.cornerRadius = 8
         tf.layer.borderWidth = 1
         tf.layer.borderColor = UIColor.systemGray4.cgColor
         tf.backgroundColor = .white
 
+        // Add padding to the left of text fields
         let padding = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 44))
         tf.leftView = padding
         tf.leftViewMode = .always
     }
 
-    // MARK: - Photo picking
+    // MARK: - Photo picker action
     @objc private func changePhotoTapped() {
+        // Initialize the photo picker helper
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image
             self.selectedImageData = image.jpegData(compressionQuality: 0.8)
         }
-        photoPicker?.presentPicker()
+        photoPicker?.presentPicker()  // Present the photo picker
     }
 
-    // MARK: - Save
+    // MARK: - Save button action
     @IBAction func saveTapped(_ sender: UIButton) {
-        guard !isSaving else { return }
+        guard !isSaving else { return }  // Prevent multiple save attempts
         guard let uid = Auth.auth().currentUser?.uid else {
             showAlert(title: "Error", message: "No logged in user. Please login again.")
             return
         }
 
+        // Retrieve and clean user inputs
         let fullName = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
+        // Validate the inputs
         let interestsArray = (interestsTextField.text ?? "")
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        // ✅ validation
+        // Ensure required fields are filled
         if fullName.isEmpty { showAlert(title: "Missing", message: "Please enter your name."); return }
         if contact.isEmpty { showAlert(title: "Missing", message: "Please enter your contact."); return }
         if interestsArray.isEmpty { showAlert(title: "Missing", message: "Please enter at least one interest (separate by commas)."); return }
@@ -119,7 +117,7 @@ final class EditProfileSeekerViewController: BaseViewController {
         isSaving = true
         setSavingUI(true)
 
-        // 1) new image? upload -> save
+        // If a new image is selected, upload it
         if let imgData = selectedImageData {
             uploadToCloudinary(imageData: imgData) { [weak self] result in
                 guard let self else { return }
@@ -127,11 +125,7 @@ final class EditProfileSeekerViewController: BaseViewController {
                 switch result {
                 case .success(let urlString):
                     self.selectedImageURL = urlString
-                    self.saveToFirestore(uid: uid,
-                                         fullName: fullName,
-                                         contact: contact,
-                                         interests: interestsArray,
-                                         imageURL: urlString)
+                    self.saveToFirestore(uid: uid, fullName: fullName, contact: contact, interests: interestsArray, imageURL: urlString)
                 case .failure(let error):
                     DispatchQueue.main.async {
                         self.isSaving = false
@@ -141,22 +135,13 @@ final class EditProfileSeekerViewController: BaseViewController {
                 }
             }
         } else {
-            // 2) no new image -> save
-            saveToFirestore(uid: uid,
-                            fullName: fullName,
-                            contact: contact,
-                            interests: interestsArray,
-                            imageURL: selectedImageURL)
+            // No new image, save without the image URL
+            saveToFirestore(uid: uid, fullName: fullName, contact: contact, interests: interestsArray, imageURL: selectedImageURL)
         }
     }
 
     // MARK: - Firestore save
-    private func saveToFirestore(uid: String,
-                                 fullName: String,
-                                 contact: String,
-                                 interests: [String],
-                                 imageURL: String?) {
-
+    private func saveToFirestore(uid: String, fullName: String, contact: String, interests: [String], imageURL: String?) {
         var data: [String: Any] = [
             "fullName": fullName,
             "contact": contact,
@@ -168,6 +153,7 @@ final class EditProfileSeekerViewController: BaseViewController {
             data["imageURL"] = imageURL
         }
 
+        // Save profile data to Firestore
         db.collection("User").document(uid).setData(data, merge: true) { [weak self] err in
             guard let self else { return }
 
@@ -180,15 +166,10 @@ final class EditProfileSeekerViewController: BaseViewController {
                     return
                 }
 
-                let updated = SeekerProfile(
-                    name: fullName,
-                    interests: interests,
-                    contact: contact,
-                    imageURL: imageURL
-                )
-
-                self.onSave?(updated)
-                self.navigationController?.popViewController(animated: true)
+                // If save is successful, update the local profile data
+                let updated = SeekerProfile(name: fullName, interests: interests, contact: contact, imageURL: imageURL)
+                self.onSave?(updated)  // Call the onSave closure
+                self.navigationController?.popViewController(animated: true)  // Go back to the previous screen
             }
         }
     }
