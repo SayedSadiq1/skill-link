@@ -2,12 +2,12 @@
 //  SeekerHomeViewController.swift
 //  Skill-Link
 //
-//  Created by BP-36-201-23 on 30/12/2025.
+//  Created by BP-36-201-14 on 28/12/2025.
 //
 
 import UIKit
 
-class SeekerHomeViewController: UIViewController {
+class SeekerHomeViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()

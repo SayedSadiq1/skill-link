@@ -1,5 +1,5 @@
 //
-//  ProviderHomeViewController.swift
+//  AddServiceViewController.swift
 //  Skill-Link
 //
 //  Created by BP-36-201-14 on 28/12/2025.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ProviderHomeViewController: BaseViewController {
+class AddServiceViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
