@@ -16,7 +16,7 @@ class ServiceDetailsViewController: BaseViewController {
     
     // MARK: - Properties
     var service: Service2!
-    let isProvider: Bool = false
+    let isProvider: Bool = true
     var isActivated: Bool = true
     
     // MARK: - Cell Identifiers
@@ -130,7 +130,6 @@ class ServiceDetailsViewController: BaseViewController {
         guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "reportPage") else {
             return
         }
-            controller.modalPresentationStyle = .fullScreen
         self.navigationController?.pushViewController(controller, animated: true)
         }
     
