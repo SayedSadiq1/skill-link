@@ -144,12 +144,14 @@ class ServiceDetailsViewController: BaseViewController {
                 return
             }
             
-        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "EditView") else {
+        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "EditView") as? EditController else {
             return
         }
+        
         controller.modalPresentationStyle = .fullScreen
         controller.navigationItem.title = "Edit Service Details"
         self.navigationController?.pushViewController(controller, animated: true)
+        controller.initWithService(service: service)
         }
 }
 

@@ -11,6 +11,13 @@ class EditController: BaseViewController {
 
     @IBOutlet weak var categoryPopupBtn: UIButton!
     @IBOutlet weak var pricingPopupBtn: UIButton!
+    @IBOutlet weak var titleField: UITextField!
+    @IBOutlet weak var descriptionField: UITextView!
+    @IBOutlet weak var minDurationField: UITextField!
+    @IBOutlet weak var maxDurationField: UITextField!
+    @IBOutlet weak var pricingField: UITextField!
+    @IBOutlet weak var disclaimersField: UITextView!
+    @IBOutlet weak var additionalInfoField: UITextView!
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -18,7 +25,7 @@ class EditController: BaseViewController {
     }
     
     let categories = ["Home Maintenance", "Handwork", "Electricity"]
-    
+    var service: Service2?
 
     func setupUI() {
         if pricingPopupBtn != nil {
@@ -44,6 +51,20 @@ class EditController: BaseViewController {
                    categoryPopupBtn.showsMenuAsPrimaryAction = true
                    categoryPopupBtn.changesSelectionAsPrimaryAction = true
                }
+        
+        guard let service = service else {
+            return
+        }
+        titleField.text = service.title
+        descriptionField.text = service.description
+        minDurationField.text = String(service.durationMinHours)
+        maxDurationField.text = String(service.durationMaxHours)
+        pricingField.text = String(service.priceBD)
+        disclaimersField.text = service.disclaimers.joined(separator: "\n")
+    }
+    
+    func initWithService(service: Service2) {
+        self.service = service
     }
 
 }

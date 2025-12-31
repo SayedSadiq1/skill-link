@@ -165,7 +165,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Nxg-E4-toF">
-                                <rect key="frame" x="8" y="235" width="393" height="487"/>
+                                <rect key="frame" x="8" y="235" width="393" height="549"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="headerCell" rowHeight="107" id="jet-Sd-J3F" userLabel="Header Cell" customClass="ServiceDetailsHeaderCell" customModule="Skill_Link" customModuleProvider="target">
@@ -244,7 +244,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <stackView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" axis="vertical" alignment="top" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="M7f-vg-dBE">
-                                                    <rect key="frame" x="10" y="5" width="116.66666666666666" height="82"/>
+                                                    <rect key="frame" x="10.000000000000007" y="5" width="116.66666666666669" height="82"/>
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Provided By" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xCk-fU-mNP">
                                                             <rect key="frame" x="0.0" y="0.0" width="105" height="24"/>
@@ -626,8 +626,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <scrollView autoresizesSubviews="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ko2-v3-lYZ">
-                                <rect key="frame" x="0.0" y="-103" width="393" height="852"/>
+                            <scrollView autoresizesSubviews="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ko2-v3-lYZ">
+                                <rect key="frame" x="0.0" y="230" width="393" height="602"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xX5-K7-Fzv">
                                         <rect key="frame" x="0.0" y="0.0" width="393" height="1186"/>
@@ -834,8 +834,10 @@
                                     <constraint firstItem="xX5-K7-Fzv" firstAttribute="leading" secondItem="929-p7-GXX" secondAttribute="leading" id="6K8-Ss-Slk"/>
                                     <constraint firstAttribute="bottom" secondItem="xX5-K7-Fzv" secondAttribute="bottom" id="GhM-Pg-jV8"/>
                                     <constraint firstItem="xX5-K7-Fzv" firstAttribute="top" secondItem="ko2-v3-lYZ" secondAttribute="top" id="H5P-VO-2YV"/>
+                                    <constraint firstItem="xX5-K7-Fzv" firstAttribute="leading" secondItem="929-p7-GXX" secondAttribute="leading" id="N5O-KQ-Xxp"/>
                                     <constraint firstItem="xX5-K7-Fzv" firstAttribute="width" secondItem="ko2-v3-lYZ" secondAttribute="width" id="RLL-SL-9Wr"/>
                                     <constraint firstItem="xX5-K7-Fzv" firstAttribute="trailing" secondItem="929-p7-GXX" secondAttribute="trailing" id="auK-C6-MWK"/>
+                                    <constraint firstItem="xX5-K7-Fzv" firstAttribute="trailing" secondItem="929-p7-GXX" secondAttribute="trailing" id="gaS-7l-m1O"/>
                                     <constraint firstItem="xX5-K7-Fzv" firstAttribute="centerX" secondItem="ko2-v3-lYZ" secondAttribute="centerX" id="y2X-JR-gYu"/>
                                 </constraints>
                                 <viewLayoutGuide key="contentLayoutGuide" id="6Gt-8r-VTb"/>
@@ -849,11 +851,19 @@
                             <constraint firstItem="ko2-v3-lYZ" firstAttribute="top" secondItem="c8h-BZ-sNC" secondAttribute="top" constant="230" id="nm6-az-ktW"/>
                             <constraint firstItem="ko2-v3-lYZ" firstAttribute="trailing" secondItem="1Me-M6-daK" secondAttribute="trailing" id="qj2-iJ-oET"/>
                             <constraint firstAttribute="bottom" secondItem="ko2-v3-lYZ" secondAttribute="bottom" constant="20" symbolic="YES" id="rJw-xQ-s3l"/>
+                            <constraint firstItem="ko2-v3-lYZ" firstAttribute="width" secondItem="c8h-BZ-sNC" secondAttribute="width" id="wmv-VS-AiL"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="additionalInfoField" destination="gZF-WH-X7P" id="trB-Eh-Yga"/>
                         <outlet property="categoryPopupBtn" destination="9en-BT-Luk" id="EUZ-7l-FD9"/>
+                        <outlet property="descriptionField" destination="95a-CK-x1m" id="C0C-La-4RD"/>
+                        <outlet property="disclaimersField" destination="gP2-nu-bgR" id="f8B-BO-YqR"/>
+                        <outlet property="maxDurationField" destination="FU7-0Y-Q0D" id="EBR-wU-8p1"/>
+                        <outlet property="minDurationField" destination="4Wl-V9-dBn" id="eOa-zi-Cgp"/>
+                        <outlet property="pricingField" destination="wOZ-Fn-4RT" id="NAk-EV-8JQ"/>
                         <outlet property="pricingPopupBtn" destination="3az-MW-w2a" id="gso-fL-65m"/>
+                        <outlet property="titleField" destination="doD-wS-qjK" id="Zyo-oh-JKI"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="cO3-Sp-HL0" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
