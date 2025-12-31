@@ -24,17 +24,17 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
         Service(id: UUID(), title: "Professional Plumbing Service", description: "",
                 category: "Plumbing", priceBD: 70, priceType: .fixed, rating: 5.0,
                 provider: UserProfile(name: "Ali", skills: [], brief: "", contact: ""),
-                available: true, disclaimers: []),
+                available: true, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Morning"),
 
         Service(id: UUID(), title: "Electrician Home Wiring", description: "",
                 category: "Electrician", priceBD: 50, priceType: .hourly, rating: 4.6,
                 provider: UserProfile(name: "Ahmed", skills: [], brief: "", contact: ""),
-                available: true, disclaimers: []),
+                available: true, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Afternoon (12–4)"),
 
         Service(id: UUID(), title: "Landscaping Garden Care", description: "",
                 category: "Landscaping", priceBD: 30, priceType: .hourly, rating: 4.4,
                 provider: UserProfile(name: "Salman", skills: [], brief: "", contact: ""),
-               available: true, disclaimers: [])
+                available: false, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Evening")
     ]
 
     private var filteredServices: [Service] = []
@@ -196,11 +196,29 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
 
     func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
         let cell = tableView.dequeueReusableCell(withIdentifier: "ServiceCell", for: indexPath) as! ServiceCellTableViewCell
         let s = filteredServices[indexPath.row]
+
         cell.serviceNameLabel.text = s.title
         cell.priceLabel.text = "\(Int(s.priceBD)) BD"
         cell.ratingLabel.text = String(format: "%.1f", s.rating)
+
+        // ✅ IMPORTANT: always set BOTH states because cells are reused
+        if s.available {
+            cell.availabilityLabel.text = "Available \(s.availableAt)"
+            cell.availabilityLabel.textColor = .systemGreen
+
+            cell.checkmarkImage.image = UIImage(systemName: "checkmark.circle.fill")
+            cell.checkmarkImage.tintColor = .systemGreen
+        } else {
+            cell.availabilityLabel.text = "Unavailable"
+            cell.availabilityLabel.textColor = .systemRed
+
+            cell.checkmarkImage.image = UIImage(systemName: "xmark.circle.fill")
+            cell.checkmarkImage.tintColor = .systemRed
+        }
+
         return cell
     }
 }
