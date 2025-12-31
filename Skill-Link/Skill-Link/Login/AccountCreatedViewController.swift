@@ -26,7 +26,7 @@ final class AccountCreatedViewController: BaseViewController {
     @IBAction func continueTapped(_ sender: UIButton) {
         // Check if the current user is logged in
         guard let uid = Auth.auth().currentUser?.uid else {
-            showAlert("No user session. Please login again.") // Show alert if no user is logged in
+            showAlert("You are not logged-in. Please login again.") // Show alert if no user is logged in
             return
         }
 

@@ -9,45 +9,70 @@ final class SetupProfileSeekerViewController: BaseViewController {
     @IBOutlet weak var contactTextField: UITextField!
     @IBOutlet weak var profileImageView: UIImageView!
 
-    private let db = Firestore.firestore()  // Firestore reference to save data
-    private var photoPicker: PhotoPickerHelper?  // Helper to pick photo
-    private var selectedImage: UIImage?  // Selected profile image
-    private var isSaving = false  // Flag to prevent multiple saves
+    private let db = Firestore.firestore()
+    private var photoPicker: PhotoPickerHelper?
+    private var selectedImage: UIImage?
+    private var isSaving = false
 
-    private var loadedFullName: String = ""  // Loaded full name from Firestore
+    private var loadedFullName: String = ""
+
+    // Spinner shown while saving (no popup)
+    private let loadingSpinner = UIActivityIndicatorView(style: .large)
+
+    override var shouldShowBackButton: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Disable back navigation
-        navigationItem.hidesBackButton = true
+        // Disable going back from setup
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
-        // Set default image if no image is selected
+        // Default profile image if user didnt pick one yet
         if profileImageView.image == nil {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
 
-        // Enable image interaction
+        // Setup image tap
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
 
-        // Load full name from Firestore
+        // Setup loading spinner (only a circle, no text)
+        setupLoadingSpinner()
+
+        // Load name from firestore
         loadFullNameFromFirestore()
     }
-    
-    override var shouldShowBackButton: Bool { false }
-
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Make profile image circular
+
+        // Make profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
     }
 
-    // Load user's full name from Firestore
+    private func setupLoadingSpinner() {
+        loadingSpinner.translatesAutoresizingMaskIntoConstraints = false
+        loadingSpinner.hidesWhenStopped = true
+
+        view.addSubview(loadingSpinner)
+
+        NSLayoutConstraint.activate([
+            loadingSpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingSpinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+
+    private func setLoading(_ isLoading: Bool) {
+        if isLoading {
+            loadingSpinner.startAnimating()
+        } else {
+            loadingSpinner.stopAnimating()
+        }
+    }
+
+    // MARK: - Load name
     private func loadFullNameFromFirestore() {
         guard let uid = Auth.auth().currentUser?.uid else {
             fullNameLabel.text = "No user"
@@ -56,10 +81,10 @@ final class SetupProfileSeekerViewController: BaseViewController {
 
         db.collection("User").document(uid).getDocument { [weak self] snap, err in
             guard let self else { return }
+
             DispatchQueue.main.async {
-                if let err = err {
+                if err != nil {
                     self.fullNameLabel.text = "Error loading name"
-                    print("Error loading name: \(err.localizedDescription)")
                     return
                 }
 
@@ -69,32 +94,20 @@ final class SetupProfileSeekerViewController: BaseViewController {
                 self.loadedFullName = name
                 self.fullNameLabel.text = name.isEmpty ? "Name not set" : name
 
-                // Save the full name locally
-                self.saveUserProfileLocally()
+                // Save the name localy too (even before continue)
+                self.saveUserProfileLocally(
+                    name: self.loadedFullName,
+                    interests: [],
+                    contact: self.contactTextField.text ?? "",
+                    imageURL: nil
+                )
             }
         }
     }
 
-    // Save user profile data locally using UserDefaults
-    private func saveUserProfileLocally() {
-        let userProfile = UserProfile(
-            name: loadedFullName,
-            skills: [],
-            brief: "",
-            contact: contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
-            imageURL: nil,  // Image URL will be saved if image is uploaded
-            id: Auth.auth().currentUser?.uid
-        )
-
-        // Encode and save the profile to UserDefaults
-        if let encodedProfile = try? JSONEncoder().encode(userProfile) {
-            UserDefaults.standard.set(encodedProfile, forKey: "userProfile")
-        }
-    }
-
-    // MARK: - Continue Button Action
+    // MARK: - Continue
     @IBAction func continueTapped(_ sender: UIButton) {
-        guard !isSaving else { return }  // Prevent multiple save operations
+        guard !isSaving else { return }
         guard validateRequiredFields() else { return }
 
         guard let uid = Auth.auth().currentUser?.uid else {
@@ -104,12 +117,13 @@ final class SetupProfileSeekerViewController: BaseViewController {
 
         isSaving = true
         sender.isEnabled = false
-        showSavingHUD(true)
+        setLoading(true)
 
-        // If a photo is selected, upload it; otherwise, save the profile without an image
+        // Upload image if exists, otherwise save direct
         if let image = selectedImage {
             CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
                 guard let self else { return }
+
                 DispatchQueue.main.async {
                     switch result {
                     case .success(let url):
@@ -121,12 +135,11 @@ final class SetupProfileSeekerViewController: BaseViewController {
                 }
             }
         } else {
-            // No photo selected, save profile without image URL
-            self.saveSeekerProfile(uid: uid, imageURL: nil, sender: sender)
+            saveSeekerProfile(uid: uid, imageURL: nil, sender: sender)
         }
     }
 
-    // Save the seeker profile data to Firestore
+    // MARK: - Save seeker profile
     private func saveSeekerProfile(uid: String, imageURL: String?, sender: UIButton) {
         let interestsArray = (interestsTextField.text ?? "")
             .split(separator: ",")
@@ -149,6 +162,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
 
         db.collection("User").document(uid).setData(data, merge: true) { [weak self] err in
             guard let self else { return }
+
             DispatchQueue.main.async {
                 if let err = err {
                     self.finishSaving(sender: sender)
@@ -156,7 +170,14 @@ final class SetupProfileSeekerViewController: BaseViewController {
                     return
                 }
 
-                // Dismiss the saving HUD, then navigate
+                // Update local data after save is done
+                self.saveUserProfileLocally(
+                    name: self.loadedFullName,
+                    interests: interestsArray,
+                    contact: contact,
+                    imageURL: imageURL
+                )
+
                 self.finishSaving(sender: sender) {
                     self.goToProfileSeeker()
                 }
@@ -164,7 +185,29 @@ final class SetupProfileSeekerViewController: BaseViewController {
         }
     }
 
-    // Navigate to the profile seeker screen after saving the data
+    private func saveUserProfileLocally(name: String, interests: [String], contact: String, imageURL: String?) {
+        // Seeker interests stored in skills to keep one local model
+        let profile = UserProfile(
+            name: name,
+            skills: interests,
+            brief: "",
+            contact: contact,
+            imageURL: imageURL,
+            id: Auth.auth().currentUser?.uid
+        )
+
+        if let encoded = try? JSONEncoder().encode(profile) {
+            UserDefaults.standard.set(encoded, forKey: "userProfile")
+        }
+    }
+
+    private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
+        setLoading(false)
+        isSaving = false
+        sender.isEnabled = true
+        completion?()
+    }
+
     private func goToProfileSeeker() {
         let sb = UIStoryboard(name: "login", bundle: nil)
 
@@ -175,10 +218,10 @@ final class SetupProfileSeekerViewController: BaseViewController {
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    // Validate required fields (name, interests, contact)
+    // MARK: - Validation
     private func validateRequiredFields() -> Bool {
         if loadedFullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            showAlert(message: "Your name is missing in Firebase. Go back and register again.")
+            showAlert(message: "Your name is missing in firebase. Please register again.")
             return false
         }
 
@@ -207,49 +250,13 @@ final class SetupProfileSeekerViewController: BaseViewController {
         return true
     }
 
-    // Show an alert with a custom message
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "Setup Profile", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
 
-    // MARK: - Saving HUD
-    private var savingAlert: UIAlertController?
-
-    private func showSavingHUD(_ show: Bool) {
-        if show {
-            let alert = UIAlertController(title: nil, message: "Saving...", preferredStyle: .alert)
-            let spinner = UIActivityIndicatorView(style: .medium)
-            spinner.translatesAutoresizingMaskIntoConstraints = false
-            spinner.startAnimating()
-            alert.view.addSubview(spinner)
-
-            NSLayoutConstraint.activate([
-                spinner.centerXAnchor.constraint(equalTo: alert.view.centerXAnchor),
-                spinner.bottomAnchor.constraint(equalTo: alert.view.bottomAnchor, constant: -20)
-            ])
-
-            savingAlert = alert
-            present(alert, animated: true)
-        } else {
-            savingAlert?.dismiss(animated: true)
-            savingAlert = nil
-        }
-    }
-
-    // Dismiss the saving alert and handle completion
-    private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
-        savingAlert?.dismiss(animated: true) { [weak self] in
-            guard let self else { return }
-            self.savingAlert = nil
-            self.isSaving = false
-            sender.isEnabled = true
-            completion?()
-        }
-    }
-
-    // MARK: - Photo picking
+    // MARK: - Photo picker
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }

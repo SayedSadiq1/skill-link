@@ -36,7 +36,7 @@ final class ServiceSetupViewController: BaseViewController {
         
         // Ensure the user is logged in
         guard let user = Auth.auth().currentUser else {
-            showSimpleAlert(title: "Error", message: "No logged in user found. Please register again.")
+            showSimpleAlert(title: "Error", message: "You are not logged-in. Please login again.")
             return
         }
 

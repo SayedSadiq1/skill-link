@@ -4,54 +4,56 @@ import FirebaseFirestore
 
 final class EditProfileSeekerViewController: BaseViewController {
 
-    // Text fields for user input
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var interestsTextField: UITextField!
     @IBOutlet weak var contactTextField: UITextField!
-
-    // Profile image view
     @IBOutlet weak var profileImageView: UIImageView!
 
-    var profile: SeekerProfile?  // Seeker profile passed from ProfileSeekerViewController
-    var onSave: ((SeekerProfile) -> Void)?  // Callback to notify the parent controller after save
+    var profile: SeekerProfile?
+    var onSave: ((SeekerProfile) -> Void)?
 
-    private let db = Firestore.firestore()  // Firestore reference for saving profile data
-    private var photoPicker: PhotoPickerHelper?  // Helper for selecting photos
+    private let db = Firestore.firestore()
+    private var photoPicker: PhotoPickerHelper?
 
-    // Cloudinary credentials for image upload
     private let cloudName = "dgamwyki7"
     private let uploadPreset = "mobile_unsigned"
 
-    // Variables for image upload
-    private var selectedImageData: Data?  // Data for selected image
-    private var selectedImageURL: String?  // URL for the uploaded image
+    private var selectedImageData: Data?
+    private var selectedImageURL: String?
 
-    private var isSaving = false  // Flag to prevent multiple save attempts
+    private var isSaving = false
+
+    // Loading circle (no top label)
+    private let loadingSpinner = UIActivityIndicatorView(style: .large)
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Style the text fields for input
+        // Style inputs so they look the same
         styleTextField(nameTextField)
         styleTextField(interestsTextField)
         styleTextField(contactTextField)
 
-        // Enable image tapping to change photo
+        // Allow tapping the image to change it
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
 
+        // Setup loading spinner (just a circle)
+        setupLoadingSpinner()
+
         guard let profile = profile else {
-            print("❌ EditProfileSeekerViewController: profile is nil (not passed)")
+            print("EditProfileSeekerViewController: profile is nil")
             return
         }
 
-        // Pre-fill the text fields with the existing profile data
+        // Fill the fields with existing data
         nameTextField.text = profile.name
         interestsTextField.text = profile.interests.joined(separator: ", ")
         contactTextField.text = profile.contact
 
-        // Load the image if it exists in the profile
+        // Keep current image url in case user didnt change it
         selectedImageURL = profile.imageURL
+
         if let urlString = profile.imageURL, let url = URL(string: urlString) {
             loadImage(from: url)
         } else {
@@ -61,55 +63,74 @@ final class EditProfileSeekerViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Make the profile image circular
+
+        // Make profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
     }
 
-    // MARK: - Styling the text fields
+    // MARK: - Spinner setup
+    private func setupLoadingSpinner() {
+        loadingSpinner.translatesAutoresizingMaskIntoConstraints = false
+        loadingSpinner.hidesWhenStopped = true
+
+        view.addSubview(loadingSpinner)
+
+        NSLayoutConstraint.activate([
+            loadingSpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingSpinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+
+    private func setLoading(_ isLoading: Bool) {
+        if isLoading {
+            loadingSpinner.startAnimating()
+        } else {
+            loadingSpinner.stopAnimating()
+        }
+    }
+
+    // MARK: - Text field style
     private func styleTextField(_ tf: UITextField) {
         tf.layer.cornerRadius = 8
         tf.layer.borderWidth = 1
         tf.layer.borderColor = UIColor.systemGray4.cgColor
         tf.backgroundColor = .white
 
-        // Add padding to the left of text fields
+        // Small left padding so text isnt stuck to the edge
         let padding = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 44))
         tf.leftView = padding
         tf.leftViewMode = .always
     }
 
-    // MARK: - Photo picker action
+    // MARK: - Photo picker
     @objc private func changePhotoTapped() {
-        // Initialize the photo picker helper
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image
             self.selectedImageData = image.jpegData(compressionQuality: 0.8)
         }
-        photoPicker?.presentPicker()  // Present the photo picker
+        photoPicker?.presentPicker()
     }
 
-    // MARK: - Save button action
+    // MARK: - Save
     @IBAction func saveTapped(_ sender: UIButton) {
-        guard !isSaving else { return }  // Prevent multiple save attempts
+        guard !isSaving else { return }
         guard let uid = Auth.auth().currentUser?.uid else {
             showAlert(title: "Error", message: "No logged in user. Please login again.")
             return
         }
 
-        // Retrieve and clean user inputs
         let fullName = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        // Validate the inputs
         let interestsArray = (interestsTextField.text ?? "")
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        // Ensure required fields are filled
+        // Required fields checks
         if fullName.isEmpty { showAlert(title: "Missing", message: "Please enter your name."); return }
         if contact.isEmpty { showAlert(title: "Missing", message: "Please enter your contact."); return }
         if interestsArray.isEmpty { showAlert(title: "Missing", message: "Please enter at least one interest (separate by commas)."); return }
@@ -117,7 +138,7 @@ final class EditProfileSeekerViewController: BaseViewController {
         isSaving = true
         setSavingUI(true)
 
-        // If a new image is selected, upload it
+        // Upload new image if user picked one
         if let imgData = selectedImageData {
             uploadToCloudinary(imageData: imgData) { [weak self] result in
                 guard let self else { return }
@@ -135,7 +156,6 @@ final class EditProfileSeekerViewController: BaseViewController {
                 }
             }
         } else {
-            // No new image, save without the image URL
             saveToFirestore(uid: uid, fullName: fullName, contact: contact, interests: interestsArray, imageURL: selectedImageURL)
         }
     }
@@ -153,7 +173,6 @@ final class EditProfileSeekerViewController: BaseViewController {
             data["imageURL"] = imageURL
         }
 
-        // Save profile data to Firestore
         db.collection("User").document(uid).setData(data, merge: true) { [weak self] err in
             guard let self else { return }
 
@@ -166,11 +185,30 @@ final class EditProfileSeekerViewController: BaseViewController {
                     return
                 }
 
-                // If save is successful, update the local profile data
+                // Update local saved profile so app can read it later
+                self.saveUserProfileLocally(name: fullName, interests: interests, contact: contact, imageURL: imageURL, uid: uid)
+
                 let updated = SeekerProfile(name: fullName, interests: interests, contact: contact, imageURL: imageURL)
-                self.onSave?(updated)  // Call the onSave closure
-                self.navigationController?.popViewController(animated: true)  // Go back to the previous screen
+                self.onSave?(updated)
+                self.navigationController?.popViewController(animated: true)
             }
+        }
+    }
+
+    // MARK: - Local save
+    private func saveUserProfileLocally(name: String, interests: [String], contact: String, imageURL: String?, uid: String) {
+        // Seeker interests saved in skills so we keep one local model
+        let profile = UserProfile(
+            name: name,
+            skills: interests,
+            brief: "",
+            contact: contact,
+            imageURL: imageURL,
+            id: uid
+        )
+
+        if let encoded = try? JSONEncoder().encode(profile) {
+            UserDefaults.standard.set(encoded, forKey: "userProfile")
         }
     }
 
@@ -185,7 +223,7 @@ final class EditProfileSeekerViewController: BaseViewController {
         }.resume()
     }
 
-    // MARK: - Cloudinary upload (Unsigned)
+    // MARK: - Cloudinary upload
     private func uploadToCloudinary(imageData: Data, completion: @escaping (Result<String, Error>) -> Void) {
         let url = URL(string: "https://api.cloudinary.com/v1_1/\(cloudName)/image/upload")!
 
@@ -234,12 +272,11 @@ final class EditProfileSeekerViewController: BaseViewController {
 
     // MARK: - UI helpers
     private func setSavingUI(_ saving: Bool) {
+        // Disable touches while saving
         view.isUserInteractionEnabled = !saving
-        if saving {
-            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Saving...", style: .plain, target: nil, action: nil)
-        } else {
-            navigationItem.rightBarButtonItem = nil
-        }
+
+        // Show only a loading circle, no top label
+        setLoading(saving)
     }
 
     private func showAlert(title: String, message: String) {

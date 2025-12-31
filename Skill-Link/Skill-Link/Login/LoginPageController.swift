@@ -8,9 +8,9 @@ final class LoginPageController: BaseViewController {
     @IBOutlet weak var passwordTextField: UITextField!
 
     private let db = Firestore.firestore()
-
+    static var currentUser: UserProfile?
+    
     @IBAction func loginButtonTapped(_ sender: UIButton) {
-
         let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let password = passwordTextField.text ?? ""
 
@@ -89,7 +89,7 @@ final class LoginPageController: BaseViewController {
             } else {
                 self.showAlert(
                     title: "Role Missing",
-                    message: "Your account role is not set yet."
+                    message: "Your account role is not set yet. Please contact support."
                 )
             }
         }
