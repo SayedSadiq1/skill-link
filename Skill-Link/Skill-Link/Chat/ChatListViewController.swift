@@ -7,6 +7,7 @@
 
 import UIKit
 import FirebaseFirestore
+import FirebaseAuth
 
 class ChatListViewController: BaseViewController,
                               UITableViewDataSource,
@@ -49,8 +50,26 @@ class ChatListViewController: BaseViewController,
         searchBar.delegate = self
         searchBar.placeholder = "Search providers"
 
-        fetchAllProviders()
+        ensureAuthThenFetchProviders()
+
     }
+    
+    func ensureAuthThenFetchProviders() {
+        if Auth.auth().currentUser == nil {
+            Auth.auth().signInAnonymously { [weak self] result, error in
+                if let error = error {
+                    print("Anonymous auth failed:", error.localizedDescription)
+                    return
+                }
+
+                print("Anonymous user signed in:", result?.user.uid ?? "")
+                self?.fetchAllProviders()
+            }
+        } else {
+            fetchAllProviders()
+        }
+    }
+
 
     func fetchAllProviders() {
         let db = Firestore.firestore()
@@ -140,13 +159,57 @@ class ChatListViewController: BaseViewController,
                    didSelectRowAt indexPath: IndexPath) {
 
         let provider = displayedProviders[indexPath.row]
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return }
 
-        if provider.lastMessage == nil {
-            print("Start NEW chat with \(provider.fullName)")
-        } else {
-            print("Open EXISTING chat with \(provider.fullName)")
-        }
+        let db = Firestore.firestore()
+
+        // 1. Check if chat already exists
+        db.collection("Chats")
+            .whereField("participants", arrayContains: currentUserId)
+            .getDocuments { snapshot, error in
+
+                if let doc = snapshot?.documents.first(where: {
+                    let participants = $0["participants"] as? [String] ?? []
+                    return participants.contains(provider.id)
+                }) {
+                    // Existing chat
+                    self.openChat(
+                        chatId: doc.documentID,
+                        provider: provider
+                    )
+                } else {
+                    // Create new chat
+                    let chatRef = db.collection("Chats").document()
+                    chatRef.setData([
+                        "participants": [currentUserId, provider.id],
+                        "createdAt": Timestamp(),
+                        "lastMessage": "",
+                        "lastMessageTime": Timestamp(),
+                        "lastSenderId": ""
+                    ]) { _ in
+                        self.openChat(
+                            chatId: chatRef.documentID,
+                            provider: provider
+                        )
+                    }
+                }
+            }
     }
+    
+    func openChat(chatId: String, provider: Provider) {
+        let sb = UIStoryboard(name: "Chat", bundle: nil)
+        let vc = sb.instantiateViewController(
+            withIdentifier: "ChatViewController"
+        ) as! ChatViewController
+
+        vc.chatId = chatId
+        vc.providerId = provider.id
+        vc.providerName = provider.fullName
+
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+
 
 
     // MARK: - Search

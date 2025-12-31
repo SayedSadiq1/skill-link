@@ -11,7 +11,7 @@
         <!--Chat View Controller-->
         <scene sceneID="s0d-6b-0kx">
             <objects>
-                <viewController modalPresentationStyle="fullScreen" id="Y6W-OH-hqX" customClass="ChatViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ChatViewController" modalPresentationStyle="fullScreen" id="Y6W-OH-hqX" customClass="ChatViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -169,7 +169,6 @@
                                             <outlet property="lastMessageLabel" destination="n5m-FY-oaK" id="Tog-wp-9eJ"/>
                                             <outlet property="nameLabel" destination="8l7-UI-zJB" id="7um-VF-uaf"/>
                                             <outlet property="timeLabel" destination="kaw-I0-myC" id="m4y-SP-Uf4"/>
-                                            <segue destination="Y6W-OH-hqX" kind="show" id="m7I-ZA-RAw"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
