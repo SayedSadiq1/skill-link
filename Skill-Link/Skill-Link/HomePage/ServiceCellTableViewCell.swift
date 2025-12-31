@@ -11,7 +11,9 @@ class ServiceCellTableViewCell: UITableViewCell {
         @IBOutlet weak var serviceNameLabel: UILabel!
         @IBOutlet weak var priceLabel: UILabel!
         @IBOutlet weak var ratingLabel: UILabel!
-
+    @IBOutlet weak var availabilityLabel: UILabel!
+    @IBOutlet weak var checkmarkImage: UIImageView!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code

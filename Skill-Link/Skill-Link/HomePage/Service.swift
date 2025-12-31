@@ -19,8 +19,11 @@ class Service {
     let provider: UserProfile
     let available: Bool
     let disclaimers: [String]
+    let durationMinHours: Double
+    let durationMaxHours: Double
+    let availableAt: String
     
-    init(id: UUID, title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, provider: UserProfile, available: Bool, disclaimers: [String]) {
+    init(id: UUID, title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, provider: UserProfile, available: Bool, disclaimers: [String], durationMinHours: Double, durationMaxHours: Double, availableAt: String = "Morning") {
         self.id = id
         self.title = title
         self.description = description
@@ -31,6 +34,9 @@ class Service {
         self.provider = provider
         self.available = available
         self.disclaimers = disclaimers
+        self.durationMinHours = durationMinHours
+        self.durationMaxHours = durationMaxHours
+        self.availableAt = availableAt
     }
 }
 
