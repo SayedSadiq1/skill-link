@@ -24,7 +24,7 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
         Service(id: UUID(), title: "Professional Plumbing Service", description: "",
                 category: "Plumbing", priceBD: 70, priceType: .fixed, rating: 5.0,
                 provider: UserProfile(name: "Ali", skills: [], brief: "", contact: ""),
-                available: true, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Morning"),
+                available: true, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Morning (8–12)"),
 
         Service(id: UUID(), title: "Electrician Home Wiring", description: "",
                 category: "Electrician", priceBD: 50, priceType: .hourly, rating: 4.6,
@@ -34,7 +34,7 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
         Service(id: UUID(), title: "Landscaping Garden Care", description: "",
                 category: "Landscaping", priceBD: 30, priceType: .hourly, rating: 4.4,
                 provider: UserProfile(name: "Salman", skills: [], brief: "", contact: ""),
-                available: false, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Evening")
+                available: false, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Evening (4–8)")
     ]
 
     private var filteredServices: [Service] = []
@@ -170,10 +170,26 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
     private func applyFilters() {
         var result = services
 
+        // Category filter
         if !currentFilters.selectedCategories.isEmpty {
             result = result.filter { currentFilters.selectedCategories.contains($0.category) }
         }
 
+        // ✅ Availability filter (NEW)
+        // Your AvailabilityViewController stores "Morning (8–12)" etc.
+        if let slot = currentFilters.availabilitySlot,
+           !slot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+
+            let wanted = normalizeSlot(slot)
+
+            result = result.filter { service in
+                // If seeker chose a slot: only show available services matching that slot
+                guard service.available else { return false }
+                return normalizeSlot(service.availableAt) == wanted
+            }
+        }
+
+        // Sort by price
         if let ps = currentFilters.priceSort {
             switch ps {
             case .lowToHigh: result.sort { $0.priceBD < $1.priceBD }
@@ -181,12 +197,23 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
             }
         }
 
+        // Sort by rating
         if currentFilters.sortByRating {
             result.sort { $0.rating > $1.rating }
         }
 
         filteredServices = result
         tableView.reloadData()
+    }
+
+    // ✅ Normalize "Night (8–12)" and "Night" to same key
+    private func normalizeSlot(_ s: String) -> String {
+        let lower = s.lowercased()
+        if lower.contains("morning") { return "morning" }
+        if lower.contains("afternoon") { return "afternoon" }
+        if lower.contains("evening") { return "evening" }
+        if lower.contains("night") { return "night" }
+        return lower.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Table
@@ -235,3 +262,4 @@ final class PaddingLabel: UILabel {
                       height: s.height + padding.top + padding.bottom)
     }
 }
+
