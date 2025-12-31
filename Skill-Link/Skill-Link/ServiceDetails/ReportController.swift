@@ -7,14 +7,13 @@
 
 import UIKit
 
-class ReportController: UIViewController {
+class ReportController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
     }
     
+    @IBOutlet weak var reportModal: UIStackView!
     @IBOutlet weak var reportDescriptionTextView: UITextView!
     
     /*
