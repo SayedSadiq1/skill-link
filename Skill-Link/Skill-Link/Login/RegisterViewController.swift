@@ -66,7 +66,7 @@ final class RegisterViewController: BaseViewController {
                 sender.isEnabled = true
 
                 if let err = err {
-                    self.showAlert("Saved auth user, but firestore failed: \(err.localizedDescription)")
+                    self.showAlert("Login Failed Cheack Your E-mail And Password")
                     return
                 }
 

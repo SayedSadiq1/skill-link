@@ -57,7 +57,7 @@ final class RoleSelectionViewController: BaseViewController {
         guard !isSaving else { return }
 
         guard let user = Auth.auth().currentUser else {
-            showAlert("No logged-in user found. Please login again.")
+            showAlert("You are not logged-in. Please login again.")
             return
         }
 

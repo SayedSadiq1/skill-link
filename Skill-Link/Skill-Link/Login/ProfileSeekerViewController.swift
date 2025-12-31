@@ -4,32 +4,34 @@ import FirebaseFirestore
 
 final class ProfileSeekerViewController: BaseViewController {
 
-    // Interests container (same as skills container)
     @IBOutlet weak var interestsStackView: UIStackView!
     @IBOutlet weak var interestsContainerView: UIView!
 
-    // Contact container
     @IBOutlet weak var contactContainerView: UIView!
     @IBOutlet weak var contactLabel: UILabel!
 
-    // Name + image
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var profileImageView: UIImageView!
 
-    private var successBanner: UIView?  // For showing success banner after profile update
-    private let db = Firestore.firestore()  // Firestore reference for saving/loading data
+    private var successBanner: UIView?
+    private let db = Firestore.firestore()
 
-    // Holds the current profile data
     private var currentProfile: SeekerProfile?
+
+    override var shouldShowBackButton: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Set up UI for interests and contact containers
+        // Interests container style
         interestsContainerView.layer.cornerRadius = 10
         interestsContainerView.layer.borderWidth = 1
         interestsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
 
+        // Make interests chips centered when its only 1
+        setupInterestsStackView()
+
+        // Contact container style
         contactContainerView.layer.cornerRadius = 8
         contactContainerView.layer.borderWidth = 1
         contactContainerView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -41,30 +43,38 @@ final class ProfileSeekerViewController: BaseViewController {
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
         nameLabel.textColor = .label
 
-        // Load profile data from Firestore
+        // Load seeker data from firestore
         loadProfileFromFirestore()
     }
-    
-    override var shouldShowBackButton: Bool { false }
-    
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
         // Make profile image a circle
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
     }
 
-    // MARK: - Firestore Load
+    private func setupInterestsStackView() {
+        // Center chips and keep spacing nice
+        interestsStackView.axis = .horizontal
+        interestsStackView.alignment = .center
+        interestsStackView.distribution = .equalSpacing
+        interestsStackView.spacing = 8
+
+        // Padding inside container so chips dont touch borders
+        interestsStackView.isLayoutMarginsRelativeArrangement = true
+        interestsStackView.layoutMargins = UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 12)
+    }
+
+    // MARK: - Firestore load
     private func loadProfileFromFirestore() {
-        // Get current user UID
         guard let uid = Auth.auth().currentUser?.uid else {
             showSimpleAlert(title: "Error", message: "No logged in user. Please login again.")
             return
         }
 
-        // Fetch user profile from Firestore
         db.collection("User").document(uid).getDocument { [weak self] snap, err in
             guard let self else { return }
 
@@ -74,16 +84,14 @@ final class ProfileSeekerViewController: BaseViewController {
                     return
                 }
 
-                // Parse Firestore data
                 let data = snap?.data() ?? [:]
                 let name = (data["fullName"] as? String ?? "")
                 let contact = (data["contact"] as? String ?? "")
                 let imageURL = (data["imageURL"] as? String)
 
-                // Seeker uses interests (array)
+                // Seeker uses interests array
                 let interests = data["interests"] as? [String] ?? []
 
-                // Populate the current profile with data
                 self.currentProfile = SeekerProfile(
                     name: name,
                     interests: interests,
@@ -91,84 +99,71 @@ final class ProfileSeekerViewController: BaseViewController {
                     imageURL: imageURL
                 )
 
-                // Apply the profile data to the UI
                 self.applyProfileToUI()
-
-                // Save the profile data locally
                 self.saveUserProfileLocally()
             }
         }
     }
 
-    // MARK: - Apply Profile to UI
+    // MARK: - Apply to UI
     private func applyProfileToUI() {
         guard let currentProfile else { return }
 
-        // Update labels with the loaded data
         nameLabel.text = currentProfile.name.isEmpty ? "No Name" : currentProfile.name
         contactLabel.text = currentProfile.contact.isEmpty ? "-" : currentProfile.contact
 
-        // Display the interests
         showInterests(currentProfile.interests)
 
-        // Load the profile image if available
         if let urlString = currentProfile.imageURL,
            let url = URL(string: urlString) {
             loadImage(from: url)
         } else {
-            profileImageView.image = UIImage(systemName: "person.circle.fill")  // Default image
+            profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
     }
 
-    // MARK: - URL Image Loader
     private func loadImage(from url: URL) {
-        // Set default image while loading
         profileImageView.image = UIImage(systemName: "person.circle.fill")
 
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
             guard let self else { return }
             guard let data, let img = UIImage(data: data) else { return }
-            DispatchQueue.main.async {
-                self.profileImageView.image = img
-            }
+            DispatchQueue.main.async { self.profileImageView.image = img }
         }.resume()
     }
 
-    // MARK: - Save Profile Locally
+    // MARK: - Local save
     private func saveUserProfileLocally() {
-        // Save the current profile data locally using UserDefaults
         guard let currentProfile else { return }
 
+        // Seeker interests are saved in skills in the local model
         let userProfile = UserProfile(
             name: currentProfile.name,
             skills: currentProfile.interests,
-            brief: "",  // No brief for seeker profile
+            brief: "",
             contact: currentProfile.contact,
             imageURL: currentProfile.imageURL,
             id: Auth.auth().currentUser?.uid
         )
 
-        // Encode and save the profile to UserDefaults
         if let encodedProfile = try? JSONEncoder().encode(userProfile) {
             UserDefaults.standard.set(encodedProfile, forKey: "userProfile")
         }
     }
 
-    // MARK: - Interests Chips
+    // MARK: - Interests chips
     private func showInterests(_ interests: [String]) {
         interestsStackView.arrangedSubviews.forEach {
             interestsStackView.removeArrangedSubview($0)
             $0.removeFromSuperview()
         }
 
-        // If no interests, show a placeholder chip
         if interests.isEmpty {
             let chip = makeChip(text: "No interests")
             interestsStackView.addArrangedSubview(chip)
             return
         }
 
-        // Create and display chips for each interest
         for interest in interests {
             let chip = makeChip(text: interest)
             interestsStackView.addArrangedSubview(chip)
@@ -176,7 +171,6 @@ final class ProfileSeekerViewController: BaseViewController {
     }
 
     private func makeChip(text: String) -> UILabel {
-        // Create a styled label for each interest chip
         let label = PaddingLabel()
         label.text = text
         label.font = .systemFont(ofSize: 14, weight: .medium)
@@ -194,41 +188,30 @@ final class ProfileSeekerViewController: BaseViewController {
         var verticalPadding: CGFloat = 6
 
         override func drawText(in rect: CGRect) {
-            let insets = UIEdgeInsets(
-                top: verticalPadding,
-                left: horizontalPadding,
-                bottom: verticalPadding,
-                right: horizontalPadding
-            )
+            let insets = UIEdgeInsets(top: verticalPadding, left: horizontalPadding, bottom: verticalPadding, right: horizontalPadding)
             super.drawText(in: rect.inset(by: insets))
         }
 
         override var intrinsicContentSize: CGSize {
             let size = super.intrinsicContentSize
-            return CGSize(
-                width: size.width + horizontalPadding * 2,
-                height: size.height + verticalPadding * 2
-            )
+            return CGSize(width: size.width + horizontalPadding * 2, height: size.height + verticalPadding * 2)
         }
     }
 
-    // MARK: - Continue Button Action
+    // MARK: - Continue
     @IBAction func continueTapped(_ sender: UIButton) {
-        // Check if current profile is loaded
-        guard let currentProfile else {
+        guard currentProfile != nil else {
             showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
             return
         }
 
-        // Navigate to the Seeker Home page
         let sb = UIStoryboard(name: "HomePage", bundle: nil)
         if let seekerHomeVC = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController") as? SeekerHomeViewController {
-            // You can pass any necessary data to the home page here (if needed)
             navigationController?.pushViewController(seekerHomeVC, animated: true)
         }
     }
 
-    // MARK: - Edit Profile
+    // MARK: - Edit
     @IBAction func editTapped(_ sender: UIButton) {
         guard let currentProfile else {
             showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
@@ -241,15 +224,16 @@ final class ProfileSeekerViewController: BaseViewController {
             fatalError("Could not find EditProfileSeekerViewController in storyboard.")
         }
 
-        // Pass current seeker profile to the next screen
         vc.profile = currentProfile
 
-        // Callback after saving the profile from the edit screen
         vc.onSave = { [weak self] updated in
             guard let self else { return }
             self.currentProfile = updated
-            self.applyProfileToUI()  // Apply the updated profile data to the UI
-            self.showSuccessBanner()  // Show success banner
+            self.applyProfileToUI()
+            self.showSuccessBanner()
+
+            // Save local again so it matchs the new edits
+            self.saveUserProfileLocally()
         }
 
         navigationController?.pushViewController(vc, animated: true)
@@ -262,7 +246,7 @@ final class ProfileSeekerViewController: BaseViewController {
         present(alert, animated: true)
     }
 
-    // MARK: - Success Banner
+    // MARK: - Success banner
     private func showSuccessBanner() {
         successBanner?.removeFromSuperview()
 
@@ -307,7 +291,6 @@ final class ProfileSeekerViewController: BaseViewController {
     }
 }
 
-// Simple model for seeker profile
 struct SeekerProfile {
     let name: String
     let interests: [String]
