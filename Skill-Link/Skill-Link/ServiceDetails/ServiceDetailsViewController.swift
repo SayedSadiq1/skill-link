@@ -15,7 +15,7 @@ class ServiceDetailsViewController: BaseViewController {
     @IBOutlet weak var cancelBtn: UIButton!
     
     // MARK: - Properties
-    var service: Service2!
+    var service: Service!
     let isProvider: Bool = true
     var isActivated: Bool = true
     
@@ -58,7 +58,7 @@ class ServiceDetailsViewController: BaseViewController {
             contact: "+973 3232 4545"
         )
         
-        service = Service2(
+        service = Service(
             id: UUID(),
             title: "Light Replacement Service",
             description: "Professional light replacement service for all types of fixtures. Our certified electricians ensure safe installation and optimal lighting solutions for your home or office.",
