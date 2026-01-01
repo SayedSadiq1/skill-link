@@ -16,7 +16,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
 
     private var loadedFullName: String = ""
 
-    // Spinner shown while saving (no popup)
+    // ONLY loading circle (no alert)
     private let loadingSpinner = UIActivityIndicatorView(style: .large)
 
     override var shouldShowBackButton: Bool { false }
@@ -24,38 +24,29 @@ final class SetupProfileSeekerViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Disable going back from setup
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
-        // Default profile image if user didnt pick one yet
-        if profileImageView.image == nil {
-            profileImageView.image = UIImage(systemName: "person.circle.fill")
-        }
-
-        // Setup image tap
+        profileImageView.image = UIImage(systemName: "person.circle.fill")
         profileImageView.isUserInteractionEnabled = true
-        profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
-        profileImageView.clipsToBounds = true
+        profileImageView.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped))
+        )
         profileImageView.contentMode = .scaleAspectFill
+        profileImageView.clipsToBounds = true
 
-        // Setup loading spinner (only a circle, no text)
-        setupLoadingSpinner()
-
-        // Load name from firestore
-        loadFullNameFromFirestore()
+        setupSpinner()
+        loadFullName()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-
-        // Make profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
     }
 
-    private func setupLoadingSpinner() {
+    // MARK: - Spinner
+    private func setupSpinner() {
         loadingSpinner.translatesAutoresizingMaskIntoConstraints = false
         loadingSpinner.hidesWhenStopped = true
-
         view.addSubview(loadingSpinner)
 
         NSLayoutConstraint.activate([
@@ -64,43 +55,21 @@ final class SetupProfileSeekerViewController: BaseViewController {
         ])
     }
 
-    private func setLoading(_ isLoading: Bool) {
-        if isLoading {
-            loadingSpinner.startAnimating()
-        } else {
-            loadingSpinner.stopAnimating()
-        }
+    private func setLoading(_ loading: Bool) {
+        loading ? loadingSpinner.startAnimating() : loadingSpinner.stopAnimating()
+        view.isUserInteractionEnabled = !loading
     }
 
     // MARK: - Load name
-    private func loadFullNameFromFirestore() {
-        guard let uid = Auth.auth().currentUser?.uid else {
-            fullNameLabel.text = "No user"
-            return
-        }
+    private func loadFullName() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
 
-        db.collection("User").document(uid).getDocument { [weak self] snap, err in
+        db.collection("User").document(uid).getDocument { [weak self] snap, _ in
             guard let self else { return }
-
+            let name = snap?.data()?["fullName"] as? String ?? ""
+            self.loadedFullName = name
             DispatchQueue.main.async {
-                if err != nil {
-                    self.fullNameLabel.text = "Error loading name"
-                    return
-                }
-
-                let data = snap?.data() ?? [:]
-                let name = (data["fullName"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-
-                self.loadedFullName = name
                 self.fullNameLabel.text = name.isEmpty ? "Name not set" : name
-
-                // Save the name localy too (even before continue)
-                self.saveUserProfileLocally(
-                    name: self.loadedFullName,
-                    interests: [],
-                    contact: self.contactTextField.text ?? "",
-                    imageURL: nil
-                )
             }
         }
     }
@@ -108,160 +77,117 @@ final class SetupProfileSeekerViewController: BaseViewController {
     // MARK: - Continue
     @IBAction func continueTapped(_ sender: UIButton) {
         guard !isSaving else { return }
-        guard validateRequiredFields() else { return }
-
-        guard let uid = Auth.auth().currentUser?.uid else {
-            showAlert(message: "No logged-in user found.")
-            return
-        }
+        guard validate() else { return }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
 
         isSaving = true
         sender.isEnabled = false
         setLoading(true)
 
-        // Upload image if exists, otherwise save direct
         if let image = selectedImage {
             CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
                 guard let self else { return }
-
                 DispatchQueue.main.async {
                     switch result {
                     case .success(let url):
-                        self.saveSeekerProfile(uid: uid, imageURL: url, sender: sender)
+                        self.saveProfile(uid: uid, imageURL: url, sender: sender)
                     case .failure(let error):
-                        self.finishSaving(sender: sender)
-                        self.showAlert(message: "Failed to upload image:\n\(error.localizedDescription)")
+                        self.finish(sender)
+                        self.showAlert(error.localizedDescription)
                     }
                 }
             }
         } else {
-            saveSeekerProfile(uid: uid, imageURL: nil, sender: sender)
+            saveProfile(uid: uid, imageURL: nil, sender: sender)
         }
     }
 
-    // MARK: - Save seeker profile
-    private func saveSeekerProfile(uid: String, imageURL: String?, sender: UIButton) {
-        let interestsArray = (interestsTextField.text ?? "")
+    // MARK: - Save
+    private func saveProfile(uid: String, imageURL: String?, sender: UIButton) {
+        let interests = interestsTextField.text?
             .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+            .map { $0.trimmingCharacters(in: .whitespaces) } ?? []
 
-        let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let contact = contactTextField.text ?? ""
 
         var data: [String: Any] = [
             "fullName": loadedFullName,
-            "interests": interestsArray,
+            "interests": interests,
             "contact": contact,
             "role": "seeker",
             "profileCompleted": true
         ]
 
-        if let imageURL = imageURL {
-            data["imageURL"] = imageURL
-        }
+        if let imageURL { data["imageURL"] = imageURL }
 
         db.collection("User").document(uid).setData(data, merge: true) { [weak self] err in
             guard let self else { return }
-
             DispatchQueue.main.async {
-                if let err = err {
-                    self.finishSaving(sender: sender)
-                    self.showAlert(message: "Failed to save profile:\n\(err.localizedDescription)")
+                if let err {
+                    self.finish(sender)
+                    self.showAlert(err.localizedDescription)
                     return
                 }
 
-                // Update local data after save is done
-                self.saveUserProfileLocally(
+                // SAVE LOCAL PROFILE
+                let profile = UserProfile(
+                    id: uid,
                     name: self.loadedFullName,
-                    interests: interestsArray,
                     contact: contact,
-                    imageURL: imageURL
+                    imageURL: imageURL,
+                    role: .seeker,
+                    skills: interests,
+                    brief: "",
+                    isSuspended: false
                 )
+                LocalUserStore.saveProfile(profile)
 
-                self.finishSaving(sender: sender) {
-                    self.goToProfileSeeker()
+                self.finish(sender) {
+                    self.goNext()
                 }
             }
         }
     }
 
-    private func saveUserProfileLocally(name: String, interests: [String], contact: String, imageURL: String?) {
-        // Seeker interests stored in skills to keep one local model
-        let profile = UserProfile(
-            name: name,
-            skills: interests,
-            brief: "",
-            contact: contact,
-            imageURL: imageURL,
-            id: Auth.auth().currentUser?.uid
-        )
-
-        if let encoded = try? JSONEncoder().encode(profile) {
-            UserDefaults.standard.set(encoded, forKey: "userProfile")
-        }
-    }
-
-    private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
+    private func finish(_ sender: UIButton, completion: (() -> Void)? = nil) {
         setLoading(false)
         isSaving = false
         sender.isEnabled = true
         completion?()
     }
 
-    private func goToProfileSeeker() {
+    private func goNext() {
         let sb = UIStoryboard(name: "login", bundle: nil)
-
-        guard let vc = sb.instantiateViewController(withIdentifier: "ProfileSeekerViewController") as? ProfileSeekerViewController else {
-            fatalError("Could not find ProfileSeekerViewController in storyboard.")
-        }
-
+        let vc = sb.instantiateViewController(
+            withIdentifier: "ProfileSeekerViewController"
+        )
         navigationController?.pushViewController(vc, animated: true)
     }
 
     // MARK: - Validation
-    private func validateRequiredFields() -> Bool {
-        if loadedFullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            showAlert(message: "Your name is missing in firebase. Please register again.")
-            return false
-        }
-
-        let interestsArray = (interestsTextField.text ?? "")
+    private func validate() -> Bool {
+        let interests = interestsTextField.text?
             .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+            .map { $0.trimmingCharacters(in: .whitespaces) } ?? []
 
-        let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        if interestsArray.isEmpty {
-            showAlert(message: "Please enter at least one interest (separate by commas).")
-            return false
-        }
-
-        if interestsArray.count > 3 {
-            showAlert(message: "You can select a maximum of 3 interests only.")
-            return false
-        }
-
-        if contact.isEmpty {
-            showAlert(message: "Please enter your contact information.")
-            return false
-        }
+        if interests.isEmpty { showAlert("Enter at least 1 interest"); return false }
+        if interests.count > 3 { showAlert("Max 3 interests"); return false }
+        if contactTextField.text?.isEmpty == true { showAlert("Enter contact"); return false }
 
         return true
     }
 
-    private func showAlert(message: String) {
-        let alert = UIAlertController(title: "Setup Profile", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+    private func showAlert(_ msg: String) {
+        let a = UIAlertController(title: "Setup Profile", message: msg, preferredStyle: .alert)
+        a.addAction(UIAlertAction(title: "OK", style: .default))
+        present(a, animated: true)
     }
 
-    // MARK: - Photo picker
+    // MARK: - Photo
     @objc private func changePhotoTapped() {
-        photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
-            guard let self else { return }
-            self.profileImageView.image = image
-            self.selectedImage = image
+        photoPicker = PhotoPickerHelper(presenter: self) { [weak self] img in
+            self?.profileImageView.image = img
+            self?.selectedImage = img
         }
         photoPicker?.presentPicker()
     }

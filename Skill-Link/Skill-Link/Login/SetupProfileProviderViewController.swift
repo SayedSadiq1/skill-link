@@ -18,7 +18,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
 
     private var loadedFullName: String = ""
 
-    // Spinner shown while saving (no popup view)
+    // just a loading circle while we save, no popup view
     private let loadingSpinner = UIActivityIndicatorView(style: .large)
 
     override var shouldShowBackButton: Bool { false }
@@ -26,28 +26,28 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Prevent going back from setup
+        // dont let user go back from setup screen
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
-        // Default image in case user didnt pick one yet
+        // put a default image if user didnt pick one
         if profileImageView.image == nil {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
 
-        // Tap on image to change it
+        // tap the image to change it
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
 
-        // Brief container style
+        // style the brief area like the design
         briefContainerView.layer.cornerRadius = 10
         briefContainerView.layer.borderWidth = 1
         briefContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         briefContainerView.backgroundColor = .white
         briefContainerView.clipsToBounds = true
 
-        // Brief text view style
+        // basic text view setup
         briefTextView.backgroundColor = .clear
         briefTextView.font = .systemFont(ofSize: 15)
         briefTextView.textColor = .label
@@ -56,24 +56,23 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         briefTextView.delegate = self
         setBriefPlaceholderIfNeeded()
 
-        // Setup loading spinner (only a circle)
+        // add loading spinner in the middle
         setupLoadingSpinner()
 
-        // Load name from firestore
+        // read the name from firestore
         loadFullNameFromFirestore()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        // Make profile image round
+        // make profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
     }
 
     private func setupLoadingSpinner() {
         loadingSpinner.translatesAutoresizingMaskIntoConstraints = false
         loadingSpinner.hidesWhenStopped = true
-
         view.addSubview(loadingSpinner)
 
         NSLayoutConstraint.activate([
@@ -92,7 +91,8 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
 
     // MARK: - Load name
     private func loadFullNameFromFirestore() {
-        guard let uid = Auth.auth().currentUser?.uid else {
+        // try local uid first so it stays consistent in the app
+        guard let uid = LocalUserStore.currentUserId() ?? Auth.auth().currentUser?.uid else {
             fullNameLabel.text = "No user"
             return
         }
@@ -112,12 +112,13 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
                 self.loadedFullName = name
                 self.fullNameLabel.text = name.isEmpty ? "Name not set" : name
 
-                // Save name localy too
+                // save name localy so other pages can use it
                 self.saveUserProfileLocally(
-                    name: self.loadedFullName,
+                    uid: uid,
+                    name: name,
                     skills: [],
                     brief: "",
-                    contact: self.contactTextField.text ?? "",
+                    contact: self.contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
                     imageURL: nil
                 )
             }
@@ -133,6 +134,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     }
 
     func textViewDidBeginEditing(_ textView: UITextView) {
+        // remove placeholder once user starts typing
         if textView.textColor == .systemGray3 {
             textView.text = ""
             textView.textColor = .label
@@ -140,6 +142,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
+        // add placeholder back if it was left empty
         if textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             setBriefPlaceholderIfNeeded()
         }
@@ -150,7 +153,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         guard !isSaving else { return }
         guard validateRequiredFields() else { return }
 
-        guard let uid = Auth.auth().currentUser?.uid else {
+        guard let uid = LocalUserStore.currentUserId() ?? Auth.auth().currentUser?.uid else {
             showAlert(message: "No logged-in user found.")
             return
         }
@@ -159,7 +162,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         sender.isEnabled = false
         setLoading(true)
 
-        // Upload image if user selected one
+        // upload image if user selected one, otherwise save without it
         if let image = selectedImage {
             CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
                 guard let self else { return }
@@ -216,8 +219,9 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
                     return
                 }
 
-                // Update local profile after firestore save
+                // update local profile after we saved firestore
                 self.saveUserProfileLocally(
+                    uid: uid,
                     name: self.loadedFullName,
                     skills: skillsArray,
                     brief: briefFinal,
@@ -232,22 +236,24 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         }
     }
 
-    private func saveUserProfileLocally(name: String, skills: [String], brief: String, contact: String, imageURL: String?) {
+    private func saveUserProfileLocally(uid: String, name: String, skills: [String], brief: String, contact: String, imageURL: String?) {
+        // save everything in one place so other screens can read it
         let profile = UserProfile(
+            id: uid,
             name: name,
-            skills: skills,
-            brief: brief,
             contact: contact,
             imageURL: imageURL,
-            id: Auth.auth().currentUser?.uid
+            role: .provider,
+            skills: skills,
+            brief: brief,
+            isSuspended: false
         )
 
-        if let encoded = try? JSONEncoder().encode(profile) {
-            UserDefaults.standard.set(encoded, forKey: "userProfile")
-        }
+        LocalUserStore.saveProfile(profile)
     }
 
     private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
+        // turn off loader and unlock the UI again
         setLoading(false)
         isSaving = false
         sender.isEnabled = true
@@ -255,6 +261,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     }
 
     private func goToProfileProvider() {
+        // go to provider profile screen after setup done
         let sb = UIStoryboard(name: "login", bundle: nil)
 
         guard let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController") as? ProfileProviderViewController else {
@@ -304,6 +311,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
 
     // MARK: - Photo picking
     @objc private func changePhotoTapped() {
+        // open photos and let user pick a new profile picture
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image

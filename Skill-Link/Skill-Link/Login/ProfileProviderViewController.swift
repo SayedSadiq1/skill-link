@@ -27,33 +27,22 @@ final class ProfileProviderViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Skills container style
         skillsContainerView.layer.cornerRadius = 10
         skillsContainerView.layer.borderWidth = 1
         skillsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
 
-        // Make skills chips look centered when there is 1 (and nice spacing for more)
-        setupSkillsStackView()
-
-        // Contact container style
         contactContainerView.layer.cornerRadius = 8
         contactContainerView.layer.borderWidth = 1
         contactContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         contactContainerView.backgroundColor = .white
 
-        contactLabel.font = .systemFont(ofSize: 16)
-        contactLabel.textColor = .label
-
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
-        nameLabel.textColor = .label
+        contactLabel.font = .systemFont(ofSize: 16)
 
-        // Brief view is display only
         briefTextView.isEditable = false
         briefTextView.isSelectable = false
-        briefTextView.isScrollEnabled = true
         briefTextView.font = .systemFont(ofSize: 15)
-        briefTextView.textColor = .label
-        briefTextView.backgroundColor = UIColor.systemGray6
+        briefTextView.backgroundColor = .systemGray6
         briefTextView.layer.cornerRadius = 8
         briefTextView.layer.borderWidth = 1
         briefTextView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -64,146 +53,65 @@ final class ProfileProviderViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-
-        // Make the profile image a circle
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
     }
 
-    private func setupSkillsStackView() {
-        // These settings helps centering chips when there is only 1
-        skillsStackView.axis = .horizontal
-        skillsStackView.alignment = .center
-        skillsStackView.distribution = .equalSpacing
-        skillsStackView.spacing = 8
-
-        // Add some padding so chips dont touch the border
-        skillsStackView.isLayoutMarginsRelativeArrangement = true
-        skillsStackView.layoutMargins = UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 12)
-    }
-
-    // MARK: - Firestore load
+    // MARK: - Load Profile
     private func loadProfileFromFirestore() {
         guard let uid = Auth.auth().currentUser?.uid else {
-            showSimpleAlert(title: "Error", message: "No logged-in user. Please login again.")
+            showAlert("No logged in user.")
             return
         }
 
-        db.collection("User").document(uid).getDocument { [weak self] snap, err in
+        db.collection("User").document(uid).getDocument { [weak self] snap, error in
             guard let self else { return }
 
             DispatchQueue.main.async {
-                if let err = err {
-                    self.showSimpleAlert(title: "Error", message: "Failed to load profile: \(err.localizedDescription)")
+                if let error = error {
+                    self.showAlert(error.localizedDescription)
                     return
                 }
 
                 let data = snap?.data() ?? [:]
 
-                let name = (data["fullName"] as? String ?? "")
-                let contact = (data["contact"] as? String ?? "")
-                let brief = (data["brief"] as? String ?? "")
-                let imageURL = (data["imageURL"] as? String)
-                let skills = data["skills"] as? [String] ?? []
-
-                self.currentProfile = UserProfile(
-                    name: name,
-                    skills: skills,
-                    brief: brief,
-                    contact: contact,
-                    imageURL: imageURL
+                let profile = UserProfile(
+                    id: uid,
+                    name: data["fullName"] as? String ?? "",
+                    contact: data["contact"] as? String ?? "",
+                    imageURL: data["imageURL"] as? String,
+                    role: .provider,
+                    skills: data["skills"] as? [String] ?? [],
+                    brief: data["brief"] as? String ?? "",
+                    isSuspended: data["isSuspended"] as? Bool ?? false
                 )
 
+                self.currentProfile = profile
                 self.applyProfileToUI()
-                self.saveUserProfileLocally()
+                LocalUserStore.saveProfile(profile)
             }
         }
     }
 
-    // MARK: - Apply to UI
+    // MARK: - Apply UI
     private func applyProfileToUI() {
-        guard let currentProfile else { return }
+        guard let profile = currentProfile else { return }
 
-        nameLabel.text = currentProfile.name.isEmpty ? "No Name" : currentProfile.name
-        contactLabel.text = currentProfile.contact.isEmpty ? "-" : currentProfile.contact
-        briefTextView.text = currentProfile.brief.isEmpty ? "-" : currentProfile.brief
+        nameLabel.text = profile.name
+        contactLabel.text = profile.contact
+        briefTextView.text = profile.brief
 
-        showSkills(currentProfile.skills)
+        showSkills(profile.skills)
 
-        if let urlString = currentProfile.imageURL,
-           let url = URL(string: urlString) {
+        if let urlStr = profile.imageURL, let url = URL(string: urlStr) {
             loadImage(from: url)
         } else {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
     }
 
-    private func loadImage(from url: URL) {
-        profileImageView.image = UIImage(systemName: "person.circle.fill")
-
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-            guard let self else { return }
-            guard let data, let img = UIImage(data: data) else { return }
-            DispatchQueue.main.async { self.profileImageView.image = img }
-        }.resume()
-    }
-
-    // MARK: - Local save
-    private func saveUserProfileLocally() {
-        guard let currentProfile else { return }
-
-        let userProfile = UserProfile(
-            name: currentProfile.name,
-            skills: currentProfile.skills,
-            brief: currentProfile.brief,
-            contact: currentProfile.contact,
-            imageURL: currentProfile.imageURL,
-            id: Auth.auth().currentUser?.uid
-        )
-
-        if let encodedProfile = try? JSONEncoder().encode(userProfile) {
-            UserDefaults.standard.set(encodedProfile, forKey: "userProfile")
-        }
-    }
-
-    // MARK: - Continue
-    @IBAction func continueTapped(_ sender: UIButton) {
-        guard currentProfile != nil else {
-            showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
-            return
-        }
-
-        let sb = UIStoryboard(name: "HomePage", bundle: nil)
-        if let providerHomeVC = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController") as? ProviderHomeViewController {
-            navigationController?.pushViewController(providerHomeVC, animated: true)
-        }
-    }
-
-    // MARK: - Edit
-    @IBAction func editTapped(_ sender: UIButton) {
-        guard let currentProfile else {
-            showSimpleAlert(title: "Wait", message: "Profile not loaded yet.")
-            return
-        }
-
-        let sb = UIStoryboard(name: "login", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "EditProfileViewController") as! EditProfileViewController
-
-        vc.profile = currentProfile
-
-        vc.onSave = { [weak self] updated in
-            guard let self else { return }
-            self.currentProfile = updated
-            self.applyProfileToUI()
-            self.showSuccessBanner()
-            self.saveUserProfileLocally()
-        }
-
-        navigationController?.pushViewController(vc, animated: true)
-    }
-
-    // MARK: - Skills chips
+    // MARK: - Skills Chips
     private func showSkills(_ skills: [String]) {
         skillsStackView.arrangedSubviews.forEach {
             skillsStackView.removeArrangedSubview($0)
@@ -211,14 +119,12 @@ final class ProfileProviderViewController: BaseViewController {
         }
 
         if skills.isEmpty {
-            let chip = makeChip(text: "No skills")
-            skillsStackView.addArrangedSubview(chip)
+            skillsStackView.addArrangedSubview(makeChip(text: "No skills"))
             return
         }
 
-        for skill in skills {
-            let chip = makeChip(text: skill)
-            skillsStackView.addArrangedSubview(chip)
+        skills.forEach {
+            skillsStackView.addArrangedSubview(makeChip(text: $0))
         }
     }
 
@@ -226,7 +132,6 @@ final class ProfileProviderViewController: BaseViewController {
         let label = PaddingLabel()
         label.text = text
         label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .black
         label.backgroundColor = .systemGray5
         label.layer.cornerRadius = 10
         label.clipsToBounds = true
@@ -240,64 +145,62 @@ final class ProfileProviderViewController: BaseViewController {
         var verticalPadding: CGFloat = 6
 
         override func drawText(in rect: CGRect) {
-            let insets = UIEdgeInsets(top: verticalPadding, left: horizontalPadding, bottom: verticalPadding, right: horizontalPadding)
-            super.drawText(in: rect.inset(by: insets))
+            super.drawText(in: rect.inset(by: UIEdgeInsets(
+                top: verticalPadding,
+                left: horizontalPadding,
+                bottom: verticalPadding,
+                right: horizontalPadding
+            )))
         }
 
         override var intrinsicContentSize: CGSize {
             let size = super.intrinsicContentSize
-            return CGSize(width: size.width + horizontalPadding * 2, height: size.height + verticalPadding * 2)
+            return CGSize(
+                width: size.width + horizontalPadding * 2,
+                height: size.height + verticalPadding * 2
+            )
         }
     }
 
-    // MARK: - Alerts
-    private func showSimpleAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+    // MARK: - Image Loader
+    private func loadImage(from url: URL) {
+        profileImageView.image = UIImage(systemName: "person.circle.fill")
+
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            guard let data, let img = UIImage(data: data) else { return }
+            DispatchQueue.main.async {
+                self.profileImageView.image = img
+            }
+        }.resume()
+    }
+
+    // MARK: - Navigation
+    @IBAction func continueTapped(_ sender: UIButton) {
+        let sb = UIStoryboard(name: "HomePage", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    @IBAction func editTapped(_ sender: UIButton) {
+        guard let profile = currentProfile else { return }
+
+        let sb = UIStoryboard(name: "login", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "EditProfileViewController") as! EditProfileViewController
+        vc.profile = profile
+
+        vc.onSave = { [weak self] updated in
+            self?.currentProfile = updated
+            self?.applyProfileToUI()
+            LocalUserStore.saveProfile(updated)
+        }
+
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    // MARK: - Alert
+    private func showAlert(_ message: String) {
+        let alert = UIAlertController(title: "Profile", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
-    }
-
-    // MARK: - Success banner
-    private func showSuccessBanner() {
-        successBanner?.removeFromSuperview()
-
-        let banner = UIView()
-        banner.backgroundColor = UIColor.systemGreen
-        banner.layer.cornerRadius = 12
-        banner.alpha = 0
-
-        let label = UILabel()
-        label.text = "Profile Updated Successfully"
-        label.textColor = .white
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.translatesAutoresizingMaskIntoConstraints = false
-
-        banner.translatesAutoresizingMaskIntoConstraints = false
-        banner.addSubview(label)
-        view.addSubview(banner)
-        successBanner = banner
-
-        NSLayoutConstraint.activate([
-            banner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            banner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            banner.heightAnchor.constraint(equalToConstant: 40),
-            banner.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, multiplier: 0.9),
-
-            label.centerXAnchor.constraint(equalTo: banner.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: banner.centerYAnchor),
-            label.leadingAnchor.constraint(greaterThanOrEqualTo: banner.leadingAnchor, constant: 12),
-            label.trailingAnchor.constraint(lessThanOrEqualTo: banner.trailingAnchor, constant: -12)
-        ])
-
-        UIView.animate(withDuration: 0.2) { banner.alpha = 1 }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            UIView.animate(withDuration: 0.2, animations: {
-                banner.alpha = 0
-            }, completion: { _ in
-                banner.removeFromSuperview()
-                self?.successBanner = nil
-            })
-        }
     }
 }
