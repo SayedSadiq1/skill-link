@@ -87,13 +87,13 @@ final class SettingsViewController: BaseViewController {
     private func goToStartPage() {
         let sb = UIStoryboard(name: "login", bundle: nil)
 
-        guard let startVC = sb.instantiateViewController(
-            withIdentifier: "StartPageViewController"
-        ) else {
-            fatalError("StartPageViewController not found. Check storyboard ID.")
-        }
-
-        navigationController?.setViewControllers([startVC], animated: true)
+//        guard let startVC = sb.instantiateViewController(
+//            withIdentifier: "StartPageViewController"
+//        ) else {
+//            fatalError("StartPageViewController not found. Check storyboard ID.")
+//        }
+//
+//        navigationController?.setViewControllers([startVC], animated: true)
     }
 
     // MARK: - Alerts
