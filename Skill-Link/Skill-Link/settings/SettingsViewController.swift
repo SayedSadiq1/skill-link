@@ -6,8 +6,12 @@ final class SettingsViewController: BaseViewController {
 
     private let db = Firestore.firestore()
 
+    // MARK: - Data Sharing Preferences Switch
+    @IBOutlet weak var dataSharingSwitch: UISwitch!
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        syncDataSharingSwitchState()
     }
 
     // MARK: - App Permissions
@@ -28,10 +32,7 @@ final class SettingsViewController: BaseViewController {
             preferredStyle: .alert
         )
 
-        // Cancel action
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        // Confirm delete
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
             self?.deleteAccountCompletely()
         })
@@ -47,16 +48,16 @@ final class SettingsViewController: BaseViewController {
 
         let uid = user.uid
 
-        // Step 1: delete user data from Firestore
+        // 1. Delete Firestore user document
         db.collection("User").document(uid).delete { [weak self] error in
             guard let self else { return }
 
             if let error = error {
-                self.showAlert(title: "Error", message: "Failed to delete user data. \(error.localizedDescription)")
+                self.showAlert(title: "Error", message: error.localizedDescription)
                 return
             }
 
-            // Step 2: delete user from Firebase Auth
+            // 2. Delete Firebase Auth account
             user.delete { authError in
                 if let authError = authError {
                     self.showAlert(
@@ -66,10 +67,10 @@ final class SettingsViewController: BaseViewController {
                     return
                 }
 
-                // Step 3: clear local data
+                // 3. Clear local data
                 self.clearLocalUserData()
 
-                // Step 4: go back to start page
+                // 4. Go to start page
                 self.goToStartPage()
             }
         }
@@ -77,10 +78,8 @@ final class SettingsViewController: BaseViewController {
 
     // MARK: - Clear Local Data
     private func clearLocalUserData() {
-        // Remove locally saved user profile
-        UserDefaults.standard.removeObject(forKey: "userProfile")
-
-        // Remove any cached data
+        // ✅ Use the centralized local store
+        LocalUserStore.clearProfile()
         URLCache.shared.removeAllCachedResponses()
     }
 
@@ -90,18 +89,34 @@ final class SettingsViewController: BaseViewController {
 
         guard let startVC = sb.instantiateViewController(
             withIdentifier: "StartPageViewController"
-        ) as? UIViewController else {
+        ) else {
             fatalError("StartPageViewController not found. Check storyboard ID.")
         }
 
-        // Reset navigation stack so user cant go back
         navigationController?.setViewControllers([startVC], animated: true)
     }
 
-    // MARK: - Alert Helper
+    // MARK: - Alerts
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+
+    // MARK: - Data Sharing
+    @IBAction func dataSharingSwitchChanged(_ sender: UISwitch) {
+        UserDefaults.standard.set(sender.isOn, forKey: "dataSharingEnabled")
+
+        showAlert(
+            title: sender.isOn ? "Data Sharing Enabled" : "Data Sharing Disabled",
+            message: sender.isOn
+                ? "Your data may be used for internal analytics."
+                : "Your data will not be shared."
+        )
+    }
+
+    private func syncDataSharingSwitchState() {
+        let enabled = UserDefaults.standard.bool(forKey: "dataSharingEnabled")
+        dataSharingSwitch.setOn(enabled, animated: false)
     }
 }
