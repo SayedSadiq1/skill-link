@@ -50,7 +50,8 @@ class ChatListViewController: BaseViewController,
         searchBar.delegate = self
         searchBar.placeholder = "Search providers"
 
-        ensureAuthThenFetchProviders()
+//        ensureAuthThenFetchProviders()
+        fetchAllProviders()
 
     }
     
@@ -93,36 +94,62 @@ class ChatListViewController: BaseViewController,
                     )
                 }
 
-                self.mergeChats()
+                self.fetchUserChats()
             }
     }
     
-    func mergeChats() {
-        // Sample existing chats
-        let existingChats: [String: (String, String)] = [
-            "provider_id_1": ("Hey, how are you?", "10:42 AM"),
-            "provider_id_2": ("Let’s meet tomorrow", "Yesterday")
-        ]
+    func fetchUserChats() {
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return }
 
-        chattedProviders = allProviders.map { provider in
-            if let chat = existingChats[provider.id] {
-                return Provider(
-                    id: provider.id,
-                    fullName: provider.fullName,
-                    serviceName: provider.serviceName,
-                    lastMessage: chat.0,
-                    lastMessageTime: chat.1
-                )
-            } else {
-                return provider
+        Firestore.firestore()
+            .collection("Chats")
+            .whereField("participants", arrayContains: currentUserId)
+            .getDocuments { snapshot, error in
+
+                guard let documents = snapshot?.documents else { return }
+
+                let providerMap = Dictionary(uniqueKeysWithValues: self.allProviders.map {
+                    ($0.id, $0)
+                })
+
+                let chats = documents.compactMap { doc -> Provider? in
+                    let data = doc.data()
+                    let participants = data["participants"] as? [String] ?? []
+
+                    guard let pid = participants.first(where: { $0 != currentUserId }) else {
+                        return nil
+                    }
+
+                    let provider = providerMap[pid] ?? Provider(
+                        id: pid,
+                        fullName: "Unknown Provider",
+                        serviceName: "",
+                        lastMessage: nil,
+                        lastMessageTime: nil
+                    )
+
+                    return Provider(
+                        id: pid,
+                        fullName: provider.fullName,
+                        serviceName: provider.serviceName,
+                        lastMessage: data["lastMessage"] as? String,
+                        lastMessageTime: (data["lastMessageTime"] as? Timestamp)?
+                            .dateValue()
+                            .formatted(date: .omitted, time: .shortened)
+                    )
+                }
+
+                print("Fetched chats:", chats.count)
+
+                DispatchQueue.main.async {
+                    self.chattedProviders = chats
+                    self.displayedProviders = chats
+                    self.tableView.reloadData()
+                }
             }
-        }
-        .filter { $0.lastMessage != nil }
-
-        // Default state = chatted providers only
-        displayedProviders = chattedProviders
-        tableView.reloadData()
     }
+
+
 
 
     // MARK: - TableView DataSource
@@ -163,38 +190,33 @@ class ChatListViewController: BaseViewController,
 
         let db = Firestore.firestore()
 
-        // 1. Check if chat already exists
-        db.collection("Chats")
-            .whereField("participants", arrayContains: currentUserId)
-            .getDocuments { snapshot, error in
+        // 🔑 Deterministic chat ID (prevents duplicates)
+        let pairId = [currentUserId, provider.id]
+            .sorted()
+            .joined(separator: "_")
 
-                if let doc = snapshot?.documents.first(where: {
-                    let participants = $0["participants"] as? [String] ?? []
-                    return participants.contains(provider.id)
-                }) {
-                    // Existing chat
-                    self.openChat(
-                        chatId: doc.documentID,
-                        provider: provider
-                    )
-                } else {
-                    // Create new chat
-                    let chatRef = db.collection("Chats").document()
-                    chatRef.setData([
-                        "participants": [currentUserId, provider.id],
-                        "createdAt": Timestamp(),
-                        "lastMessage": "",
-                        "lastMessageTime": Timestamp(),
-                        "lastSenderId": ""
-                    ]) { _ in
-                        self.openChat(
-                            chatId: chatRef.documentID,
-                            provider: provider
-                        )
-                    }
+        let chatRef = db.collection("Chats").document(pairId)
+
+        chatRef.getDocument { doc, error in
+            if doc?.exists == true {
+                // Existing chat
+                self.openChat(chatId: pairId, provider: provider)
+            } else {
+                // Create chat ONCE
+                chatRef.setData([
+                    "participants": [currentUserId, provider.id],
+                    "pairId": pairId,
+                    "createdAt": Timestamp(),
+                    "lastMessage": "",
+                    "lastMessageTime": Timestamp(),
+                    "lastSenderId": ""
+                ]) { _ in
+                    self.openChat(chatId: pairId, provider: provider)
                 }
             }
+        }
     }
+
     
     func openChat(chatId: String, provider: Provider) {
         let sb = UIStoryboard(name: "Chat", bundle: nil)
