@@ -173,7 +173,8 @@ final class EditProfileSeekerViewController: BaseViewController {
             LocalUserStore.saveProfile(localProfile)
 
             self.setLoading(false)
-            self.onSave?(SeekerProfile(name: name, interests: interests, contact: contact, imageURL: imageURL))
+            self.onSave?(SeekerProfile(name: name, interests: interests, contact: contact, imageURL: imageURL, id: uid))
+
             self.navigationController?.popViewController(animated: true)
         }
     }
