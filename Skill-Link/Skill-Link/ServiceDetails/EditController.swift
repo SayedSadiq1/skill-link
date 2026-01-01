@@ -17,15 +17,18 @@ class EditController: BaseViewController {
     @IBOutlet weak var maxDurationField: UITextField!
     @IBOutlet weak var pricingField: UITextField!
     @IBOutlet weak var disclaimersField: UITextView!
-    @IBOutlet weak var additionalInfoField: UITextView!
+    var selectedCategory: String?
+    var selectedPricingType: String?
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        setCategories()
         setupUI()
     }
     
-    let categories = ["Home Maintenance", "Handwork", "Electrical"]
+    var categories: [String] = ["Loading"]
     var service: Service?
+    let serviceManager = ServiceManager()
 
     func setupUI() {
         if pricingPopupBtn != nil {
@@ -62,21 +65,51 @@ class EditController: BaseViewController {
         pricingField.text = String(service.priceBD)
         disclaimersField.text = service.disclaimers.joined(separator: "\n")
         
-        var actions: [UIAction] = []
-        for action in categories {
-            actions.append(UIAction(title: action, state: action == service.category ? .on : .off, handler: {_ in }))
-        }
-        categoryPopupBtn.menu = UIMenu(children: actions)
-        
+        setCategoryOptions()
         var pricingActions: [UIAction] = []
         for action in ["Fixed", "Hourly"] {
-            pricingActions.append(UIAction(title: action, state: action == service.priceType.rawValue ? .on : .off, handler: {_ in}))
+            pricingActions.append(UIAction(title: action, state: action == service.priceType.rawValue ? .on : .off, handler: {(uiaction : UIAction) in self.selectedPricingType = uiaction.title}))
         }
         pricingPopupBtn.menu = UIMenu(children: pricingActions)
+    }
+    
+    func setCategories() {
+        serviceManager.fetchServiceCategories(completion: {result in
+            switch result {
+            case .success(let categories):
+                self.categories = categories
+                self.setCategoryOptions()
+            case .failure(let error):
+                self.categories = ["Home Maintenance"]
+                print("Error fetching categories: \(error.localizedDescription)")
+            }
+        })
+    }
+    
+    func setCategoryOptions() {
+        guard let service = service else {
+            return
+        }
+        var actions: [UIAction] = []
+        for action in categories {
+            actions.append(UIAction(title: action, state: action == service.category ? .on : .off, handler: {(uiaction : UIAction) in self.selectedCategory = uiaction.title}))
+        }
+        categoryPopupBtn.menu = UIMenu(children: actions)
     }
     
     func initWithService(service: Service) {
         self.service = service
     }
 
+    @IBAction func save(_ sender: Any) {
+        service?.category = selectedCategory ?? categories[0]
+        service?.title = titleField.text!
+        service?.description = descriptionField.text
+        service?.durationMinHours = Double(minDurationField.text!)!
+        service?.durationMaxHours = Double(maxDurationField.text!)!
+        service?.priceBD = Double(pricingField.text!)!
+        service?.priceType = PriceType(rawValue: selectedPricingType!) ?? .Hourly
+        service?.disclaimers = disclaimersField.text.components(separatedBy: "\n")
+        self.navigationController?.popViewController(animated: true)
+    }
 }
