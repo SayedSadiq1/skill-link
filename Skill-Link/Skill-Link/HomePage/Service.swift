@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 
 class Service {
-    var id: UUID
+    @DocumentID<String> var id: String?
     let title: String
     let description: String
     let category: String
@@ -24,7 +25,7 @@ class Service {
     let availableAt: String
     
     init(id: UUID, title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, provider: UserProfile, available: Bool, disclaimers: [String], durationMinHours: Double, durationMaxHours: Double, availableAt: String = "Morning") {
-        self.id = id
+        self.id = id.uuidString
         self.title = title
         self.description = description
         self.category = category
