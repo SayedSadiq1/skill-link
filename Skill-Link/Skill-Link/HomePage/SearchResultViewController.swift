@@ -8,148 +8,144 @@
 import UIKit
 
 final class SearchResultViewController: BaseViewController, UITableViewDataSource, UITableViewDelegate {
-
+    
     @IBOutlet weak var tableView: UITableView!
-
+    
     var currentFilters = SearchFilters()
-
+    
     // MARK: - Chips UI
     private let chipsHeight: CGFloat = 56
     private let chipsContainer = UIView()
     private let chipsScrollView = UIScrollView()
     private let chipsStackView = UIStackView()
-
+    
     // MARK: - Demo Data (replace with Firebase later)
-    private let services: [Service] = [
-//        Service(id: UUID(),
-//                title: "Professional Plumbing Service",
-//                description: "Fix leaks",
-//                category: "Plumbing",
-//                priceBD: 70,
-//                priceType: .fixed,
-//                rating: 5.0,
-//                provider: UserProfile(name: "Ali Yusuf", skills: [""], brief: "", contact: ""),
-//                available: true,
-//                disclaimers: []),
-//
-//        Service(id: UUID(),
-//                title: "Electrician Home Wiring",
-//                description: "Wiring & repair",
-//                category: "Electrician",
-//                priceBD: 50,
-//                priceType: .hourly,
-//                rating: 4.6,
-//                provider: UserProfile(name: "Ahmed Raza", skills: [""], brief: "", contact: ""),
-//                available: true,
-//                disclaimers: []),
-//
-//        Service(id: UUID(),
-//                title: "Deep Cleaning Service",
-//                description: "Home cleaning",
-//                category: "Landscaping",
-//                priceBD: 40,
-//                priceType: .fixed,
-//                rating: 4.8,
-//                provider: UserProfile(name: "Sara Ali", skills: [""], brief: "", contact: ""),
-//                available: false,
-//                disclaimers: [])
+    private var services: [Service] = [
     ]
-
+    
     private var filteredServices: [Service] = []
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        setServices()
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = 160
         tableView.isScrollEnabled = true
-
+        
         setupChipsBar()
-
+        
         filteredServices = services
         tableView.reloadData()
     }
+    
+    func setServices() {
+        let serviceManager = ServiceManager()
+        serviceManager.fetchAllServices() { [weak self] result in
+            guard let self else { return }
 
+            switch result {
+            case .success(let services):
+                print("got \(services.count) services")
+
+                DispatchQueue.main.async {
+                    self.services = services
+
+                    // ✅ IMPORTANT: update what the table actually displays
+                    self.applyFilters() // this sets filteredServices + reloads
+
+                    // If you don't want filters applied here, use this instead:
+                    // self.filteredServices = services
+                    // self.tableView.reloadData()
+                }
+
+            case .failure(let error):
+                print("fetch error: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
+        
         currentFilters = FiltersStore.load()
         rebuildChips()
         applyFilters()
     }
-
+    
     // MARK: - Chips Bar (placed directly under blue header in WHITE area)
     private func setupChipsBar() {
         chipsContainer.translatesAutoresizingMaskIntoConstraints = false
         chipsScrollView.translatesAutoresizingMaskIntoConstraints = false
         chipsStackView.translatesAutoresizingMaskIntoConstraints = false
-
+        
         chipsContainer.backgroundColor = .clear
-
+        
         chipsScrollView.showsHorizontalScrollIndicator = false
         chipsScrollView.alwaysBounceHorizontal = true
         chipsScrollView.alwaysBounceVertical = false
         chipsScrollView.isDirectionalLockEnabled = true
-
+        
         chipsStackView.axis = .horizontal
         chipsStackView.spacing = 12
         chipsStackView.alignment = .center
         chipsStackView.distribution = .fill
-
+        
         view.addSubview(chipsContainer)
         chipsContainer.addSubview(chipsScrollView)
         chipsScrollView.addSubview(chipsStackView)
-
+        
         NSLayoutConstraint.activate([
             // ✅ Anchor chips relative to the table top so it sits in WHITE area (not in blue header)
             chipsContainer.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -chipsHeight - 8),
             chipsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             chipsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             chipsContainer.heightAnchor.constraint(equalToConstant: chipsHeight),
-
+            
             chipsScrollView.leadingAnchor.constraint(equalTo: chipsContainer.leadingAnchor, constant: 16),
             chipsScrollView.trailingAnchor.constraint(equalTo: chipsContainer.trailingAnchor, constant: -16),
             chipsScrollView.topAnchor.constraint(equalTo: chipsContainer.topAnchor),
             chipsScrollView.bottomAnchor.constraint(equalTo: chipsContainer.bottomAnchor),
-
+            
             chipsStackView.leadingAnchor.constraint(equalTo: chipsScrollView.contentLayoutGuide.leadingAnchor),
             chipsStackView.trailingAnchor.constraint(equalTo: chipsScrollView.contentLayoutGuide.trailingAnchor),
             chipsStackView.topAnchor.constraint(equalTo: chipsScrollView.contentLayoutGuide.topAnchor),
             chipsStackView.bottomAnchor.constraint(equalTo: chipsScrollView.contentLayoutGuide.bottomAnchor),
             chipsStackView.heightAnchor.constraint(equalTo: chipsScrollView.frameLayoutGuide.heightAnchor)
         ])
-
+        
         // ✅ Push table content down so first cell never overlaps chips
         tableView.contentInset.top = chipsHeight + 16
         tableView.scrollIndicatorInsets.top = chipsHeight + 16
     }
-
+    
     private func rebuildChips() {
         chipsStackView.arrangedSubviews.forEach {
             chipsStackView.removeArrangedSubview($0)
             $0.removeFromSuperview()
         }
-
+        
         let titles = chipTitles()
         chipsContainer.isHidden = titles.isEmpty
         guard !titles.isEmpty else { return }
-
+        
         for t in titles {
             chipsStackView.addArrangedSubview(makeChip(text: t))
         }
-
+        
         view.layoutIfNeeded()
     }
-
+    
     private func chipTitles() -> [String] {
         var arr: [String] = []
-
+        
         // categories (each as its own chip)
         if !currentFilters.selectedCategories.isEmpty {
             arr.append(contentsOf: currentFilters.selectedCategories)
         }
-
+        
         // sort
         if let ps = currentFilters.priceSort {
             arr.append(ps == .lowToHigh ? "Price Low > High" : "Price High > Low")
@@ -157,15 +153,15 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
         if currentFilters.sortByRating {
             arr.append("Rating High > Low")
         }
-
+        
         // availability
         if let slot = currentFilters.availabilitySlot, !slot.isEmpty {
             arr.append(slot)
         }
-
+        
         return arr
     }
-
+    
     private func makeChip(text: String) -> UILabel {
         let lbl = PaddingLabel()
         lbl.text = text
@@ -183,30 +179,30 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
         lbl.setContentCompressionResistancePriority(.required, for: .horizontal)
         return lbl
     }
-
+    
     // MARK: - Filtering
     private func applyFilters() {
         var result = services
-
+        
         // Category filter
         if !currentFilters.selectedCategories.isEmpty {
             result = result.filter { currentFilters.selectedCategories.contains($0.category) }
         }
-
+        
         // ✅ Availability filter (NEW)
         // Your AvailabilityViewController stores "Morning (8–12)" etc.
         if let slot = currentFilters.availabilitySlot,
            !slot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-
+            
             let wanted = normalizeSlot(slot)
-
+            
             result = result.filter { service in
                 // If seeker chose a slot: only show available services matching that slot
                 guard service.available else { return false }
                 return normalizeSlot(service.availableAt) == wanted
             }
         }
-
+        
         // Sort by price
         if let ps = currentFilters.priceSort {
             switch ps {
@@ -214,16 +210,16 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
             case .highToLow: result.sort { $0.priceBD > $1.priceBD }
             }
         }
-
+        
         // Sort by rating
         if currentFilters.sortByRating {
             result.sort { $0.rating > $1.rating }
         }
-
+        
         filteredServices = result
         tableView.reloadData()
     }
-
+    
     // ✅ Normalize "Night (8–12)" and "Night" to same key
     private func normalizeSlot(_ s: String) -> String {
         let lower = s.lowercased()
@@ -233,37 +229,40 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
         if lower.contains("night") { return "night" }
         return lower.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-
+    
     // MARK: - Table
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         filteredServices.count
     }
-
+    
     func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "ServiceCell", for: indexPath) as! ServiceCellTableViewCell
         let s = filteredServices[indexPath.row]
-
+        
         cell.serviceNameLabel.text = s.title
         cell.priceLabel.text = "\(Int(s.priceBD)) BD"
         cell.ratingLabel.text = String(format: "%.1f", s.rating)
-
+        
         // ✅ IMPORTANT: always set BOTH states because cells are reused
         if s.available {
             cell.availabilityLabel.text = "Available \(s.availableAt)"
             cell.availabilityLabel.textColor = .systemGreen
-
+            
             cell.checkmarkImage.image = UIImage(systemName: "checkmark.circle.fill")
             cell.checkmarkImage.tintColor = .systemGreen
         } else {
             cell.availabilityLabel.text = "Unavailable"
             cell.availabilityLabel.textColor = .systemRed
-
+            
             cell.checkmarkImage.image = UIImage(systemName: "xmark.circle.fill")
             cell.checkmarkImage.tintColor = .systemRed
         }
-
+        
+        cell.serviceData = s
+        cell.parent = self
+        
         return cell
     }
 }

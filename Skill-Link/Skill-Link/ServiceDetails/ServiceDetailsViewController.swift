@@ -178,7 +178,8 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
             return
         }
         
-        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "EditView") as? EditController else {
+        let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+        guard let controller = storyboard.instantiateViewController(identifier: "EditView") as? EditController else {
             return
         }
         
