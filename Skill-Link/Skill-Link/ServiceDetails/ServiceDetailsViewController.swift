@@ -46,31 +46,31 @@ class ServiceDetailsViewController: UIViewController {
     
     // MARK: - Mock Data
     private func loadMockService() {
-        let mockProvider = UserProfile(
-            name: "Modeer",
-            skills: ["Electrician", "Stock Analyst"],
-            brief: "Microsoft Certified Electrician!",
-            contact: "+973 3232 4545"
-        )
+//        let mockProvider = UserProfile(
+//            name: "Modeer",
+//            skills: ["Electrician", "Stock Analyst"],
+//            brief: "Microsoft Certified Electrician!",
+//            contact: "+973 3232 4545"
+//        )
         
-        service = Service2(
-            id: UUID(),
-            title: "Light Replacement Service",
-            description: "Professional light replacement service for all types of fixtures. Our certified electricians ensure safe installation and optimal lighting solutions for your home or office.",
-            category: "Electrical",
-            priceBD: 13.0,
-            priceType: .Fixed,
-            rating: 4.8,
-            provider: mockProvider,
-            available: true,
-            disclaimers: [
-                "Price includes labor only. Materials may incur additional charges.",
-                "Service may be rescheduled due to weather conditions.",
-                "24-hour cancellation policy applies."
-            ],
-            durationMinHours: 1,
-            durationMaxHours: 1.5
-        )
+//        service = Service2(
+//            id: UUID(),
+//            title: "Light Replacement Service",
+//            description: "Professional light replacement service for all types of fixtures. Our certified electricians ensure safe installation and optimal lighting solutions for your home or office.",
+//            category: "Electrical",
+//            priceBD: 13.0,
+//            priceType: .fixed,
+//            rating: 4.8,
+//            provider: mockProvider,
+//            available: true,
+//            disclaimers: [
+//                "Price includes labor only. Materials may incur additional charges.",
+//                "Service may be rescheduled due to weather conditions.",
+//                "24-hour cancellation policy applies."
+//            ],
+//            durationMinHours: 1,
+//            durationMaxHours: 1.5
+//        )
     }
 }
 
