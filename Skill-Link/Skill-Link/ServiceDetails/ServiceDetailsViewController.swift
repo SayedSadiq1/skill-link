@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ServiceDetailsViewController: BaseViewController {
+class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - Outlets
     @IBOutlet weak var tableView: UITableView!
@@ -17,7 +17,38 @@ class ServiceDetailsViewController: BaseViewController {
     // MARK: - Properties
     var service: Service!
     let isProvider: Bool = true
-    var isActivated: Bool = true
+    
+    // MARK: - ServiceEditDelegate
+        func didUpdateService(_ updatedService: Service) {
+            // Option 1: Update with passed data (fastest)
+            self.service = updatedService
+            refreshUI()
+            
+            // Option 2: Re-fetch from Firebase (most accurate)
+            // fetchFreshDataFromFirebase()
+        }
+        
+        private func refreshUI() {
+            // Reload all UI elements
+            setupUI()
+            tableView.reloadData()
+        }
+        
+        private func fetchFreshDataFromFirebase() {
+            guard let serviceID = service.id else { return }
+            
+            let serviceManager = ServiceManager()
+            serviceManager.fetchService(by: serviceID) { [weak self] result in
+                switch result {
+                case .success(let updatedService):
+                    self?.service = updatedService
+                    self?.refreshUI()
+                case .failure(let error):
+                    print("Error fetching fresh data: \(error)")
+                    self?.refreshUI() // Still refresh with local data
+                }
+            }
+        }
     
     // MARK: - Cell Identifiers
     private enum CellIdentifier: String {
@@ -49,6 +80,7 @@ class ServiceDetailsViewController: BaseViewController {
             loadMockService()
         }
         setupUI()
+        tableView.reloadData()
     }
     
     // MARK: - Mock Data
@@ -90,7 +122,7 @@ class ServiceDetailsViewController: BaseViewController {
                 actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
             }
             if cancelBtn != nil {
-                if isActivated {
+                if service.available {
                     var config = UIButton.Configuration.filled()
                     config.image = UIImage(systemName: "xmark.app")
                     config.title = "Deactivate"
@@ -110,8 +142,8 @@ class ServiceDetailsViewController: BaseViewController {
     
     @IBAction func reportClicked(_ sender: Any) {
             if isProvider {
-                isActivated = !isActivated
-                if isActivated {
+                service.available = !service.available
+                if service.available {
                     var config = UIButton.Configuration.filled()
                     config.image = UIImage(systemName: "xmark.app")
                     config.title = "Deactivate"
@@ -126,6 +158,7 @@ class ServiceDetailsViewController: BaseViewController {
                     cancelBtn.configuration = config
                 }
                 
+                refreshUI()
                 return
             }
             
@@ -136,25 +169,26 @@ class ServiceDetailsViewController: BaseViewController {
         }
     
     @IBAction func actionClicked(_ sender: Any) {
-            if !isProvider {
-                guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "BookingPage") else {
-                    return
-                }
-                controller.modalPresentationStyle = .fullScreen
-                controller.navigationItem.title = "Confirm Booking"
-                self.navigationController?.pushViewController(controller, animated: true)
+        if !isProvider {
+            guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "BookingPage") else {
                 return
             }
-            
+            controller.modalPresentationStyle = .fullScreen
+            controller.navigationItem.title = "Confirm Booking"
+            self.navigationController?.pushViewController(controller, animated: true)
+            return
+        }
+        
         guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "EditView") as? EditController else {
             return
         }
         
         controller.modalPresentationStyle = .fullScreen
         controller.navigationItem.title = "Edit Service Details"
+        controller.service = service
+        controller.delegate = self
         self.navigationController?.pushViewController(controller, animated: true)
-        controller.initWithService(service: service)
-        }
+    }
 }
 
 // MARK: - UITableViewDataSource

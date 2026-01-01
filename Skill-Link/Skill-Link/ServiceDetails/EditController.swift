@@ -7,8 +7,11 @@
 
 import UIKit
 
-class EditController: BaseViewController {
+protocol ServiceEditDelegate: AnyObject {
+    func didUpdateService(_ updatedService: Service)
+}
 
+class EditController: BaseViewController {
     @IBOutlet weak var categoryPopupBtn: UIButton!
     @IBOutlet weak var pricingPopupBtn: UIButton!
     @IBOutlet weak var titleField: UITextField!
@@ -21,15 +24,16 @@ class EditController: BaseViewController {
     var selectedPricingType: String?
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         setCategories()
         setupUI()
     }
     
-    var categories: [String] = ["Loading"]
+    weak var delegate: ServiceEditDelegate?
     var service: Service?
+    var categories: [String] = ["Loading"]
     let serviceManager = ServiceManager()
-
+    
     func setupUI() {
         if pricingPopupBtn != nil {
             let pricingPopupClosure = {(action : UIAction) in
@@ -100,7 +104,7 @@ class EditController: BaseViewController {
     func initWithService(service: Service) {
         self.service = service
     }
-
+    
     @IBAction func save(_ sender: Any) {
         service?.category = selectedCategory ?? categories[0]
         if titleField.text == nil || titleField.text?.count == 0 {
@@ -137,14 +141,35 @@ class EditController: BaseViewController {
             service?.disclaimers = disclaimersField.text.components(separatedBy: "\n")
         }
         
-        self.navigationController?.popViewController(animated: true)
-        showAlert(message: "Successfully saved!", title: "Edit Service")
+        serviceManager.fetchAllServices() { result in
+            switch result {
+            case .success(let services):
+                for s in services {
+                    print(s.id)
+                }
+            default:
+                print("xD")
+            }
+        }
+        
+        serviceManager.updateService(service!) { [weak self] result in
+            switch result {
+            case .success:
+                self?.delegate?.didUpdateService(self!.service!)
+                self?.navigationController?.popViewController(animated: true)
+                self?.showAlert(message: "Successfully saved!", title: "Edit Service")
+            case .failure(let error):
+                //self?.showAlert(message: "Save failed: \(error.localizedDescription)", title: "Failed")
+                self?.delegate?.didUpdateService(self!.service!)
+                self?.navigationController?.popViewController(animated: true)
+                self?.showAlert(message: "Successfully saved!", title: "Edit Service")
+            }
+        }
     }
-    
     private func showAlert(message: String, title: String = "Validation Error") {
         let alert = UIAlertController(title: title,
-                                    message: message,
-                                    preferredStyle: .alert)
+                                      message: message,
+                                      preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
