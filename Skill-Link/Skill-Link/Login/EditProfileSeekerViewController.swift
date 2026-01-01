@@ -27,6 +27,9 @@ final class EditProfileSeekerViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        
+        profileImageView.applyCircleAvatarNoCrop()
+        
         styleTextField(nameTextField)
         styleTextField(interestsTextField)
         styleTextField(contactTextField)
@@ -50,14 +53,14 @@ final class EditProfileSeekerViewController: BaseViewController {
         } else {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
-        
-        profileImageView.applyCircleAvatarNoCrop()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
-        profileImageView.clipsToBounds = true
+           profileImageView.clipsToBounds = true
+           profileImageView.contentMode = .scaleAspectFill
+        
         profileImageView.updateCircleMask()
     }
 
@@ -91,8 +94,13 @@ final class EditProfileSeekerViewController: BaseViewController {
     // MARK: - Image picker
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
-            self?.profileImageView.image = image
-            self?.selectedImageData = image.jpegData(compressionQuality: 0.8)
+            guard let self else { return }
+            self.profileImageView.image = image
+            self.selectedImageData = image.jpegData(compressionQuality: 0.8)
+
+            // ✅ re-apply after setting new image
+            self.profileImageView.applyCircleAvatarNoCrop()
+            self.profileImageView.updateCircleMask()
         }
         photoPicker?.presentPicker()
     }
@@ -118,8 +126,12 @@ final class EditProfileSeekerViewController: BaseViewController {
         if let imgData = selectedImageData {
             uploadToCloudinary(imageData: imgData) { [weak self] result in
                 guard let self else { return }
-                if case let .success(url) = result {
+                switch result {
+                case .success(let url):
                     self.saveToFirestore(uid: uid, name: name, contact: contact, interests: interests, imageURL: url)
+                case .failure:
+                    self.isSaving = false
+                    self.setLoading(false)
                 }
             }
         } else {
@@ -158,7 +170,6 @@ final class EditProfileSeekerViewController: BaseViewController {
                 brief: "",
                 isSuspended: false
             )
-
             LocalUserStore.saveProfile(localProfile)
 
             self.setLoading(false)
@@ -170,8 +181,15 @@ final class EditProfileSeekerViewController: BaseViewController {
     // MARK: - Image load
     private func loadImage(from url: URL) {
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self else { return }
             if let data, let img = UIImage(data: data) {
-                DispatchQueue.main.async { self?.profileImageView.image = img }
+                DispatchQueue.main.async {
+                    self.profileImageView.image = img
+
+                    // ✅ re-apply after async load
+                    self.profileImageView.applyCircleAvatarNoCrop()
+                    self.profileImageView.updateCircleMask()
+                }
             }
         }.resume()
     }
@@ -202,11 +220,15 @@ final class EditProfileSeekerViewController: BaseViewController {
 
         req.httpBody = body
 
-        URLSession.shared.dataTask(with: req) { data, _, _ in
+        URLSession.shared.dataTask(with: req) { data, _, error in
+            if let error = error { completion(.failure(error)); return }
+
             if let data,
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let url = json["secure_url"] as? String {
                 completion(.success(url))
+            } else {
+                completion(.failure(NSError(domain: "Cloudinary", code: -1)))
             }
         }.resume()
     }

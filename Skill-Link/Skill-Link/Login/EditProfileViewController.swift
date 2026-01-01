@@ -74,6 +74,7 @@ final class EditProfileViewController: BaseViewController {
         super.viewDidLayoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
+        profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 

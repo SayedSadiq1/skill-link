@@ -70,6 +70,8 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
 
         // make profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
+           profileImageView.clipsToBounds = true
+           profileImageView.contentMode = .scaleAspectFill
         
         profileImageView.updateCircleMask()
     }

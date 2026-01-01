@@ -42,6 +42,9 @@ final class SetupProfileSeekerViewController: BaseViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         // ✅ keep circle correct after layout
+        profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
+           profileImageView.clipsToBounds = true
+           profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 
