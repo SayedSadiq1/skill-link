@@ -25,8 +25,10 @@ class ChatListViewController: BaseViewController,
 
         // Chat-related (optional)
         let lastMessage: String?
-        let lastMessageTime: String?
+        let lastMessageTime: Timestamp?
     }
+    
+    private var chatsListener: ListenerRegistration?
     
     // All providers from Firebase
     var allProviders: [Provider] = []
@@ -94,19 +96,26 @@ class ChatListViewController: BaseViewController,
                     )
                 }
 
-                self.fetchUserChats()
+                self.listenToUserChats()
+
             }
     }
     
-    func fetchUserChats() {
+    func listenToUserChats() {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return }
 
-        Firestore.firestore()
+        // Remove old listener if exists
+        chatsListener?.remove()
+
+        chatsListener = Firestore.firestore()
             .collection("Chats")
             .whereField("participants", arrayContains: currentUserId)
-            .getDocuments { snapshot, error in
+            .addSnapshotListener { snapshot, error in
 
-                guard let documents = snapshot?.documents else { return }
+                guard let documents = snapshot?.documents else {
+                    print("Chat listener error:", error?.localizedDescription ?? "")
+                    return
+                }
 
                 let providerMap = Dictionary(uniqueKeysWithValues: self.allProviders.map {
                     ($0.id, $0)
@@ -116,9 +125,8 @@ class ChatListViewController: BaseViewController,
                     let data = doc.data()
                     let participants = data["participants"] as? [String] ?? []
 
-                    guard let pid = participants.first(where: { $0 != currentUserId }) else {
-                        return nil
-                    }
+                    let otherIds = participants.filter { $0 != currentUserId }
+                    guard let pid = otherIds.first else { return nil }
 
                     let provider = providerMap[pid] ?? Provider(
                         id: pid,
@@ -133,21 +141,30 @@ class ChatListViewController: BaseViewController,
                         fullName: provider.fullName,
                         serviceName: provider.serviceName,
                         lastMessage: data["lastMessage"] as? String,
-                        lastMessageTime: (data["lastMessageTime"] as? Timestamp)?
-                            .dateValue()
-                            .formatted(date: .omitted, time: .shortened)
+                        lastMessageTime: data["lastMessageTime"] as? Timestamp
                     )
                 }
+                
+                let sortedChats = chats.sorted {
+                    ($0.lastMessageTime?.seconds ?? 0) >
+                    ($1.lastMessageTime?.seconds ?? 0)
+                }
 
-                print("Fetched chats:", chats.count)
 
                 DispatchQueue.main.async {
-                    self.chattedProviders = chats
-                    self.displayedProviders = chats
+                    self.chattedProviders = sortedChats
+
+                    if self.searchBar.text?.isEmpty == true {
+                        self.displayedProviders = sortedChats
+                    }
+
                     self.tableView.reloadData()
                 }
+
             }
     }
+
+
 
 
 
@@ -170,14 +187,23 @@ class ChatListViewController: BaseViewController,
 
         let provider = displayedProviders[indexPath.row]
 
+        let timeText: String
+        if let ts = provider.lastMessageTime {
+            timeText = ts.dateValue()
+                .formatted(date: .omitted, time: .shortened)
+        } else {
+            timeText = ""
+        }
+
         cell.configure(
             name: provider.fullName,
             lastMessage: provider.lastMessage ?? provider.serviceName,
-            time: provider.lastMessageTime ?? ""
+            time: timeText
         )
 
         return cell
     }
+
 
 
     // MARK: - TableView Delegate
@@ -259,4 +285,9 @@ class ChatListViewController: BaseViewController,
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
     }
+    
+    deinit {
+        chatsListener?.remove()
+    }
+
 }

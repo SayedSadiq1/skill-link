@@ -28,9 +28,9 @@ class ChatCell: UITableViewCell {
     func configure(message: String, isSender: Bool) {
         messageLabel.text = message
         
-        leadingConstraint.isActive = !isSender
-        trailingConstraint.isActive = isSender
-        
+        leadingConstraint?.isActive = !isSender
+        trailingConstraint?.isActive = isSender
+
         bubbleView.backgroundColor = isSender ? .systemBlue : .systemGray5
         messageLabel.textColor = isSender ? .white : .black
         
