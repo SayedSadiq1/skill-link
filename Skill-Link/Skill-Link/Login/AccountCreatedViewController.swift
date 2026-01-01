@@ -49,7 +49,7 @@ final class AccountCreatedViewController: BaseViewController {
 
                 // go to the right setup screen based on role
                 if role == "provider" {
-                    let vc = sb.instantiateViewController(withIdentifier: "SetupProfileProviderViewController")
+                    let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController1")
                     self.navigationController?.pushViewController(vc, animated: true)
                 } else if role == "seeker" {
                     let vc = sb.instantiateViewController(withIdentifier: "SetupProfileSeekerViewController")

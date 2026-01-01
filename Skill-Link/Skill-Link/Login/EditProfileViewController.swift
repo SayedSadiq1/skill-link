@@ -33,6 +33,8 @@ final class EditProfileViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        
+        profileImageView.applyCircleAvatarNoCrop()
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped))
@@ -64,12 +66,16 @@ final class EditProfileViewController: BaseViewController {
         } else {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
+        
+        
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
+        profileImageView.contentMode = .scaleAspectFill
+        profileImageView.updateCircleMask()
     }
 
     // MARK: - Spinner

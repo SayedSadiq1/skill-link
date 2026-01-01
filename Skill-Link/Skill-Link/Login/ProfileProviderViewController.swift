@@ -49,6 +49,8 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
         loadProfileFromFirestore()
+        
+        profileImageView.applyCircleAvatarNoCrop()
     }
 
     override func viewDidLayoutSubviews() {
@@ -56,6 +58,7 @@ final class ProfileProviderViewController: BaseViewController {
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
+        profileImageView.updateCircleMask()
     }
 
     // MARK: - Load Profile

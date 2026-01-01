@@ -31,8 +31,9 @@ final class SetupProfileSeekerViewController: BaseViewController {
         profileImageView.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped))
         )
-        profileImageView.contentMode = .scaleAspectFill
-        profileImageView.clipsToBounds = true
+
+        // ✅ NO CROP circular avatar
+        profileImageView.applyCircleAvatarNoCrop()
 
         setupSpinner()
         loadFullName()
@@ -40,7 +41,11 @@ final class SetupProfileSeekerViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        // ✅ keep circle correct after layout
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
+           profileImageView.clipsToBounds = true
+           profileImageView.contentMode = .scaleAspectFill
+        profileImageView.updateCircleMask()
     }
 
     // MARK: - Spinner
@@ -158,9 +163,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
 
     private func goNext() {
         let sb = UIStoryboard(name: "login", bundle: nil)
-        let vc = sb.instantiateViewController(
-            withIdentifier: "ProfileSeekerViewController"
-        )
+        let vc = sb.instantiateViewController(withIdentifier: "ProfileSeekerViewController")
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -186,8 +189,12 @@ final class SetupProfileSeekerViewController: BaseViewController {
     // MARK: - Photo
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] img in
-            self?.profileImageView.image = img
-            self?.selectedImage = img
+            guard let self else { return }
+            self.profileImageView.image = img
+            self.selectedImage = img
+
+            // ✅ ensure mode stays no-crop even after picking
+            self.profileImageView.applyCircleAvatarNoCrop()
         }
         photoPicker?.presentPicker()
     }

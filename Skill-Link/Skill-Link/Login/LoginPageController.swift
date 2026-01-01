@@ -6,7 +6,7 @@ final class LoginPageController: BaseViewController {
 
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
-
+ static var loggedinUser: UserProfile?
     private let db = Firestore.firestore()
     private let spinner = UIActivityIndicatorView(style: .large)
 
@@ -98,6 +98,7 @@ final class LoginPageController: BaseViewController {
             )
 
             LocalUserStore.saveProfile(profile)
+            LoginPageController.loggedinUser = profile
 
             self.finish(sender) {
                 role == .provider ? self.goToProviderHome() : self.goToSeekerHome()

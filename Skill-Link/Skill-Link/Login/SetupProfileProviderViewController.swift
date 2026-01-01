@@ -33,6 +33,8 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         if profileImageView.image == nil {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
+        
+        profileImageView.applyCircleAvatarNoCrop()
 
         // tap the image to change it
         profileImageView.isUserInteractionEnabled = true
@@ -68,6 +70,10 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
 
         // make profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
+           profileImageView.clipsToBounds = true
+           profileImageView.contentMode = .scaleAspectFill
+        
+        profileImageView.updateCircleMask()
     }
 
     private func setupLoadingSpinner() {

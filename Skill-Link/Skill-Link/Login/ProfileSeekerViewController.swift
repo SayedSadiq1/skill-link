@@ -23,6 +23,8 @@ final class ProfileSeekerViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        profileImageView.applyCircleAvatarNoCrop()
+        
         interestsContainerView.layer.cornerRadius = 10
         interestsContainerView.layer.borderWidth = 1
         interestsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -37,12 +39,16 @@ final class ProfileSeekerViewController: BaseViewController {
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
 
         loadProfileFromFirestore()
+        
+       
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
-        profileImageView.clipsToBounds = true
+           profileImageView.clipsToBounds = true
+           profileImageView.contentMode = .scaleAspectFill
+        profileImageView.updateCircleMask()
     }
 
     private func setupInterestsStackView() {
