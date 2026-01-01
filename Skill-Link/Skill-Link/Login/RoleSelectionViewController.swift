@@ -27,10 +27,8 @@ final class RoleSelectionViewController: BaseViewController {
     private func styleCard(_ view: UIView) {
         view.layer.cornerRadius = 28
         view.layer.masksToBounds = false
-
         view.layer.borderWidth = 1
         view.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
-
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.18
         view.layer.shadowRadius = 18
@@ -39,15 +37,15 @@ final class RoleSelectionViewController: BaseViewController {
 
     // MARK: - Actions
     @IBAction func providerTapped(_ sender: UIButton) {
-        setRole("provider")
+        setRole(.provider)
     }
 
     @IBAction func seekerTapped(_ sender: UIButton) {
-        setRole("seeker")
+        setRole(.seeker)
     }
 
     // MARK: - Save role
-    private func setRole(_ role: String) {
+    private func setRole(_ role: UserRole) {
         guard !isSaving else { return }
 
         guard let user = Auth.auth().currentUser else {
@@ -58,7 +56,7 @@ final class RoleSelectionViewController: BaseViewController {
         isSaving = true
 
         let data: [String: Any] = [
-            "role": role,
+            "role": role.rawValue,
             "profileCompleted": false
         ]
 
@@ -71,23 +69,15 @@ final class RoleSelectionViewController: BaseViewController {
                 return
             }
 
-            // update role locally in the saved profile
-            self.updateRoleLocally(role, uid: user.uid)
-
-            // navigation still handled by storyboard
+            // update role locally
+            self.updateRoleLocally(role)
         }
     }
 
     // MARK: - Local update
-    private func updateRoleLocally(_ role: String, uid: String) {
-        // load existing local profile
+    private func updateRoleLocally(_ role: UserRole) {
         guard var profile = LocalUserStore.loadProfile() else { return }
-
-        // make sure uid is set
-        profile.id = uid
-
-        // role will be resolved later from firestore
-        // we just keep uid synced here
+        profile.role = role
         LocalUserStore.saveProfile(profile)
     }
 
