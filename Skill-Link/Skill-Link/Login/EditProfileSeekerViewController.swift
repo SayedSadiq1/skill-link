@@ -50,12 +50,15 @@ final class EditProfileSeekerViewController: BaseViewController {
         } else {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
+        
+        profileImageView.applyCircleAvatarNoCrop()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
+        profileImageView.updateCircleMask()
     }
 
     // MARK: - Spinner

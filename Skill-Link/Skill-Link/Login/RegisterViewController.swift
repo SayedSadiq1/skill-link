@@ -83,7 +83,7 @@ final class RegisterViewController: BaseViewController {
                 )
 
                 LocalUserStore.saveProfile(localProfile)
-
+                LoginPageController.loggedinUser = localProfile
 
                 // go pick role next
                 self.goToRoleSelection()

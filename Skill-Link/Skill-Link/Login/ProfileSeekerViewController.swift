@@ -37,12 +37,15 @@ final class ProfileSeekerViewController: BaseViewController {
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
 
         loadProfileFromFirestore()
+        
+        profileImageView.applyCircleAvatarNoCrop()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
+        profileImageView.updateCircleMask()
     }
 
     private func setupInterestsStackView() {
