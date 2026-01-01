@@ -22,17 +22,17 @@ final class SearchResultViewController: BaseViewController, UITableViewDataSourc
     // MARK: - Demo Data (replace with Firebase later)
     private let services: [Service] = [
         Service(id: UUID(), title: "Professional Plumbing Service", description: "",
-                category: "Plumbing", priceBD: 70, priceType: .fixed, rating: 5.0,
+                category: "Plumbing", priceBD: 70, priceType: .Fixed, rating: 5.0,
                 provider: UserProfile(name: "Ali", skills: [], brief: "", contact: ""),
                 available: true, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Morning (8–12)"),
 
         Service(id: UUID(), title: "Electrician Home Wiring", description: "",
-                category: "Electrician", priceBD: 50, priceType: .hourly, rating: 4.6,
+                category: "Electrician", priceBD: 50, priceType: .Hourly, rating: 4.6,
                 provider: UserProfile(name: "Ahmed", skills: [], brief: "", contact: ""),
                 available: true, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Afternoon (12–4)"),
 
         Service(id: UUID(), title: "Landscaping Garden Care", description: "",
-                category: "Landscaping", priceBD: 30, priceType: .hourly, rating: 4.4,
+                category: "Landscaping", priceBD: 30, priceType: .Hourly, rating: 4.4,
                 provider: UserProfile(name: "Salman", skills: [], brief: "", contact: ""),
                 available: false, disclaimers: [], durationMinHours: 1, durationMaxHours: 2, availableAt: "Evening (4–8)")
     ]

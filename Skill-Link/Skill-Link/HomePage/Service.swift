@@ -9,20 +9,20 @@ import Foundation
 import FirebaseFirestore
 
 
-class Service {
+class Service: Codable {
     @DocumentID<String> var id: String?
-    let title: String
-    let description: String
-    let category: String
-    let priceBD: Double
-    let priceType: PriceType
-    let rating: Double
-    let provider: UserProfile
-    let available: Bool
-    let disclaimers: [String]
-    let durationMinHours: Double
-    let durationMaxHours: Double
-    let availableAt: String
+    var title: String
+    var description: String
+    var category: String
+    var priceBD: Double
+    var priceType: PriceType
+    var rating: Double
+    var provider: UserProfile
+    var available: Bool
+    var disclaimers: [String]
+    var durationMinHours: Double
+    var durationMaxHours: Double
+    var availableAt: String
     
     init(id: UUID, title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, provider: UserProfile, available: Bool, disclaimers: [String], durationMinHours: Double, durationMaxHours: Double, availableAt: String = "Morning") {
         self.id = id.uuidString
@@ -41,7 +41,7 @@ class Service {
     }
 }
 
-enum PriceType: String {
-    case fixed
-    case hourly
+enum PriceType: String, Codable {
+    case Fixed
+    case Hourly
 }

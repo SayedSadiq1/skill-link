@@ -59,7 +59,7 @@ class ServiceDetailsViewController: UIViewController {
             description: "Professional light replacement service for all types of fixtures. Our certified electricians ensure safe installation and optimal lighting solutions for your home or office.",
             category: "Electrical",
             priceBD: 13.0,
-            priceType: .fixed,
+            priceType: .Fixed,
             rating: 4.8,
             provider: mockProvider,
             available: true,
@@ -152,7 +152,7 @@ extension ServiceDetailsViewController: UITableViewDataSource {
     private func configureDetailsCell(_ cell: ServiceDetailsDetailsCell) {
         // Format price
         let priceText = String(format: "%.2f BD", service.priceBD)
-        let priceTypeText = service.priceType == .fixed ? "(Fixed Price)" : "(Per Hour)"
+        let priceTypeText = service.priceType == .Fixed ? "(Fixed Price)" : "(Per Hour)"
         cell.priceLabel.text = "\(priceText) \(priceTypeText)"
         
         // Availability
