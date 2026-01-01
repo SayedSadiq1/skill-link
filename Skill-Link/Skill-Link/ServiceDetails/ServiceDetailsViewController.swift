@@ -19,12 +19,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - ServiceEditDelegate
     func didUpdateService(_ updatedService: Service) {
-        // Option 1: Update with passed data (fastest)
-        self.service = updatedService
-        refreshUI()
-        
-        // Option 2: Re-fetch from Firebase (most accurate)
-        // fetchFreshDataFromFirebase()
+        fetchFreshDataFromFirebase()
     }
     
     private func refreshUI() {
@@ -75,44 +70,15 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        if service == nil {
-            loadMockService()
-        }
         setupUI()
         tableView.reloadData()
     }
     
-    // MARK: - Mock Data
-    private func loadMockService() {
-        //        let mockProvider = UserProfile(
-        //            name: "Modeer",
-        //            skills: ["Electrician", "Stock Analyst"],
-        //            brief: "Microsoft Certified Electrician!",
-        //            contact: "+973 3232 4545"
-        //        )
-        
-        //        service = Service2(
-        //            id: UUID(),
-        //            title: "Light Replacement Service",
-        //            description: "Professional light replacement service for all types of fixtures. Our certified electricians ensure safe installation and optimal lighting solutions for your home or office.",
-        //            category: "Electrical",
-        //            priceBD: 13.0,
-        //            priceType: .fixed,
-        //            rating: 4.8,
-        //            provider: mockProvider,
-        //            available: true,
-        //            disclaimers: [
-        //                "Price includes labor only. Materials may incur additional charges.",
-        //                "Service may be rescheduled due to weather conditions.",
-        //                "24-hour cancellation policy applies."
-        //            ],
-        //            durationMinHours: 1,
-        //            durationMaxHours: 1.5
-        //        )
-    }
-    
     func setupUI() {
         if (LoginPageController.loggedinUser?.isProvider ?? false) {
+            return
+        }
+        if service == nil {
             return
         }
         
@@ -140,6 +106,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     }
     
     @IBAction func reportClicked(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
         if LoginPageController.loggedinUser?.isProvider ?? false {
             service.available = !service.available
             if service.available {
@@ -161,17 +128,14 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
             return
         }
         
-        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "reportPage") else {
-            return
-        }
+        let controller = storyboard.instantiateViewController(identifier: "reportPage")
         self.navigationController?.pushViewController(controller, animated: true)
     }
     
     @IBAction func actionClicked(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
         if !(LoginPageController.loggedinUser?.isProvider ?? false) {
-            guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "BookingPage") else {
-                return
-            }
+            let controller = storyboard.instantiateViewController(identifier: "BookingPage")
             controller.modalPresentationStyle = .fullScreen
             controller.navigationItem.title = "Confirm Booking"
             self.navigationController?.pushViewController(controller, animated: true)
@@ -258,8 +222,8 @@ extension ServiceDetailsViewController: UITableViewDataSource {
     }
     
     private func configureProviderCell(_ cell: ServiceDetailsProviderCell) {
-        cell.providerName.text = service.provider.name
-        cell.providerContactLabel.text = service.provider.contact
+        cell.providerName.text = "service.provider.name"
+        cell.providerContactLabel.text = "service.provider.contact"
     }
     
     private func configureDescriptionCell(_ cell: ServiceDetailsDescriptionCell) {

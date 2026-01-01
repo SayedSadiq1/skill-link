@@ -17,14 +17,14 @@ class Service: Codable {
     var priceBD: Double
     var priceType: PriceType
     var rating: Double
-    var provider: UserProfile
+    var providerId: String
     var available: Bool
     var disclaimers: [String]
     var durationMinHours: Double
     var durationMaxHours: Double
     var availableAt: String
     
-    init(id: UUID, title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, provider: UserProfile, available: Bool, disclaimers: [String], durationMinHours: Double, durationMaxHours: Double, availableAt: String = "Morning") {
+    init(id: UUID, title: String, description: String, category: String, priceBD: Double, priceType: PriceType, rating: Double, providerId: String, available: Bool, disclaimers: [String], durationMinHours: Double, durationMaxHours: Double, availableAt: String = "Morning") {
         self.id = id.uuidString
         self.title = title
         self.description = description
@@ -32,7 +32,7 @@ class Service: Codable {
         self.priceBD = priceBD
         self.priceType = priceType
         self.rating = rating
-        self.provider = provider
+        self.providerId = providerId
         self.available = available
         self.disclaimers = disclaimers
         self.durationMinHours = durationMinHours
