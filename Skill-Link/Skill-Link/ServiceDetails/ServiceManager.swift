@@ -2,7 +2,7 @@ import FirebaseFirestore
 
 class ServiceManager {
     private let db = Firestore.firestore()
-    private let collectionName = "services"
+    private let collectionName = "Service"
     
     // MARK: - Save Service
     func saveService(_ service: Service, completion: @escaping (Result<String, Error>) -> Void) {
