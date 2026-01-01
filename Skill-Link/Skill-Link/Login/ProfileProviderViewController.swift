@@ -11,11 +11,11 @@ final class ProfileProviderViewController: BaseViewController {
     @IBOutlet weak var contactLabel: UILabel!
 
     @IBOutlet weak var nameLabel: UILabel!
-
     @IBOutlet weak var briefContainerView: UIView!
     @IBOutlet weak var briefTextView: UITextView!
 
     @IBOutlet weak var profileImageView: UIImageView!
+    @IBOutlet weak var editButton: UIButton! // Add this to your storyboard
 
     private var successBanner: UIView?
     private let db = Firestore.firestore()
@@ -49,16 +49,30 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
         loadProfileFromFirestore()
-        
-        profileImageView.applyCircleAvatarNoCrop()
-    }
 
+        profileImageView.applyCircleAvatarNoCrop()
+
+        // Disable edit button if the profile is not the logged-in user's
+        checkIfOwnProfile()
+    }
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
+        // make profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
-        profileImageView.clipsToBounds = true
-        profileImageView.contentMode = .scaleAspectFill
+           profileImageView.clipsToBounds = true
+           profileImageView.contentMode = .scaleAspectFill
+        
         profileImageView.updateCircleMask()
+    }
+
+    private func checkIfOwnProfile() {
+        guard let currentUserUID = Auth.auth().currentUser?.uid else { return }
+
+        if let profile = currentProfile, profile.id != currentUserUID {
+            editButton.isHidden = true // Hide the Edit button if it's not the user's profile
+        }
     }
 
     // MARK: - Load Profile
@@ -93,6 +107,7 @@ final class ProfileProviderViewController: BaseViewController {
                 self.currentProfile = profile
                 self.applyProfileToUI()
                 LocalUserStore.saveProfile(profile)
+                self.checkIfOwnProfile() // Check again if the profile is owned by the logged-in user
             }
         }
     }
@@ -157,11 +172,9 @@ final class ProfileProviderViewController: BaseViewController {
         }
 
         override var intrinsicContentSize: CGSize {
-            let size = super.intrinsicContentSize
-            return CGSize(
-                width: size.width + horizontalPadding * 2,
-                height: size.height + verticalPadding * 2
-            )
+            let s = super.intrinsicContentSize
+            return CGSize(width: s.width + horizontalPadding * 2,
+                          height: s.height + verticalPadding * 2)
         }
     }
 

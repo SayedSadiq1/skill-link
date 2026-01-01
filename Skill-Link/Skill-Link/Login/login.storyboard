@@ -962,6 +962,7 @@
                         <outlet property="briefTextView" destination="jvW-r7-EPr" id="kxD-K7-2kU"/>
                         <outlet property="contactContainerView" destination="Fz1-TP-kNe" id="xOf-CE-Ejc"/>
                         <outlet property="contactLabel" destination="1Kt-dw-l66" id="z9Y-V1-kNh"/>
+                        <outlet property="editButton" destination="KoW-Kn-7O9" id="jgs-LV-FpL"/>
                         <outlet property="nameLabel" destination="7x7-uf-PCh" id="ir5-Cm-pqm"/>
                         <outlet property="profileImageView" destination="IDd-1V-2z0" id="9ed-Ss-YgU"/>
                         <outlet property="skillsContainerView" destination="KTD-S0-rj2" id="2Qw-hB-HAw"/>
@@ -1322,6 +1323,7 @@
                     <connections>
                         <outlet property="contactContainerView" destination="cHg-vt-UIz" id="0n1-0t-MrB"/>
                         <outlet property="contactLabel" destination="vC6-GF-guE" id="w2P-uO-EB8"/>
+                        <outlet property="editButton" destination="Eep-Cw-Jfs" id="Uuq-jD-xg6"/>
                         <outlet property="interestsContainerView" destination="lQU-Gu-jqg" id="6RR-tO-LY2"/>
                         <outlet property="interestsStackView" destination="367-Yp-5WE" id="rlP-Fg-Nct"/>
                         <outlet property="nameLabel" destination="Oc1-vk-ixM" id="eq7-Ee-7LQ"/>

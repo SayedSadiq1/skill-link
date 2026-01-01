@@ -6,16 +6,14 @@ final class ProfileSeekerViewController: BaseViewController {
 
     @IBOutlet weak var interestsStackView: UIStackView!
     @IBOutlet weak var interestsContainerView: UIView!
-
     @IBOutlet weak var contactContainerView: UIView!
     @IBOutlet weak var contactLabel: UILabel!
-
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var profileImageView: UIImageView!
+    @IBOutlet weak var editButton: UIButton!
 
     private var successBanner: UIView?
     private let db = Firestore.firestore()
-
     private var currentProfile: SeekerProfile?
 
     override var shouldShowBackButton: Bool { false }
@@ -24,7 +22,6 @@ final class ProfileSeekerViewController: BaseViewController {
         super.viewDidLoad()
 
         profileImageView.applyCircleAvatarNoCrop()
-        
         interestsContainerView.layer.cornerRadius = 10
         interestsContainerView.layer.borderWidth = 1
         interestsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -39,15 +36,16 @@ final class ProfileSeekerViewController: BaseViewController {
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
 
         loadProfileFromFirestore()
-        
-       
+
+        // Check if the logged-in user is the profile owner and show/hide the edit button accordingly
+        checkIfOwnerCanEdit()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
-           profileImageView.clipsToBounds = true
-           profileImageView.contentMode = .scaleAspectFill
+        profileImageView.clipsToBounds = true
+        profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 
@@ -72,7 +70,8 @@ final class ProfileSeekerViewController: BaseViewController {
                 name: data["fullName"] as? String ?? "",
                 interests: data["interests"] as? [String] ?? [],
                 contact: data["contact"] as? String ?? "",
-                imageURL: data["imageURL"] as? String
+                imageURL: data["imageURL"] as? String,
+                id: uid  // Add the profile owner's id here
             )
 
             self.applyProfileToUI()
@@ -173,6 +172,18 @@ final class ProfileSeekerViewController: BaseViewController {
 
     // MARK: - Edit
     @IBAction func editTapped(_ sender: UIButton) {
+        guard let currentProfile else {
+            
+            return
+        }
+
+        // Check if the logged-in user is the profile owner
+        if let loggedInUserID = Auth.auth().currentUser?.uid, loggedInUserID != currentProfile.id {
+            // Disable or hide the edit button if not the profile owner
+            editButton.isHidden = true
+            return
+        }
+
         let sb = UIStoryboard(name: "login", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "EditProfileSeekerViewController") as! EditProfileSeekerViewController
         vc.profile = currentProfile
@@ -183,6 +194,15 @@ final class ProfileSeekerViewController: BaseViewController {
         }
         navigationController?.pushViewController(vc, animated: true)
     }
+
+    // MARK: - Check if the logged-in user can edit
+    private func checkIfOwnerCanEdit() {
+        // Hide the edit button if the current user is not the profile owner
+        guard let currentProfile else { return }
+        if let loggedInUserID = Auth.auth().currentUser?.uid, loggedInUserID != currentProfile.id {
+            editButton.isHidden = true
+        }
+    }
 }
 
 struct SeekerProfile {
@@ -190,4 +210,5 @@ struct SeekerProfile {
     let interests: [String]
     let contact: String
     let imageURL: String?
+    let id: String  // Add the profile owner's id
 }
