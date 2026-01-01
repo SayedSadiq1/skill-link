@@ -16,39 +16,38 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - Properties
     var service: Service!
-    let isProvider: Bool = true
     
     // MARK: - ServiceEditDelegate
-        func didUpdateService(_ updatedService: Service) {
-            // Option 1: Update with passed data (fastest)
-            self.service = updatedService
-            refreshUI()
-            
-            // Option 2: Re-fetch from Firebase (most accurate)
-            // fetchFreshDataFromFirebase()
-        }
+    func didUpdateService(_ updatedService: Service) {
+        // Option 1: Update with passed data (fastest)
+        self.service = updatedService
+        refreshUI()
         
-        private func refreshUI() {
-            // Reload all UI elements
-            setupUI()
-            tableView.reloadData()
-        }
+        // Option 2: Re-fetch from Firebase (most accurate)
+        // fetchFreshDataFromFirebase()
+    }
+    
+    private func refreshUI() {
+        // Reload all UI elements
+        setupUI()
+        tableView.reloadData()
+    }
+    
+    private func fetchFreshDataFromFirebase() {
+        guard let serviceID = service.id else { return }
         
-        private func fetchFreshDataFromFirebase() {
-            guard let serviceID = service.id else { return }
-            
-            let serviceManager = ServiceManager()
-            serviceManager.fetchService(by: serviceID) { [weak self] result in
-                switch result {
-                case .success(let updatedService):
-                    self?.service = updatedService
-                    self?.refreshUI()
-                case .failure(let error):
-                    print("Error fetching fresh data: \(error)")
-                    self?.refreshUI() // Still refresh with local data
-                }
+        let serviceManager = ServiceManager()
+        serviceManager.fetchService(by: serviceID) { [weak self] result in
+            switch result {
+            case .success(let updatedService):
+                self?.service = updatedService
+                self?.refreshUI()
+            case .failure(let error):
+                print("Error fetching fresh data: \(error)")
+                self?.refreshUI() // Still refresh with local data
             }
         }
+    }
     
     // MARK: - Cell Identifiers
     private enum CellIdentifier: String {
@@ -85,91 +84,91 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - Mock Data
     private func loadMockService() {
-//        let mockProvider = UserProfile(
-//            name: "Modeer",
-//            skills: ["Electrician", "Stock Analyst"],
-//            brief: "Microsoft Certified Electrician!",
-//            contact: "+973 3232 4545"
-//        )
+        //        let mockProvider = UserProfile(
+        //            name: "Modeer",
+        //            skills: ["Electrician", "Stock Analyst"],
+        //            brief: "Microsoft Certified Electrician!",
+        //            contact: "+973 3232 4545"
+        //        )
         
-//        service = Service2(
-//            id: UUID(),
-//            title: "Light Replacement Service",
-//            description: "Professional light replacement service for all types of fixtures. Our certified electricians ensure safe installation and optimal lighting solutions for your home or office.",
-//            category: "Electrical",
-//            priceBD: 13.0,
-//            priceType: .fixed,
-//            rating: 4.8,
-//            provider: mockProvider,
-//            available: true,
-//            disclaimers: [
-//                "Price includes labor only. Materials may incur additional charges.",
-//                "Service may be rescheduled due to weather conditions.",
-//                "24-hour cancellation policy applies."
-//            ],
-//            durationMinHours: 1,
-//            durationMaxHours: 1.5
-//        )
+        //        service = Service2(
+        //            id: UUID(),
+        //            title: "Light Replacement Service",
+        //            description: "Professional light replacement service for all types of fixtures. Our certified electricians ensure safe installation and optimal lighting solutions for your home or office.",
+        //            category: "Electrical",
+        //            priceBD: 13.0,
+        //            priceType: .fixed,
+        //            rating: 4.8,
+        //            provider: mockProvider,
+        //            available: true,
+        //            disclaimers: [
+        //                "Price includes labor only. Materials may incur additional charges.",
+        //                "Service may be rescheduled due to weather conditions.",
+        //                "24-hour cancellation policy applies."
+        //            ],
+        //            durationMinHours: 1,
+        //            durationMaxHours: 1.5
+        //        )
     }
     
     func setupUI() {
-            if (!isProvider) {
-                return
-            }
-        
-            if actionBtn != nil {
-                actionBtn.setTitle("Edit service", for: .normal)
-                actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
-            }
-            if cancelBtn != nil {
-                if service.available {
-                    var config = UIButton.Configuration.filled()
-                    config.image = UIImage(systemName: "xmark.app")
-                    config.title = "Deactivate"
-                    config.baseBackgroundColor = UIColor.red
-                    cancelBtn.configuration = config
-                    
-                } else {
-                    var config = UIButton.Configuration.filled()
-                    config.image = UIImage(systemName: "repeat")
-                    config.title = "Reactivate"
-                    config.baseBackgroundColor = UIColor.systemTeal
-                    cancelBtn.configuration = config
-                }
-            }
-            
+        if (LoginPageController.loggedinUser?.isProvider ?? false) {
+            return
         }
+        
+        if actionBtn != nil {
+            actionBtn.setTitle("Edit service", for: .normal)
+            actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
+        }
+        if cancelBtn != nil {
+            if service.available {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "xmark.app")
+                config.title = "Deactivate"
+                config.baseBackgroundColor = UIColor.red
+                cancelBtn.configuration = config
+                
+            } else {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "repeat")
+                config.title = "Reactivate"
+                config.baseBackgroundColor = UIColor.systemTeal
+                cancelBtn.configuration = config
+            }
+        }
+        
+    }
     
     @IBAction func reportClicked(_ sender: Any) {
-            if isProvider {
-                service.available = !service.available
-                if service.available {
-                    var config = UIButton.Configuration.filled()
-                    config.image = UIImage(systemName: "xmark.app")
-                    config.title = "Deactivate"
-                    config.baseBackgroundColor = UIColor.red
-                    cancelBtn.configuration = config
-                    
-                } else {
-                    var config = UIButton.Configuration.filled()
-                    config.image = UIImage(systemName: "repeat")
-                    config.title = "Reactivate"
-                    config.baseBackgroundColor = UIColor.systemTeal
-                    cancelBtn.configuration = config
-                }
+        if LoginPageController.loggedinUser?.isProvider ?? false {
+            service.available = !service.available
+            if service.available {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "xmark.app")
+                config.title = "Deactivate"
+                config.baseBackgroundColor = UIColor.red
+                cancelBtn.configuration = config
                 
-                refreshUI()
-                return
+            } else {
+                var config = UIButton.Configuration.filled()
+                config.image = UIImage(systemName: "repeat")
+                config.title = "Reactivate"
+                config.baseBackgroundColor = UIColor.systemTeal
+                cancelBtn.configuration = config
             }
             
+            refreshUI()
+            return
+        }
+        
         guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "reportPage") else {
             return
         }
         self.navigationController?.pushViewController(controller, animated: true)
-        }
+    }
     
     @IBAction func actionClicked(_ sender: Any) {
-        if !isProvider {
+        if !(LoginPageController.loggedinUser?.isProvider ?? false) {
             guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "BookingPage") else {
                 return
             }
