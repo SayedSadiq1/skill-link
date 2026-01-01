@@ -87,4 +87,22 @@ class ServiceManager {
             completion(.success(services))
         }
     }
+    
+    // MARK: - Fetch Available Categories
+        func fetchServiceCategories(completion: @escaping (Result<[String], Error>) -> Void) {
+            db.collection("metadata").document("service_categories").getDocument { snapshot, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                guard let data = snapshot?.data(),
+                      let categories = data["categories"] as? [String] else {
+                    completion(.failure(NSError(domain: "", code: 404, userInfo: [NSLocalizedDescriptionKey: "Categories not found"])))
+                    return
+                }
+                
+                completion(.success(categories))
+            }
+        }
 }
