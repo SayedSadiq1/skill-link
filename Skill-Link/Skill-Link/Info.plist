@@ -16,11 +16,7 @@
 					<key>UISceneDelegateClassName</key>
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
 					<key>UISceneStoryboardFile</key>
-<<<<<<< HEAD
-					<string>HomePage</string>
-=======
 					<string>ServiceDetailsStoryboard</string>
->>>>>>> 2b39046 (everything asdhjsgfajhkdjsgfjhsdgfjhasgjhdgasf)
 				</dict>
 			</array>
 		</dict>

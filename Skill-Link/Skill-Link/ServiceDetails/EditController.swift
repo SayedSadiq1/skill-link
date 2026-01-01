@@ -24,33 +24,33 @@ class EditController: BaseViewController {
         setupUI()
     }
     
-    let categories = ["Home Maintenance", "Handwork", "Electricity"]
-    var service: Service2?
+    let categories = ["Home Maintenance", "Handwork", "Electrical"]
+    var service: Service?
 
     func setupUI() {
         if pricingPopupBtn != nil {
-                   let pricingPopupClosure = {(action : UIAction) in
-                       print(action.title)
-                   }
-                   pricingPopupBtn.menu = UIMenu(children: [
-                       UIAction(title: "Hourly", state: .on, handler: pricingPopupClosure),
-                       UIAction(title: "Fixed", handler: pricingPopupClosure)
-                   ])
-                   pricingPopupBtn.showsMenuAsPrimaryAction = true
-                   pricingPopupBtn.changesSelectionAsPrimaryAction = true
-               }
-               
-               if categoryPopupBtn != nil {
-                   let categoryPopupClosure = {(action : UIAction) in
-                   print(action)}
-                   var actions: [UIAction] = []
-                   for action in categories {
-                       actions.append(UIAction(title: action, handler: categoryPopupClosure))
-                   }
-                   categoryPopupBtn.menu = UIMenu(children: actions)
-                   categoryPopupBtn.showsMenuAsPrimaryAction = true
-                   categoryPopupBtn.changesSelectionAsPrimaryAction = true
-               }
+            let pricingPopupClosure = {(action : UIAction) in
+                print(action.title)
+            }
+            pricingPopupBtn.menu = UIMenu(children: [
+                UIAction(title: "Hourly", state: .on, handler: pricingPopupClosure),
+                UIAction(title: "Fixed", handler: pricingPopupClosure)
+            ])
+            pricingPopupBtn.showsMenuAsPrimaryAction = true
+            pricingPopupBtn.changesSelectionAsPrimaryAction = true
+        }
+        
+        if categoryPopupBtn != nil {
+            let categoryPopupClosure = {(action : UIAction) in
+                print(action)}
+            var actions: [UIAction] = []
+            for action in categories {
+                actions.append(UIAction(title: action, handler: categoryPopupClosure))
+            }
+            categoryPopupBtn.menu = UIMenu(children: actions)
+            categoryPopupBtn.showsMenuAsPrimaryAction = true
+            categoryPopupBtn.changesSelectionAsPrimaryAction = true
+        }
         
         guard let service = service else {
             return
@@ -61,9 +61,21 @@ class EditController: BaseViewController {
         maxDurationField.text = String(service.durationMaxHours)
         pricingField.text = String(service.priceBD)
         disclaimersField.text = service.disclaimers.joined(separator: "\n")
+        
+        var actions: [UIAction] = []
+        for action in categories {
+            actions.append(UIAction(title: action, state: action == service.category ? .on : .off, handler: {_ in }))
+        }
+        categoryPopupBtn.menu = UIMenu(children: actions)
+        
+        var pricingActions: [UIAction] = []
+        for action in ["Fixed", "Hourly"] {
+            pricingActions.append(UIAction(title: action, state: action == service.priceType.rawValue ? .on : .off, handler: {_ in}))
+        }
+        pricingPopupBtn.menu = UIMenu(children: pricingActions)
     }
     
-    func initWithService(service: Service2) {
+    func initWithService(service: Service) {
         self.service = service
     }
 
