@@ -29,11 +29,11 @@ class ServiceCellTableViewCell: UITableViewCell {
     
     
     @IBAction func viewDetailsClick(_ sender: Any) {
-        print("jhtyuskjhdgfytsduijhgfdtsrweyuirgjhfvdgy7eurhfj")
         if serviceData != nil {
             let serviceDetailsStoryboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
             if let serviceDetails = serviceDetailsStoryboard.instantiateViewController(withIdentifier: "serviceDetailsPage") as? ServiceDetailsViewController {
                 serviceDetails.service = serviceData
+                serviceDetails.navigationItem.title = "Service Details"
                 parent!.navigationController?.pushViewController(serviceDetails, animated: true)
             }
         }
