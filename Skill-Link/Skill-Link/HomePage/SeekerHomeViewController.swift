@@ -17,10 +17,10 @@ class SeekerHomeViewController: BaseViewController {
     
     @IBAction func messagesTapped(_ sender: UIButton) {
         let sb = UIStoryboard(name: "Chat", bundle: nil)
-        let nav = sb.instantiateViewController(withIdentifier: "ChatNav")
+        let nav = sb.instantiateViewController(withIdentifier: "ChatListView")
         
         nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        self.navigationController?.pushViewController(nav, animated: true)
     }
 
     
