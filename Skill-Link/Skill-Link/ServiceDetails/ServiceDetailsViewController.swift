@@ -45,7 +45,9 @@ class ServiceDetailsViewController: BaseViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadMockService()
+        if service == nil {
+            loadMockService()
+        }
         setupUI()
     }
     

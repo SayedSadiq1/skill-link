@@ -103,13 +103,49 @@ class EditController: BaseViewController {
 
     @IBAction func save(_ sender: Any) {
         service?.category = selectedCategory ?? categories[0]
+        if titleField.text == nil || titleField.text?.count == 0 {
+            showAlert(message: "Title cannot be empty")
+            return
+        }
         service?.title = titleField.text!
+        if service?.description == nil || service?.description.count == 0 {
+            showAlert(message: "Description cannot be empty")
+            return
+        }
         service?.description = descriptionField.text
-        service?.durationMinHours = Double(minDurationField.text!)!
-        service?.durationMaxHours = Double(maxDurationField.text!)!
-        service?.priceBD = Double(pricingField.text!)!
-        service?.priceType = PriceType(rawValue: selectedPricingType!) ?? .Hourly
-        service?.disclaimers = disclaimersField.text.components(separatedBy: "\n")
+        if let minDuration = Double(minDurationField.text!), minDuration >= 0 {
+            service?.durationMinHours = minDuration
+        } else {
+            showAlert(message: "Invalid minimum duration for service")
+            return
+        }
+        if let maxDuration = Double(maxDurationField.text!),
+           maxDuration >= service!.durationMinHours {
+            service?.durationMaxHours = maxDuration
+        } else {
+            showAlert(message: "Invalid maximum duration for service\nMust be more than minimum duration")
+            return
+        }
+        if let priceBD = Double(pricingField.text!) {
+            service?.priceBD = priceBD
+        } else {
+            showAlert(message: "Invalid price")
+            return
+        }
+        service?.priceType = PriceType(rawValue: selectedPricingType ?? "Hourly")!
+        if disclaimersField.text.count > 0 {
+            service?.disclaimers = disclaimersField.text.components(separatedBy: "\n")
+        }
+        
         self.navigationController?.popViewController(animated: true)
+        showAlert(message: "Successfully saved!", title: "Edit Service")
+    }
+    
+    private func showAlert(message: String, title: String = "Validation Error") {
+        let alert = UIAlertController(title: title,
+                                    message: message,
+                                    preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
