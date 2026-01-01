@@ -7,13 +7,48 @@
 
 import UIKit
 
-class ServiceDetailsViewController: UIViewController {
+class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - Outlets
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var actionBtn: UIButton!
+    @IBOutlet weak var cancelBtn: UIButton!
     
     // MARK: - Properties
-    var service: Service2!
+    var service: Service!
+    let isProvider: Bool = true
+    
+    // MARK: - ServiceEditDelegate
+        func didUpdateService(_ updatedService: Service) {
+            // Option 1: Update with passed data (fastest)
+            self.service = updatedService
+            refreshUI()
+            
+            // Option 2: Re-fetch from Firebase (most accurate)
+            // fetchFreshDataFromFirebase()
+        }
+        
+        private func refreshUI() {
+            // Reload all UI elements
+            setupUI()
+            tableView.reloadData()
+        }
+        
+        private func fetchFreshDataFromFirebase() {
+            guard let serviceID = service.id else { return }
+            
+            let serviceManager = ServiceManager()
+            serviceManager.fetchService(by: serviceID) { [weak self] result in
+                switch result {
+                case .success(let updatedService):
+                    self?.service = updatedService
+                    self?.refreshUI()
+                case .failure(let error):
+                    print("Error fetching fresh data: \(error)")
+                    self?.refreshUI() // Still refresh with local data
+                }
+            }
+        }
     
     // MARK: - Cell Identifiers
     private enum CellIdentifier: String {
@@ -41,7 +76,11 @@ class ServiceDetailsViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadMockService()
+        if service == nil {
+            loadMockService()
+        }
+        setupUI()
+        tableView.reloadData()
     }
     
     // MARK: - Mock Data
@@ -71,6 +110,84 @@ class ServiceDetailsViewController: UIViewController {
 //            durationMinHours: 1,
 //            durationMaxHours: 1.5
 //        )
+    }
+    
+    func setupUI() {
+            if (!isProvider) {
+                return
+            }
+        
+            if actionBtn != nil {
+                actionBtn.setTitle("Edit service", for: .normal)
+                actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
+            }
+            if cancelBtn != nil {
+                if service.available {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "xmark.app")
+                    config.title = "Deactivate"
+                    config.baseBackgroundColor = UIColor.red
+                    cancelBtn.configuration = config
+                    
+                } else {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "repeat")
+                    config.title = "Reactivate"
+                    config.baseBackgroundColor = UIColor.systemTeal
+                    cancelBtn.configuration = config
+                }
+            }
+            
+        }
+    
+    @IBAction func reportClicked(_ sender: Any) {
+            if isProvider {
+                service.available = !service.available
+                if service.available {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "xmark.app")
+                    config.title = "Deactivate"
+                    config.baseBackgroundColor = UIColor.red
+                    cancelBtn.configuration = config
+                    
+                } else {
+                    var config = UIButton.Configuration.filled()
+                    config.image = UIImage(systemName: "repeat")
+                    config.title = "Reactivate"
+                    config.baseBackgroundColor = UIColor.systemTeal
+                    cancelBtn.configuration = config
+                }
+                
+                refreshUI()
+                return
+            }
+            
+        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "reportPage") else {
+            return
+        }
+        self.navigationController?.pushViewController(controller, animated: true)
+        }
+    
+    @IBAction func actionClicked(_ sender: Any) {
+        if !isProvider {
+            guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "BookingPage") else {
+                return
+            }
+            controller.modalPresentationStyle = .fullScreen
+            controller.navigationItem.title = "Confirm Booking"
+            self.navigationController?.pushViewController(controller, animated: true)
+            return
+        }
+        
+        guard let controller = self.navigationController?.storyboard?.instantiateViewController(identifier: "EditView") as? EditController else {
+            return
+        }
+        
+        controller.modalPresentationStyle = .fullScreen
+        controller.navigationItem.title = "Edit Service Details"
+        controller.service = service
+        controller.delegate = self
+        self.navigationController?.pushViewController(controller, animated: true)
     }
 }
 
@@ -192,31 +309,9 @@ extension ServiceDetailsViewController: UITableViewDelegate {
         case .disclaimers:
             return UITableView.automaticDimension
         case .additionalInfo:
-            return UITableView.automaticDimension
-        }
-    }
-    
-    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard let section = Section(rawValue: indexPath.section) else {
             return 100
         }
-        
-        switch section {
-        case .header:
-            return 180
-        case .provider:
-            return 120
-        case .description:
-            return 200
-        case .details:
-            return 100
-        case .disclaimers:
-            return 60
-        case .additionalInfo:
-            return 80
-        }
     }
-    
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return Section(rawValue: section)?.title
     }
