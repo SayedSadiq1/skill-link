@@ -16,6 +16,7 @@ class ChatViewController: BaseViewController,
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var messageTextField: UITextField!
     @IBOutlet weak var sendButton: UIButton!
+    @IBOutlet weak var titleName: UILabel!
     
     var chatId: String!
     var providerId: String!
@@ -46,7 +47,8 @@ class ChatViewController: BaseViewController,
         
         messageTextField.delegate = self
         
-        title = providerName
+//        title = providerName
+        titleName.text = providerName
         listenForMessages()
 
     }

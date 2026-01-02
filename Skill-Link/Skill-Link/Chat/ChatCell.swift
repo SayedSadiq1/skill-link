@@ -12,8 +12,8 @@ class ChatCell: UITableViewCell {
     @IBOutlet weak var bubbleView: UIView!
     @IBOutlet weak var messageLabel: UILabel!
     
-    @IBOutlet weak var leadingConstraint: NSLayoutConstraint!
-    @IBOutlet weak var trailingConstraint: NSLayoutConstraint!
+    @IBOutlet weak var leadingConstraint: NSLayoutConstraint?
+    @IBOutlet weak var trailingConstraint: NSLayoutConstraint?
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -27,27 +27,16 @@ class ChatCell: UITableViewCell {
     
     func configure(message: String, isSender: Bool) {
         messageLabel.text = message
-        
-        leadingConstraint.isActive = !isSender
-        trailingConstraint.isActive = isSender
-        
+
+        leadingConstraint?.isActive = !isSender
+        trailingConstraint?.isActive = isSender
+
         bubbleView.backgroundColor = isSender ? .systemBlue : .systemGray5
         messageLabel.textColor = isSender ? .white : .black
-        
-        if isSender {
-            bubbleView.layer.maskedCorners = [
-                .layerMinXMinYCorner,
-                .layerMaxXMinYCorner,
-                .layerMinXMaxYCorner
-            ]
-        } else {
-            bubbleView.layer.maskedCorners = [
-                .layerMinXMinYCorner,
-                .layerMaxXMinYCorner,
-                .layerMaxXMaxYCorner
-            ]
-        }
-        
-        layoutIfNeeded()
+
+        bubbleView.layer.maskedCorners = isSender
+            ? [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner]
+            : [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMaxXMaxYCorner]
     }
+
 }
