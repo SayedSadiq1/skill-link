@@ -6,12 +6,14 @@
 //
 
 import UIKit
+import FirebaseFirestore
 
 final class SearchServiceViewController: BaseViewController {
 
     // MARK: - Outlets
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var recentTableView: UITableView!
+    @IBOutlet weak var suggestedContainer: UIView!   // ✅ add this outlet
 
     // MARK: - State
     private var currentFilters: SearchFilters = FiltersStore.load()
@@ -21,54 +23,11 @@ final class SearchServiceViewController: BaseViewController {
     private var shouldRestoreCategoriesAfterReturn = false
     private var originalCategoriesBeforeTempSearch: [String]?
 
-    // Real categories (must match exactly your Category screen + Service.category)
-    private let knownCategories: [String] = [
-        "Plumbing",
-        "Electrician",
-        "Landscaping",
-        "Tutoring",
-        "UI/UX Design",
-        "Coding"
-    ]
+    // ✅ Categories fetched from Firebase (no hardcoding)
+    private var firestoreCategories: [String] = []
 
-    // Aliases for “near match” terms
-    private let categoryAliases: [String: String] = [
-        "plumb": "Plumbing",
-        "plumber": "Plumbing",
-        "plumbing": "Plumbing",
-        "pipe": "Plumbing",
-        "pipes": "Plumbing",
-
-        "electr": "Electrician",
-        "electric": "Electrician",
-        "electrician": "Electrician",
-        "electrical": "Electrician",
-        "electricity": "Electrician",
-        "wiring": "Electrician",
-        "wire": "Electrician",
-
-        "landscape": "Landscaping",
-        "landscaping": "Landscaping",
-        "garden": "Landscaping",
-        "gardening": "Landscaping",
-
-        "tutor": "Tutoring",
-        "tutoring": "Tutoring",
-        "teacher": "Tutoring",
-        "teaching": "Tutoring",
-
-        "ui": "UI/UX Design",
-        "ux": "UI/UX Design",
-        "uiux": "UI/UX Design",
-        "design": "UI/UX Design",
-
-        "code": "Coding",
-        "coding": "Coding",
-        "program": "Coding",
-        "programming": "Coding",
-        "developer": "Coding",
-        "dev": "Coding"
-    ]
+    // Firestore
+    private let db = Firestore.firestore()
 
     // MARK: - Lifecycle
 
@@ -84,6 +43,7 @@ final class SearchServiceViewController: BaseViewController {
         recentTableView.tableFooterView = UIView()
 
         reloadRecents()
+        fetchCategoriesAndBuildSuggestedButtons()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -111,6 +71,98 @@ final class SearchServiceViewController: BaseViewController {
         recentTableView.reloadData()
     }
 
+    // MARK: - Firebase Categories
+
+    private func fetchCategoriesAndBuildSuggestedButtons() {
+        // metadata/service_categories { categories: [...] }
+        db.collection("metadata")
+            .document("service_categories")
+            .getDocument { [weak self] snap, err in
+                guard let self else { return }
+
+                if let err {
+                    self.showSimpleAlert(title: "Firebase Error", message: err.localizedDescription)
+                    return
+                }
+
+                let arr = snap?.data()?["categories"] as? [String] ?? []
+                // Clean + stable ordering
+                self.firestoreCategories = arr
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                    .sorted()
+
+                self.buildSuggestedButtons()
+            }
+    }
+
+    private func buildSuggestedButtons() {
+        // Clear previous buttons
+        suggestedContainer.subviews.forEach { $0.removeFromSuperview() }
+
+        // Choose what to show (simple: first 4)
+        let suggested = Array(firestoreCategories.prefix(4))
+        guard !suggested.isEmpty else { return }
+
+        // Layout: 2 rows x 2 columns using vertical stack of horizontal stacks
+        let vStack = UIStackView()
+        vStack.axis = .vertical
+        vStack.distribution = .fillEqually
+        vStack.spacing = 12
+        vStack.translatesAutoresizingMaskIntoConstraints = false
+
+        suggestedContainer.addSubview(vStack)
+        NSLayoutConstraint.activate([
+            vStack.leadingAnchor.constraint(equalTo: suggestedContainer.leadingAnchor),
+            vStack.trailingAnchor.constraint(equalTo: suggestedContainer.trailingAnchor),
+            vStack.topAnchor.constraint(equalTo: suggestedContainer.topAnchor),
+            vStack.bottomAnchor.constraint(equalTo: suggestedContainer.bottomAnchor)
+        ])
+
+        var idx = 0
+        while idx < suggested.count {
+            let hStack = UIStackView()
+            hStack.axis = .horizontal
+            hStack.distribution = .fillEqually
+            hStack.spacing = 12
+
+            let leftTitle = suggested[idx]
+            let leftBtn = makeSuggestedButton(title: leftTitle)
+            hStack.addArrangedSubview(leftBtn)
+            idx += 1
+
+            if idx < suggested.count {
+                let rightTitle = suggested[idx]
+                let rightBtn = makeSuggestedButton(title: rightTitle)
+                hStack.addArrangedSubview(rightBtn)
+                idx += 1
+            } else {
+                // Fill empty slot if odd count
+                let spacer = UIView()
+                hStack.addArrangedSubview(spacer)
+            }
+
+            vStack.addArrangedSubview(hStack)
+        }
+    }
+
+    private func makeSuggestedButton(title: String) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setTitle(title, for: .normal)
+        b.setTitleColor(.black, for: .normal)
+        b.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
+        b.layer.cornerRadius = 8
+        b.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        b.addTarget(self, action: #selector(suggestedButtonPressed(_:)), for: .touchUpInside)
+        return b
+    }
+
+    @objc private func suggestedButtonPressed(_ sender: UIButton) {
+        let title = (sender.title(for: .normal) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return }
+        openResultsTemporarilyForCategory(title)
+    }
+
     // MARK: - IBActions
 
     @IBAction func filtersTapped(_ sender: UIButton) {
@@ -121,7 +173,6 @@ final class SearchServiceViewController: BaseViewController {
     /// - If empty text: open results (using current saved filters if any; otherwise all)
     /// - If text typed: save to recents always, match to category; if matched show results TEMPORARILY (no persistence)
     @IBAction func searchTapped(_ sender: UIButton) {
-        // Force commit of user typing
         searchBar.resignFirstResponder()
 
         let term = (searchBar.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -133,30 +184,6 @@ final class SearchServiceViewController: BaseViewController {
         }
 
         runSearch(term: term)
-    }
-
-    /// Suggested buttons MUST have tags in storyboard:
-    /// 1 Plumbing, 2 Electrician, 3 Landscaping, 4 Tutoring, 5 UI/UX Design, 6 Coding
-    /// This must ALSO be temporary (no persistence).
-    @IBAction func suggestedCategoryTapped(_ sender: UIButton) {
-        guard let category = categoryFromTag(sender.tag) else {
-            showSimpleAlert(title: "Error", message: "Suggested button tag is not set.")
-            return
-        }
-
-        openResultsTemporarilyForCategory(category)
-    }
-
-    private func categoryFromTag(_ tag: Int) -> String? {
-        switch tag {
-        case 1: return "Plumbing"
-        case 2: return "Electrician"
-        case 3: return "Landscaping"
-        case 4: return "Tutoring"
-        case 5: return "UI/UX Design"
-        case 6: return "Coding"
-        default: return nil
-        }
     }
 
     // MARK: - Search logic
@@ -177,23 +204,22 @@ final class SearchServiceViewController: BaseViewController {
         }
     }
 
-    /// The core requirement: show category results BUT do NOT persist category into filters.
-    /// We do a temporary write so Results can read it, then restore when coming back.
+    /// Show category results BUT do NOT persist category into filters.
     private func openResultsTemporarilyForCategory(_ category: String) {
         var filters = FiltersStore.load()
 
-        // Save the original categories so we can restore later
+        // Save original categories so we can restore later
         originalCategoriesBeforeTempSearch = filters.selectedCategories
         shouldRestoreCategoriesAfterReturn = true
 
-        // Apply temporary category ONLY
+        // Temporary category ONLY
         filters.selectedCategories = [category]
         FiltersStore.save(filters)
 
         openSearchResults()
     }
 
-    // MARK: - Navigation (code-only)
+    // MARK: - Navigation
 
     private func openSearchResults() {
         guard let vc = storyboard?.instantiateViewController(withIdentifier: "SearchResultViewController") as? SearchResultViewController else {
@@ -210,32 +236,30 @@ final class SearchServiceViewController: BaseViewController {
         }
     }
 
-    // MARK: - Matching (aliases + small typo tolerance)
+    // MARK: - Matching (Firebase categories + typo tolerance)
 
     private func matchCategory(for input: String) -> String? {
         let q = normalize(input)
         guard !q.isEmpty else { return nil }
 
-        if let alias = categoryAliases[q] { return alias }
+        // If categories not loaded yet, fail safely
+        guard !firestoreCategories.isEmpty else { return nil }
 
-        if let prefixHit = knownCategories.first(where: { normalize($0).hasPrefix(q) }) {
-            return prefixHit
-        }
-        if let containsHit = knownCategories.first(where: { normalize($0).contains(q) }) {
-            return containsHit
-        }
+        // Exact / prefix / contains on normalized strings
+        if let exact = firestoreCategories.first(where: { normalize($0) == q }) { return exact }
+        if let prefix = firestoreCategories.first(where: { normalize($0).hasPrefix(q) }) { return prefix }
+        if let contains = firestoreCategories.first(where: { normalize($0).contains(q) }) { return contains }
 
-        // Small typo tolerance (<=2)
-        let candidates = knownCategories.map { ($0, normalize($0)) }
+        // Typo tolerance: choose closest if very near
         var best: (cat: String, dist: Int)?
-
-        for (cat, norm) in candidates {
-            let d = levenshtein(q, norm)
+        for cat in firestoreCategories {
+            let d = levenshtein(q, normalize(cat))
             if best == nil || d < best!.dist {
                 best = (cat, d)
             }
         }
 
+        // Safe threshold: <=2 to avoid gibberish matching
         if let best, best.dist <= 2 { return best.cat }
         return nil
     }
@@ -282,7 +306,7 @@ final class SearchServiceViewController: BaseViewController {
         present(ac, animated: true)
     }
 
-    // MARK: - Filters segue (ONLY place filters should persist)
+    // MARK: - Filters segue (ONLY place filters persist)
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "toFilters",
@@ -290,7 +314,7 @@ final class SearchServiceViewController: BaseViewController {
 
             vc.filters = currentFilters
 
-            // ✅ This is the ONLY path that persists filters (as you requested)
+            // ✅ ONLY this path persists filters
             vc.onApply = { [weak self] updated in
                 guard let self else { return }
                 self.currentFilters = updated
@@ -310,7 +334,6 @@ final class SearchServiceViewController: BaseViewController {
 
 extension SearchServiceViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        // Same behavior as Search button
         searchTapped(UIButton())
     }
 }
