@@ -41,8 +41,9 @@ class ChatListViewController: BaseViewController,
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        searchBar.searchBarStyle = .minimal
 
-        title = "Chats"
+//        title = "Chats"
 
         tableView.dataSource = self
         tableView.delegate = self
