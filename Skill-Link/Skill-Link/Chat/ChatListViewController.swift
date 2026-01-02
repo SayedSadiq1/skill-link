@@ -193,7 +193,7 @@ class ChatListViewController: BaseViewController,
             timeText = ts.dateValue()
                 .formatted(date: .omitted, time: .shortened)
         } else {
-            timeText = ""
+            timeText = "Go to chat"
         }
 
         cell.configure(
