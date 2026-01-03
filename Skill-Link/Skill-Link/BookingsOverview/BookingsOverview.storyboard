@@ -166,6 +166,9 @@
                                                                                 <imageReference key="image" image="phone" catalog="system" symbolScale="small"/>
                                                                                 <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
                                                                             </buttonConfiguration>
+                                                                            <connections>
+                                                                                <action selector="callButtonTapped:" destination="UXc-5Q-qNl" eventType="touchUpInside" id="FuY-QK-TPb"/>
+                                                                            </connections>
                                                                         </button>
                                                                     </subviews>
                                                                 </stackView>
