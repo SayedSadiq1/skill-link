@@ -14,6 +14,7 @@ protocol BookingsTableViewCellDelegate: AnyObject {
 
 class BookingsTableViewCell: UITableViewCell {
 
+    @IBOutlet weak var approveDeclineButtons: UIStackView!
     @IBOutlet weak var serviceTitle: UILabel!
     @IBOutlet weak var bookingCategory: UILabel!
     @IBOutlet weak var providedBy: UILabel!
@@ -28,7 +29,6 @@ class BookingsTableViewCell: UITableViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {

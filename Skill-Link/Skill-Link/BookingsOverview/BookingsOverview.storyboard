@@ -844,6 +844,7 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="approveDeclineButtons" destination="JsT-eM-Oar" id="EFj-4c-JXK"/>
                                             <outlet property="bookingCategory" destination="50O-iK-xtv" id="6bp-Tf-yX3"/>
                                             <outlet property="cellContextMenu" destination="T7i-6V-d1s" id="HK5-hE-36d"/>
                                             <outlet property="date" destination="nst-j5-ps3" id="aOF-oK-DFA"/>

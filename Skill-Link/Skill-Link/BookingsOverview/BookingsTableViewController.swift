@@ -52,11 +52,6 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     
 
     private func addProviderView() {
-        if !(isProvider) {
-            return
-        }
-        
-        // 1. Get a reference to your Tab Bar Controller
         guard let tabBarController = self.tabBarController else {
             return
         }
