@@ -69,13 +69,14 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
+        print("CURRENT USER: \(String(describing: LoginPageController.loggedinUser))")
         super.viewDidLoad()
         setupUI()
         tableView.reloadData()
     }
     
     func setupUI() {
-        if (LoginPageController.loggedinUser?.isProvider ?? false) {
+        if !(LoginPageController.loggedinUser?.isProvider ?? false) {
             return
         }
         if service == nil {
@@ -142,7 +143,6 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
             return
         }
         
-        let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
         guard let controller = storyboard.instantiateViewController(identifier: "EditView") as? EditController else {
             return
         }
