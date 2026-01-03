@@ -8,8 +8,8 @@
 import UIKit
 
 protocol BookingsTableViewCellDelegate: AnyObject {
-    func didTapApprove(for serviceId: String)
-    func didTapDecline(for serviceId: String)
+    func didTapApprove(for booking: Booking)
+    func didTapDecline(for booking: Booking)
 }
 
 class BookingsTableViewCell: UITableViewCell {
@@ -21,7 +21,7 @@ class BookingsTableViewCell: UITableViewCell {
     @IBOutlet weak var time: UILabel!
     @IBOutlet weak var location: UILabel!
     @IBOutlet weak var price: UILabel!
-    var serviceId: String!
+    var booking: Booking?
     
     @IBOutlet weak var cellContextMenu: UIButton!
     weak var delegate: BookingsTableViewCellDelegate?
@@ -72,10 +72,12 @@ class BookingsTableViewCell: UITableViewCell {
     }
 
     @IBAction func approveBtnTap(_ sender: UIButton) {
-        delegate?.didTapApprove(for: serviceId)
+        print("approveBtnTap")
+        delegate?.didTapApprove(for: booking!)
     }
     
     @IBAction func declineBtnTap(_ sender: UIButton) {
-        delegate?.didTapDecline(for: serviceId)
+        print("declineBtnTap")
+        delegate?.didTapDecline(for: booking!)
     }
 }

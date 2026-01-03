@@ -22,20 +22,7 @@ class BookingDataManager {
         return allBookings.filter { $0.status == state }
     }
     
-    func updateBookingState(serviceId: String, newState: BookedServiceStatus) {
-        if let index = allBookings.firstIndex(where: { $0.serviceId == serviceId }) {
-            // Create a mutable copy
-            var booking = allBookings[index]
-            booking.status = newState
-            allBookings[index] = booking
-            
-            // Notify observers (tabs) of the change
-            NotificationCenter.default.post(
-                name: .bookingDataDidChange,
-                object: nil
-            )
-        }
-    }
+    
     
     // Add initial data
     func setInitialData(_ bookings: [Booking]) {
