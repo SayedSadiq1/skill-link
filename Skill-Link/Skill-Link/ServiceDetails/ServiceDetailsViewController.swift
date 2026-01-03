@@ -135,7 +135,9 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
             return
         }
         
-        let controller = storyboard.instantiateViewController(identifier: "reportPage")
+        let controller = storyboard.instantiateViewController(identifier: "reportPage") as! ReportController
+        controller.serviceName = service.title
+        controller.userName = LoginPageController.loggedinUser?.fullName ?? ""
         self.navigationController?.pushViewController(controller, animated: true)
     }
     
