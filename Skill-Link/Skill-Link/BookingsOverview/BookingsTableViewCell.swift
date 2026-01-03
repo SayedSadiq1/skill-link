@@ -80,4 +80,20 @@ class BookingsTableViewCell: UITableViewCell {
         print("declineBtnTap")
         delegate?.didTapDecline(for: booking!)
     }
+    
+    @IBAction func callButtonTapped(_ sender: UIButton) {
+        let phoneNumber = "+97332324545" // Your phone number
+        
+        // Remove spaces, dashes, etc.
+        let cleanNumber = phoneNumber.replacingOccurrences(of: " ", with: "")
+                                      .replacingOccurrences(of: "-", with: "")
+        
+        // Create the URL
+        guard let url = URL(string: "tel://\(cleanNumber)") else { return }
+        
+        // Check if device can open phone app (not iPad/iPod)
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
 }
