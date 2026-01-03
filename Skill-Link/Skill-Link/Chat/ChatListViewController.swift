@@ -241,7 +241,7 @@ class ChatListViewController: BaseViewController,
 
                     // 🔑 DISPLAY NAMES (WRITE ONCE)
                     "seekerId": currentUserId,
-                    "seekerName": profile.name,
+                    "seekerName": profile.fullName,
 
                     "providerId": provider.id,
                     "providerName": provider.fullName,
