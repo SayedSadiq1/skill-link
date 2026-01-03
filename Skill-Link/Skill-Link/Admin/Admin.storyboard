@@ -340,7 +340,6 @@
                                 </buttonConfiguration>
                                 <connections>
                                     <action selector="addCategoryTapped:" destination="XTe-n4-Hx3" eventType="touchUpInside" id="faw-qy-A06"/>
-                                    <segue destination="qcz-oy-fle" kind="show" id="kq1-fb-cNY"/>
                                 </connections>
                             </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="yAR-59-0wU">
@@ -373,6 +372,9 @@
                                                             <buttonConfiguration key="configuration" style="filled" title="Delete" cornerStyle="large">
                                                                 <color key="baseBackgroundColor" red="0.11372549830000001" green="0.18039217590000001" blue="0.3686274886" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             </buttonConfiguration>
+                                                            <connections>
+                                                                <action selector="deleteTapped:" destination="swC-Or-KqQ" eventType="touchUpInside" id="nL2-Kt-EY4"/>
+                                                            </connections>
                                                         </button>
                                                         <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="JGo-q2-Wf8">
                                                             <rect key="frame" x="148" y="20" width="76" height="32"/>
@@ -382,7 +384,7 @@
                                                                 <color key="baseBackgroundColor" red="0.11372549830000001" green="0.18039217590000001" blue="0.3686274886" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             </buttonConfiguration>
                                                             <connections>
-                                                                <segue destination="KZs-Z5-Qm5" kind="show" id="g7A-FF-zG1"/>
+                                                                <action selector="editTapped:" destination="swC-Or-KqQ" eventType="touchUpInside" id="0hb-lq-209"/>
                                                             </connections>
                                                         </button>
                                                     </subviews>
@@ -1265,7 +1267,7 @@
             <objects>
                 <viewController id="znG-JP-Qxe" userLabel="Edit Success" customClass="BaseViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="hOU-5z-sKS">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="v1N-sQ-v68">
@@ -1291,7 +1293,7 @@
             <objects>
                 <viewController id="tnT-4U-4G5" customClass="BaseViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="iy3-sr-jeO">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="UN8-qB-vhA">
