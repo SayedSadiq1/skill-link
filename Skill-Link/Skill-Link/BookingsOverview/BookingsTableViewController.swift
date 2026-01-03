@@ -41,7 +41,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                     self?.table.reloadData()
                     self?.refreshTabs()
                 case .failure(let error):
-                    print(error.localizedDescription)
+                    print("COULDNT LOAD USER BOOKINGS: \(error.localizedDescription)")
                 }
             }
         }
@@ -52,6 +52,10 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     
 
     private func addProviderView() {
+        if !isProvider {
+            return
+        }
+        
         guard let tabBarController = self.tabBarController else {
             return
         }
@@ -85,6 +89,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         }
     }
     
+    // MARK: - Delegate
     func didTapApprove(for booking: Booking) {
         print("didTapApprove")
         booking.status = .Upcoming
@@ -122,6 +127,66 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         self.refreshTabs()
         self.showAlert(message: "Booking declined")
     }
+    
+    func goToServiceDetails(for serviceId: String) {
+        serviceManager.fetchService(by: serviceId) { [weak self] result in
+            switch result {
+            case .success(let service):
+                let sb = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+                let vc = sb.instantiateViewController(withIdentifier: "serviceDetailsPage") as! ServiceDetailsViewController
+                vc.service = service
+                self!.navigationController?.pushViewController(vc, animated: true)
+            case .failure(let err):
+                self?.showAlert(message: "An error occured")
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    func markServiceCompleted(for booking: Booking) {
+        booking.status = .Completed
+        updateBookingState(serviceId: booking.serviceId, newState: .Completed)
+        bookingManager.updateBooking(booking) { [weak self] result in
+            switch result {
+            case .success(_):
+                self?.updateBookingState(serviceId: booking.serviceId, newState: .Completed)
+                self?.table.reloadData()
+                self?.refreshTabs()
+            case .failure(let failure):
+                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
+            }
+        }
+    }
+    
+    func goToProviderProfile(for providerId: String) {
+        userService.fetchUserProfile(uid: providerId) { [weak self] result in
+            switch result {
+            case .success(let success):
+                let sb = UIStoryboard(name: "login", bundle: nil)
+                let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController") as! ProfileProviderViewController
+                vc.currentProfile = success
+                self!.navigationController?.pushViewController(vc, animated: true)
+            case .failure(let failure):
+                self?.showAlert(message: "An error occured: \(failure.localizedDescription)")
+            }
+        }
+    }
+    
+    func markServiceCanceled(for booking: Booking) {
+        booking.status = .Canceled
+        updateBookingState(serviceId: booking.serviceId, newState: .Canceled)
+        bookingManager.updateBooking(booking) { [weak self] result in
+            switch result {
+            case .success(_):
+                self?.updateBookingState(serviceId: booking.serviceId, newState: .Canceled)
+                self?.table.reloadData()
+                self?.refreshTabs()
+            case .failure(let failure):
+                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
+            }
+        }
+    }
+    
     
     private func showAlert(message: String) {
         let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)

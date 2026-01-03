@@ -10,10 +10,14 @@ import UIKit
 protocol BookingsTableViewCellDelegate: AnyObject {
     func didTapApprove(for booking: Booking)
     func didTapDecline(for booking: Booking)
+    func goToServiceDetails(for serviceId: String)
+    func markServiceCompleted(for booking: Booking)
+    func goToProviderProfile(for providerId: String)
+    func markServiceCanceled(for booking: Booking)
 }
 
 class BookingsTableViewCell: UITableViewCell {
-
+    
     @IBOutlet weak var approveDeclineButtons: UIStackView!
     @IBOutlet weak var serviceTitle: UILabel!
     @IBOutlet weak var bookingCategory: UILabel!
@@ -23,17 +27,23 @@ class BookingsTableViewCell: UITableViewCell {
     @IBOutlet weak var location: UILabel!
     @IBOutlet weak var price: UILabel!
     var booking: Booking?
+    private let isProvider = (LoginPageController.loggedinUser?.isProvider ?? true)
     
     @IBOutlet weak var cellContextMenu: UIButton!
     weak var delegate: BookingsTableViewCellDelegate?
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        if !isProvider {
+            if approveDeclineButtons != nil {
+                approveDeclineButtons.isHidden = true
+            }
+        }
     }
-
+    
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
+        
         // Configure the view for the selected state
     }
     
@@ -42,8 +52,24 @@ class BookingsTableViewCell: UITableViewCell {
             return
         }
         
-        let closure = {(action : UIAction) in
+        let closure = {[weak self] (action : UIAction) in
             print(action.title)
+            switch action.title {
+            case "See Details":
+                self!.delegate?.goToServiceDetails(for: self!.booking!.serviceId)
+            case "Mark Completed":
+                self!.delegate?.markServiceCompleted(for: self!.booking!)
+            case "View Provider":
+                self!.delegate?.goToProviderProfile(for: self!.booking!.providerId)
+            case "Cancel":
+                self!.delegate?.markServiceCanceled(for: self!.booking!)
+            case "Favorite":
+                print("")
+            case "Rate":
+                print("")
+            default:
+                print("impossible")
+            }
         }
         
         
@@ -51,7 +77,7 @@ class BookingsTableViewCell: UITableViewCell {
         case .Upcoming:
             cellContextMenu.menu = UIMenu(children: [
                 UIAction(title: "See Details", attributes: [], handler: closure),
-                UIAction(title: "View Provider", handler: closure),
+                isProvider ? UIAction(title: "Mark Completed", handler: closure) : UIAction(title: "View Provider", handler: closure),
                 UIAction(title: "Cancel", handler: closure)
             ])
             
@@ -70,7 +96,7 @@ class BookingsTableViewCell: UITableViewCell {
         cellContextMenu.showsMenuAsPrimaryAction = true
         cellContextMenu.changesSelectionAsPrimaryAction = false
     }
-
+    
     @IBAction func approveBtnTap(_ sender: UIButton) {
         print("approveBtnTap")
         delegate?.didTapApprove(for: booking!)
@@ -86,7 +112,7 @@ class BookingsTableViewCell: UITableViewCell {
         
         // Remove spaces, dashes, etc.
         let cleanNumber = phoneNumber.replacingOccurrences(of: " ", with: "")
-                                      .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "-", with: "")
         
         // Create the URL
         guard let url = URL(string: "tel://\(cleanNumber)") else { return }
