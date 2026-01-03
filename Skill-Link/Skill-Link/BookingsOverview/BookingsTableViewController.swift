@@ -32,14 +32,14 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         if tabBarController.viewControllers?.count == 4 {
             return
         }
-
+        
         // 2. Prepare your conditional view controller (e.g., from Storyboard)
         let storyboard = UIStoryboard(name: "BookingsOverview", bundle: nil)
         let providerVC = storyboard.instantiateViewController(withIdentifier: "PendingBookings")
-
+        
         // Configure the adminVC's tab bar item
         providerVC.tabBarItem = UITabBarItem(title: "Pending", image: UIImage(systemName: "person.fill.checkmark.and.xmark"), tag: 3)
-
+        
         // 3. Check the condition (e.g., user is an admin)
         if LoginPageController.loggedinUser?.isProvider ?? false {
             // Insert the admin tab as the fourth item (index 3)
@@ -48,7 +48,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
             if !currentViewControllers.contains(providerVC) {
                 currentViewControllers.insert(providerVC, at: 0) // Add at specific position
                 tabBarController.viewControllers = currentViewControllers
-            } 
+            }
         } else {
             if let providerVCIndex = tabBarController.viewControllers?.firstIndex(where: { $0.tabBarItem.title == "Pending" }) {
                 var currentViewControllers = tabBarController.viewControllers
@@ -79,10 +79,10 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     }
     
     private func showAlert(message: String) {
-            let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-        }
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
     
     func printAllBookings() {
         print("=== ALL BOOKINGS ===")
@@ -98,18 +98,18 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? BookingsTableViewCell else {
-                return UITableViewCell()
-            }
-            
-            let booking = BookingDataManager.shared.getBookings(for: currentState)[indexPath.row]  // Use filteredData
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? BookingsTableViewCell else {
+            return UITableViewCell()
+        }
+        
+        let booking = BookingDataManager.shared.getBookings(for: currentState)[indexPath.row]  // Use filteredData
         
         cell.delegate = self
-            
-            // Format the date
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .medium
-            
+        
+        // Format the date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        
         cell.serviceTitle?.text = booking.service.title
         if currentState == .Pending {
             cell.providedBy?.text = "Booked By: \(booking.user.name)"
@@ -126,91 +126,91 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         cell.location?.text = booking.location
         cell.price?.text = "\(booking.totalPrice)BD"
         cell.serviceId = booking.serviceId
-            
-            let stateLabel = cell.bookingCategory as! CardLabel
-            stateLabel.alpha = CGFloat(0.65)
+        
+        let stateLabel = cell.bookingCategory as! CardLabel
+        stateLabel.alpha = CGFloat(0.65)
         stateLabel.text = booking.status.rawValue
         switch booking.status {
-                case .Pending:
-                    stateLabel.setBackgroundColor(UIColor.yellow)
-                case .Upcoming:
-                    stateLabel.setBackgroundColor(UIColor.tintColor)
-                case .Completed:
-                    stateLabel.setBackgroundColor(UIColor.systemGreen)
-                case .Canceled:
-                    stateLabel.setBackgroundColor(UIColor.orange)
-            }
-            
+        case .Pending:
+            stateLabel.setBackgroundColor(UIColor.yellow)
+        case .Upcoming:
+            stateLabel.setBackgroundColor(UIColor.tintColor)
+        case .Completed:
+            stateLabel.setBackgroundColor(UIColor.systemGreen)
+        case .Canceled:
+            stateLabel.setBackgroundColor(UIColor.orange)
+        }
+        
         cell.setupContextMenu(state: currentState)
         
-            return cell
-        }
+        return cell
+    }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-            return 250
-        }
-//        
-        func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-            table.deselectRow(at: indexPath, animated: true)
-            // Handle row selection
-        }
+        return 250
+    }
+    //
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        table.deselectRow(at: indexPath, animated: true)
+        // Handle row selection
+    }
     
     private func setupForCurrentTab() {
-            // Get the current tab index
-            if let tabBarController = self.tabBarController,
-               let index = tabBarController.viewControllers?.firstIndex(of: self) {
-                
-                // Set current state based on tab index
-                if !(LoginPageController.loggedinUser?.isProvider ?? false) {
-                    switch index {
-                    case 0:
-                        currentState = .Upcoming
-                    case 1:
-                        currentState = .Completed
-                    case 2:
-                        currentState = .Canceled
-                    default:
-                        break
-                    }
-                } else {
-                    switch index {
-                    case 0:
-                        currentState = .Pending
-                    case 1:
-                        currentState = .Upcoming
-                    case 2:
-                        currentState = .Completed
-                    case 3:
-                        currentState = .Canceled
-                    default:
-                        break
-                    }
+        // Get the current tab index
+        if let tabBarController = self.tabBarController,
+           let index = tabBarController.viewControllers?.firstIndex(of: self) {
+            
+            // Set current state based on tab index
+            if !(LoginPageController.loggedinUser?.isProvider ?? false) {
+                switch index {
+                case 0:
+                    currentState = .Upcoming
+                case 1:
+                    currentState = .Completed
+                case 2:
+                    currentState = .Canceled
+                default:
+                    break
                 }
-                
-                
-                // Filter the data
-                filteredData = BookingDataManager.shared.getBookings(for: currentState)
-                
-                // Reload table
-                table.reloadData()
-                
-                // Debug
-                print("Tab \(index): Showing \(filteredData.count) \(currentState.rawValue) services")
+            } else {
+                switch index {
+                case 0:
+                    currentState = .Pending
+                case 1:
+                    currentState = .Upcoming
+                case 2:
+                    currentState = .Completed
+                case 3:
+                    currentState = .Canceled
+                default:
+                    break
+                }
             }
+            
+            
+            // Filter the data
+            filteredData = BookingDataManager.shared.getBookings(for: currentState)
+            
+            // Reload table
+            table.reloadData()
+            
+            // Debug
+            print("Tab \(index): Showing \(filteredData.count) \(currentState.rawValue) services")
         }
+    }
     
     private func refreshTabs() {
         if let tabBarController = self.navigationController?.tabBarController {
-                tabBarController.viewControllers?.forEach { viewController in
-                    if let nav = viewController as? UINavigationController,
-                       let bookingVC = nav.viewControllers.first as? BookingsOverviewTableViewController,
-                       bookingVC != self {
-                        bookingVC.table.reloadData()
-                    } else if let bookingVC = viewController as? BookingsOverviewTableViewController,
-                              bookingVC != self {
-                        bookingVC.table.reloadData()
-                    }
+            tabBarController.viewControllers?.forEach { viewController in
+                if let nav = viewController as? UINavigationController,
+                   let bookingVC = nav.viewControllers.first as? BookingsOverviewTableViewController,
+                   bookingVC != self {
+                    bookingVC.table.reloadData()
+                } else if let bookingVC = viewController as? BookingsOverviewTableViewController,
+                          bookingVC != self {
+                    bookingVC.table.reloadData()
                 }
             }
+        }
     }
 }

@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 class Booking: Codable {
+    @DocumentID var id: String?
     var status: BookedServiceStatus
     let serviceId: String
     let userId: String
