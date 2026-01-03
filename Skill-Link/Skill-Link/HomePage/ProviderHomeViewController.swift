@@ -8,6 +8,8 @@
 import UIKit
 
 class ProviderHomeViewController: BaseViewController {
+    
+    override var shouldShowBackButton: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,6 +32,24 @@ class ProviderHomeViewController: BaseViewController {
         nav.modalPresentationStyle = .fullScreen
         self.navigationController?.pushViewController(nav, animated: true)
     }
+    
+    @IBAction func settingsTapped(_ sender: Any) {
+        let sb = UIStoryboard(name: "Settings", bundle: nil) // ← storyboard file name
+           let vc = sb.instantiateViewController(
+               withIdentifier: "NotificationCenterViewController"
+           ) as! NotificationCenterViewController
+           navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    
+    @IBAction func profileTapped(_ sender: Any) {
+        let sb = UIStoryboard(name: "login", bundle: nil) // storyboard file name
+            let vc = sb.instantiateViewController(
+                withIdentifier: "ProfileProviderViewController"
+            ) as! ProfileProviderViewController
+            navigationController?.pushViewController(vc, animated: true)
+    }
+    
     
     
     /*
