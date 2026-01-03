@@ -16,6 +16,8 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - Properties
     var service: Service!
+    let isProvider = LoginPageController.loggedinUser?.isProvider ?? true
+    let userSerivce = FirebaseService.shared
     
     // MARK: - ServiceEditDelegate
     func didUpdateService(_ updatedService: Service) {
@@ -76,7 +78,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     }
     
     func setupUI() {
-        if !(LoginPageController.loggedinUser?.isProvider ?? false) {
+        if !(isProvider) {
             return
         }
         if service == nil {
@@ -108,7 +110,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     @IBAction func reportClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
-        if LoginPageController.loggedinUser?.isProvider ?? false {
+        if isProvider {
             service.available = !service.available
             if service.available {
                 var config = UIButton.Configuration.filled()
@@ -135,7 +137,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     @IBAction func actionClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
-        if !(LoginPageController.loggedinUser?.isProvider ?? false) {
+        if !isProvider {
             let controller = storyboard.instantiateViewController(identifier: "BookingPage")
             controller.modalPresentationStyle = .fullScreen
             controller.navigationItem.title = "Confirm Booking"
@@ -222,8 +224,15 @@ extension ServiceDetailsViewController: UITableViewDataSource {
     }
     
     private func configureProviderCell(_ cell: ServiceDetailsProviderCell) {
-        cell.providerName.text = "service.provider.name"
-        cell.providerContactLabel.text = "service.provider.contact"
+        userSerivce.fetchUserProfile(uid: service.providerId) { [weak cell] result in
+            switch result {
+            case .success(let success):
+                cell?.providerName.text = success.fullName
+                cell?.providerContactLabel.text = success.contact
+            case .failure(let failure):
+                print("Provider could not be loaded: \(failure.localizedDescription)")
+            }
+        }
     }
     
     private func configureDescriptionCell(_ cell: ServiceDetailsDescriptionCell) {
