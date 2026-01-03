@@ -281,7 +281,7 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="NextBookingCell" rowHeight="86" id="izH-7E-dYF">
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="NextBookingCellTableViewCell" rowHeight="86" id="izH-7E-dYF" customClass="NextBookingCellTableViewCell" customModule="Skill_Link" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="50" width="346" height="86"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="izH-7E-dYF" id="Otj-Y8-gJa">
@@ -302,13 +302,6 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Time Here" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="38g-Tt-BIi">
-                                                    <rect key="frame" x="240" y="42" width="79" height="21"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                    <nil key="textColor"/>
-                                                    <nil key="highlightedColor"/>
-                                                </label>
                                                 <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vct-uS-MPy">
                                                     <rect key="frame" x="20" y="40" width="130" height="24"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -316,9 +309,17 @@
                                                     <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                     <state key="normal" title="Button"/>
                                                     <buttonConfiguration key="configuration" style="plain" title="View Details"/>
+                                                    <connections>
+                                                        <action selector="viewDetailsTapped:" destination="izH-7E-dYF" eventType="touchUpInside" id="dDM-gh-Exn"/>
+                                                    </connections>
                                                 </button>
                                             </subviews>
                                         </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="subtitleLabel" destination="2M6-2u-5yu" id="C3p-QQ-UIG"/>
+                                            <outlet property="titleLabel" destination="iPH-wu-rsx" id="0Kb-sd-ewp"/>
+                                            <outlet property="viewDetailsButton" destination="vct-uS-MPy" id="zaL-RC-vRM"/>
+                                        </connections>
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
@@ -348,6 +349,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="lzV-DA-9lh"/>
                     <connections>
+                        <outlet property="nextBookingTableView" destination="PZf-H4-FQs" id="eiW-8l-0zK"/>
                         <outlet property="recommendedTableView" destination="KAn-ZU-Rbj" id="Lhf-r1-6MJ"/>
                     </connections>
                 </viewController>
@@ -919,7 +921,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qM1-4j-ZKi" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2607" y="31"/>
+            <point key="canvasLocation" x="2876" y="-567"/>
         </scene>
         <!--Search Service View Controller-->
         <scene sceneID="aSa-Pw-Obj">
