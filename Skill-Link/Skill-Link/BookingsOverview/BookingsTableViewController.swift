@@ -15,7 +15,6 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        userService.signIn(email: "123@123.com", password: "123123") {_ in }
         // Set up the table view
         table.dataSource = self
         table.delegate = self
