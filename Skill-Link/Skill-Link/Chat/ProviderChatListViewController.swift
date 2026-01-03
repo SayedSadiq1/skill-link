@@ -72,7 +72,7 @@ class ProviderChatListViewController: BaseViewController,
                     let participants = data["participants"] as? [String] ?? []
                     guard participants.count == 2 else { return nil }
 
-                    let seekerName = data["seekerName"] as? String ?? "Seeker"
+                    let seekerName = data["seekerName"] as? String ?? "Seekertest"
 
                     return ChatRow(
                         chatId: doc.documentID,

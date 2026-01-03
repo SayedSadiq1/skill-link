@@ -230,14 +230,28 @@ class ChatListViewController: BaseViewController,
                 self.openChat(chatId: pairId, provider: provider)
             } else {
                 // Create chat ONCE
+                guard let profile = LocalUserStore.loadProfile() else {
+                    print("❌ No local user profile")
+                    return
+                }
+
                 chatRef.setData([
                     "participants": [currentUserId, provider.id],
                     "pairId": pairId,
+
+                    // 🔑 DISPLAY NAMES (WRITE ONCE)
+                    "seekerId": currentUserId,
+                    "seekerName": profile.name,
+
+                    "providerId": provider.id,
+                    "providerName": provider.fullName,
+
                     "createdAt": Timestamp(),
                     "lastMessage": "",
                     "lastMessageTime": Timestamp(),
                     "lastSenderId": ""
-                ]) { _ in
+                ])
+                { _ in
                     self.openChat(chatId: pairId, provider: provider)
                 }
             }
