@@ -45,6 +45,9 @@
                                 <buttonConfiguration key="configuration" style="plain" image="calendar" catalog="system" cornerStyle="large">
                                     <backgroundConfiguration key="background"/>
                                 </buttonConfiguration>
+                                <connections>
+                                    <action selector="bookingsTapped:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="wqD-hP-0uF"/>
+                                </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sYj-Sb-hea">
                                 <rect key="frame" x="133" y="240" width="61" height="46.666666666666629"/>
