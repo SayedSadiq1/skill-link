@@ -15,7 +15,6 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        userService.signIn(email: "123@123.com", password: "123123") {_ in }
         // Set up the table view
         table.dataSource = self
         table.delegate = self
@@ -34,7 +33,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                 }
             }
         } else {
-            bookingManager.fetchBookingsForUser(LoginPageController.loggedinUser!.id){ [weak self] result in
+            bookingManager.fetchBookingsForUser(LoginPageController.loggedinUser!.id!){ [weak self] result in
                 switch result {
                 case .success(let bookings):
                     print("Found \(bookings.count) for seeker: \(String(describing: self?.userId))")
@@ -143,12 +142,12 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
             switch result {
             case .success(let user):
                 if self!.currentState == .Pending {
-                    cell!.providedBy?.text = "Booked By: \(user.name)"
+                    cell!.providedBy?.text = "Booked By: \(user.fullName)"
                 } else {
                     if self!.isProvider {
-                        cell!.providedBy?.text = "Booked By: \(user.name)"
+                        cell!.providedBy?.text = "Booked By: \(user.fullName)"
                     } else {
-                        cell!.providedBy?.text = "Provided By: \(user.name)"
+                        cell!.providedBy?.text = "Provided By: \(user.fullName)"
                     }
                 }
             case .failure(let failure):

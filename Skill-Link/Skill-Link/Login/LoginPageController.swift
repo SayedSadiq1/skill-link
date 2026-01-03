@@ -86,7 +86,7 @@ final class LoginPageController: BaseViewController {
 
             let profile = UserProfile(
                 id: uid,
-                name: data["fullName"] as? String ?? "",
+                fullName: data["fullName"] as? String ?? "",
                 contact: data["contact"] as? String ?? "",
                 imageURL: data["imageURL"] as? String,
                 role: role,

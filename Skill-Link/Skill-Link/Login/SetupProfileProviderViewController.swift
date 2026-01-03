@@ -246,7 +246,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         // save everything in one place so other screens can read it
         let profile = UserProfile(
             id: uid,
-            name: name,
+            fullName: name,
             contact: contact,
             imageURL: imageURL,
             role: .provider,

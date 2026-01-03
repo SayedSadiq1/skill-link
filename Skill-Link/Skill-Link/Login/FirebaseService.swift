@@ -28,18 +28,26 @@ final class FirebaseService {
     }
 
     func fetchUserProfile(uid: String, completion: @escaping (Result<UserProfile, Error>) -> Void) {
-        db.collection("users").document(uid).getDocument { snap, error in
-            if let error = error { completion(.failure(error)); return }
-            guard let data = snap?.data() else {
+        db.collection("User").document(uid).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let snapshot = snapshot, snapshot.exists else {
                 completion(.failure(NSError(domain: "Profile", code: 404, userInfo: [NSLocalizedDescriptionKey: "Profile not found"])))
                 return
             }
-
+            
+            // Print raw data to console
+            print("✅ Raw Firestore data for user \(uid): \(snapshot.data() ?? [:])")
+            
             do {
-                let json = try JSONSerialization.data(withJSONObject: data)
-                let profile = try JSONDecoder().decode(UserProfile.self, from: json)
+                let profile = try snapshot.data(as: UserProfile.self)
                 completion(.success(profile))
             } catch {
+                print("❌ Decoding error: \(error)")
+                // This will show exactly which field is wrong
                 completion(.failure(error))
             }
         }
