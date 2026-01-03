@@ -23,6 +23,15 @@ class ProviderHomeViewController: BaseViewController {
         self.navigationController?.pushViewController(nav, animated: true)
     }
 
+    @IBAction func bookingsTapped(_ sender: Any) {
+        let sb = UIStoryboard(name: "BookingsOverview", bundle: nil)
+        let nav = sb.instantiateViewController(withIdentifier: "bookingsTabView")
+        nav.navigationItem.title = "Bookings Overview"
+        nav.modalPresentationStyle = .fullScreen
+        self.navigationController?.pushViewController(nav, animated: true)
+    }
+    
+    
     /*
     // MARK: - Navigation
 
