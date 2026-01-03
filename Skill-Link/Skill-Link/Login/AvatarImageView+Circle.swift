@@ -10,15 +10,16 @@ import UIKit
 
 extension UIImageView {
 
-    /// Fully visible circular avatar (no cropping)
+    // Makes the image view look like a circle avatar without cutting the image.
+    
     func applyCircleAvatarNoCrop(background: UIColor = .systemGray6) {
         clipsToBounds = true
         layer.masksToBounds = true
-        contentMode = .scaleAspectFit   // ✅ prevents cropping
+        contentMode = .scaleAspectFit
         backgroundColor = background
     }
 
-    /// Call in viewDidLayoutSubviews
+   
     func updateCircleMask() {
         layer.cornerRadius = min(bounds.width, bounds.height) / 2
     }

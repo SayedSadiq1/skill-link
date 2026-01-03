@@ -2,44 +2,49 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Handles editing provider profile
 final class EditProfileViewController: BaseViewController {
 
+    // Input fields and image
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var skillsTextField: UITextField!
     @IBOutlet weak var briefTextView: UITextView!
     @IBOutlet weak var contactTextField: UITextField!
-
     @IBOutlet weak var briefContainerView: UIView!
     @IBOutlet weak var skillsContainerView: UIView!
     @IBOutlet weak var profileImageView: UIImageView!
 
+    // Passed profile and save callback
     var profile: UserProfile?
     var onSave: ((UserProfile) -> Void)?
 
+    // Firebase and helpers
     private let db = Firestore.firestore()
     private var photoPicker: PhotoPickerHelper?
 
+    // Cloudinary config
     private let cloudName = "dgamwyki7"
     private let uploadPreset = "mobile_unsigned"
 
+    // Image and state flags
     private var selectedImageData: Data?
     private var selectedImageURL: String?
-
     private var isSaving = false
 
-    // loading circle only
+    // Loading spinner only
     private let spinner = UIActivityIndicatorView(style: .large)
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
+        // Setup profile image tap
         profileImageView.applyCircleAvatarNoCrop()
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped))
         )
 
+        // Style skills and brief sections
         skillsContainerView.layer.cornerRadius = 10
         skillsContainerView.layer.borderWidth = 1
         skillsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -48,13 +53,16 @@ final class EditProfileViewController: BaseViewController {
         briefContainerView.layer.borderWidth = 1
         briefContainerView.layer.borderColor = UIColor.systemGray4.cgColor
 
+        // Setup brief text view
         briefTextView.font = .systemFont(ofSize: 15)
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
+        // Add spinner to screen
         setupSpinner()
 
         guard let profile else { return }
 
+        // Fill fields with existing profile data
         nameTextField.text = profile.fullName
         skillsTextField.text = profile.skills?.joined(separator: ", ")
         briefTextView.text = profile.brief
@@ -66,19 +74,19 @@ final class EditProfileViewController: BaseViewController {
         } else {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
-        
-        
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
+        // Keep profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 
-    // MARK: - Spinner
+    // Setup spinner in center
     private func setupSpinner() {
         spinner.translatesAutoresizingMaskIntoConstraints = false
         spinner.hidesWhenStopped = true
@@ -90,12 +98,13 @@ final class EditProfileViewController: BaseViewController {
         ])
     }
 
+    // Toggle loading state
     private func setLoading(_ loading: Bool) {
         view.isUserInteractionEnabled = !loading
         loading ? spinner.startAnimating() : spinner.stopAnimating()
     }
 
-    // MARK: - Image picker
+    // Open image picker
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] img in
             guard let self else { return }
@@ -105,7 +114,7 @@ final class EditProfileViewController: BaseViewController {
         photoPicker?.presentPicker()
     }
 
-    // MARK: - Save
+    // Save updated profile
     @IBAction func saveTapped(_ sender: UIButton) {
         guard !isSaving,
               let uid = Auth.auth().currentUser?.uid,
@@ -125,6 +134,7 @@ final class EditProfileViewController: BaseViewController {
         isSaving = true
         setLoading(true)
 
+        // Upload image if changed
         if let imgData = selectedImageData {
             uploadToCloudinary(imageData: imgData) { [weak self] result in
                 guard let self else { return }
@@ -140,13 +150,15 @@ final class EditProfileViewController: BaseViewController {
         }
     }
 
-    private func save(_ uid: String,
-                      _ name: String,
-                      _ contact: String,
-                      _ brief: String,
-                      _ skills: [String],
-                      _ imageURL: String?) {
-
+    // Save provider data to firestore
+    private func save(
+        _ uid: String,
+        _ name: String,
+        _ contact: String,
+        _ brief: String,
+        _ skills: [String],
+        _ imageURL: String?
+    ) {
         var data: [String: Any] = [
             "fullName": name,
             "contact": contact,
@@ -178,12 +190,13 @@ final class EditProfileViewController: BaseViewController {
         }
     }
 
+    // Reset saving state
     private func finishSave() {
         isSaving = false
         setLoading(false)
     }
 
-    // MARK: - Image load
+    // Load image from url
     private func loadImage(from url: URL) {
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
             guard let data, let img = UIImage(data: data) else { return }
@@ -193,10 +206,11 @@ final class EditProfileViewController: BaseViewController {
         }.resume()
     }
 
-    // MARK: - Cloudinary
-    private func uploadToCloudinary(imageData: Data,
-                                    completion: @escaping (Result<String, Error>) -> Void) {
-
+    // Upload image to cloudinary
+    private func uploadToCloudinary(
+        imageData: Data,
+        completion: @escaping (Result<String, Error>) -> Void
+    ) {
         let url = URL(string: "https://api.cloudinary.com/v1_1/\(cloudName)/image/upload")!
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
@@ -210,7 +224,6 @@ final class EditProfileViewController: BaseViewController {
         add("--\(boundary)\r\n")
         add("Content-Disposition: form-data; name=\"upload_preset\"\r\n\r\n")
         add("\(uploadPreset)\r\n")
-
         add("--\(boundary)\r\n")
         add("Content-Disposition: form-data; name=\"file\"; filename=\"img.jpg\"\r\n")
         add("Content-Type: image/jpeg\r\n\r\n")
@@ -220,10 +233,15 @@ final class EditProfileViewController: BaseViewController {
         req.httpBody = body
 
         URLSession.shared.dataTask(with: req) { data, _, err in
-            if let err { completion(.failure(err)); return }
+            if let err {
+                completion(.failure(err))
+                return
+            }
+
             guard let data,
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let url = json["secure_url"] as? String else { return }
+
             completion(.success(url))
         }.resume()
     }

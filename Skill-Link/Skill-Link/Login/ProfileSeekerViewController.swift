@@ -2,53 +2,67 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Shows seeker profile details
 final class ProfileSeekerViewController: BaseViewController {
 
+    
     @IBOutlet weak var interestsStackView: UIStackView!
     @IBOutlet weak var interestsContainerView: UIView!
     @IBOutlet weak var contactContainerView: UIView!
     @IBOutlet weak var contactLabel: UILabel!
+
+    
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var profileImageView: UIImageView!
     @IBOutlet weak var editButton: UIButton!
 
-    private var successBanner: UIView?
+    // Firestore and state
     private let db = Firestore.firestore()
     private var currentProfile: SeekerProfile?
 
+    // Disable back button
     override var shouldShowBackButton: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Apply circular avatar style
         profileImageView.applyCircleAvatarNoCrop()
+
+        // Style interests section
         interestsContainerView.layer.cornerRadius = 10
         interestsContainerView.layer.borderWidth = 1
         interestsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
 
         setupInterestsStackView()
 
+        // Style contact section
         contactContainerView.layer.cornerRadius = 8
         contactContainerView.layer.borderWidth = 1
         contactContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         contactContainerView.backgroundColor = .white
 
+        // Setup name label font
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
 
+        // Load seeker profile
         loadProfileFromFirestore()
 
-        // Check if the logged-in user is the profile owner and show/hide the edit button accordingly
+        // Hide edit button if not owner
         checkIfOwnerCanEdit()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
+        // Keep profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 
+    // Setup interests stack layout
     private func setupInterestsStackView() {
         interestsStackView.axis = .horizontal
         interestsStackView.alignment = .center
@@ -57,7 +71,7 @@ final class ProfileSeekerViewController: BaseViewController {
         interestsStackView.layoutMargins = UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 12)
     }
 
-    // MARK: - Firestore
+    // Load profile data from firestore
     private func loadProfileFromFirestore() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
@@ -71,7 +85,7 @@ final class ProfileSeekerViewController: BaseViewController {
                 interests: data["interests"] as? [String] ?? [],
                 contact: data["contact"] as? String ?? "",
                 imageURL: data["imageURL"] as? String,
-                id: uid  // Add the profile owner's id here
+                id: uid
             )
 
             self.applyProfileToUI()
@@ -79,6 +93,7 @@ final class ProfileSeekerViewController: BaseViewController {
         }
     }
 
+    // Apply profile data into UI
     private func applyProfileToUI() {
         guard let currentProfile else { return }
 
@@ -93,14 +108,17 @@ final class ProfileSeekerViewController: BaseViewController {
         }
     }
 
+    // Load profile image from url
     private func loadImage(from url: URL) {
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
             guard let data, let img = UIImage(data: data) else { return }
-            DispatchQueue.main.async { self?.profileImageView.image = img }
+            DispatchQueue.main.async {
+                self?.profileImageView.image = img
+            }
         }.resume()
     }
 
-    // MARK: - LOCAL SAVE (FIXED)
+    // Save seeker profile locally
     private func saveUserProfileLocally() {
         guard
             let currentProfile,
@@ -121,7 +139,7 @@ final class ProfileSeekerViewController: BaseViewController {
         LocalUserStore.saveProfile(profile)
     }
 
-    // MARK: - Chips
+    // Show interests as chips
     private func showInterests(_ interests: [String]) {
         interestsStackView.arrangedSubviews.forEach {
             interestsStackView.removeArrangedSubview($0)
@@ -129,9 +147,12 @@ final class ProfileSeekerViewController: BaseViewController {
         }
 
         let list = interests.isEmpty ? ["No interests"] : interests
-        list.forEach { interestsStackView.addArrangedSubview(makeChip(text: $0)) }
+        list.forEach {
+            interestsStackView.addArrangedSubview(makeChip(text: $0))
+        }
     }
 
+    // Create interest chip label
     private func makeChip(text: String) -> UILabel {
         let label = PaddingLabel()
         label.text = text
@@ -143,6 +164,7 @@ final class ProfileSeekerViewController: BaseViewController {
         return label
     }
 
+    // Label with padding support
     final class PaddingLabel: UILabel {
         var horizontalPadding: CGFloat = 12
         var verticalPadding: CGFloat = 6
@@ -158,57 +180,61 @@ final class ProfileSeekerViewController: BaseViewController {
 
         override var intrinsicContentSize: CGSize {
             let s = super.intrinsicContentSize
-            return CGSize(width: s.width + horizontalPadding * 2,
-                          height: s.height + verticalPadding * 2)
+            return CGSize(
+                width: s.width + horizontalPadding * 2,
+                height: s.height + verticalPadding * 2
+            )
         }
     }
 
-    // MARK: - Continue
+    // Navigate to seeker home
     @IBAction func continueTapped(_ sender: UIButton) {
         let sb = UIStoryboard(name: "HomePage", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    // MARK: - Edit
+    // Open edit seeker profile
     @IBAction func editTapped(_ sender: UIButton) {
-        guard let currentProfile else {
-            
-            return
-        }
+        guard let currentProfile else { return }
 
-        // Check if the logged-in user is the profile owner
-        if let loggedInUserID = Auth.auth().currentUser?.uid, loggedInUserID != currentProfile.id {
-            // Disable or hide the edit button if not the profile owner
+        if let loggedInUserID = Auth.auth().currentUser?.uid,
+           loggedInUserID != currentProfile.id {
             editButton.isHidden = true
             return
         }
 
         let sb = UIStoryboard(name: "login", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "EditProfileSeekerViewController") as! EditProfileSeekerViewController
+        let vc = sb.instantiateViewController(
+            withIdentifier: "EditProfileSeekerViewController"
+        ) as! EditProfileSeekerViewController
+
         vc.profile = currentProfile
         vc.onSave = { [weak self] updated in
             self?.currentProfile = updated
             self?.applyProfileToUI()
             self?.saveUserProfileLocally()
         }
+
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    // MARK: - Check if the logged-in user can edit
+    // Check if current user can edit profile
     private func checkIfOwnerCanEdit() {
-        // Hide the edit button if the current user is not the profile owner
         guard let currentProfile else { return }
-        if let loggedInUserID = Auth.auth().currentUser?.uid, loggedInUserID != currentProfile.id {
+
+        if let loggedInUserID = Auth.auth().currentUser?.uid,
+           loggedInUserID != currentProfile.id {
             editButton.isHidden = true
         }
     }
 }
 
+// Simple seeker profile model
 struct SeekerProfile {
     let name: String
     let interests: [String]
     let contact: String
     let imageURL: String?
-    let id: String  // Add the profile owner's id
+    let id: String
 }
