@@ -16,6 +16,8 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     
     // MARK: - Properties
     var service: Service!
+    let isProvider = LoginPageController.loggedinUser?.isProvider ?? true
+    let userSerivce = FirebaseService.shared
     
     // MARK: - ServiceEditDelegate
     func didUpdateService(_ updatedService: Service) {
@@ -76,7 +78,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
     }
     
     func setupUI() {
-        if !(LoginPageController.loggedinUser?.isProvider ?? false) {
+        if !(isProvider) {
             return
         }
         if service == nil {
@@ -106,15 +108,17 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
         
     }
     
+    // MARK: - Report/Deactivate
     @IBAction func reportClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
-        if LoginPageController.loggedinUser?.isProvider ?? false {
+        if isProvider {
             service.available = !service.available
             if service.available {
                 var config = UIButton.Configuration.filled()
                 config.image = UIImage(systemName: "xmark.app")
                 config.title = "Deactivate"
                 config.baseBackgroundColor = UIColor.red
+                service.available = true
                 cancelBtn.configuration = config
                 
             } else {
@@ -122,9 +126,11 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
                 config.image = UIImage(systemName: "repeat")
                 config.title = "Reactivate"
                 config.baseBackgroundColor = UIColor.systemTeal
+                service.available = false
                 cancelBtn.configuration = config
             }
             
+            ServiceManager().saveService(service) { _ in }
             refreshUI()
             return
         }
@@ -133,12 +139,14 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
         self.navigationController?.pushViewController(controller, animated: true)
     }
     
+    // MARK: - Book/Edit
     @IBAction func actionClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
-        if !(LoginPageController.loggedinUser?.isProvider ?? false) {
-            let controller = storyboard.instantiateViewController(identifier: "BookingPage")
+        if !isProvider {
+            let controller = storyboard.instantiateViewController(identifier: "BookingPage") as! BookingPageController
             controller.modalPresentationStyle = .fullScreen
             controller.navigationItem.title = "Confirm Booking"
+            controller.service = service
             self.navigationController?.pushViewController(controller, animated: true)
             return
         }
@@ -222,8 +230,17 @@ extension ServiceDetailsViewController: UITableViewDataSource {
     }
     
     private func configureProviderCell(_ cell: ServiceDetailsProviderCell) {
-        cell.providerName.text = "service.provider.name"
-        cell.providerContactLabel.text = "service.provider.contact"
+        cell.parent = self
+        cell.providerId = service.providerId
+        userSerivce.fetchUserProfile(uid: service.providerId) { [weak cell] result in
+            switch result {
+            case .success(let success):
+                cell?.providerName.text = success.fullName
+                cell?.providerContactLabel.text = success.contact
+            case .failure(let failure):
+                print("Provider could not be loaded: \(failure.localizedDescription)")
+            }
+        }
     }
     
     private func configureDescriptionCell(_ cell: ServiceDetailsDescriptionCell) {

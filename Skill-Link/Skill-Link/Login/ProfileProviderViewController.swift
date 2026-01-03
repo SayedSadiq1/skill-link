@@ -24,7 +24,8 @@ final class ProfileProviderViewController: BaseViewController {
 
     // Firestore and state
     private let db = Firestore.firestore()
-    private var currentProfile: UserProfile?
+
+    var currentProfile: UserProfile?
 
     // Disable back button
     override var shouldShowBackButton: Bool { false }
@@ -57,10 +58,12 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.layer.borderColor = UIColor.systemGray4.cgColor
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
-        // Load profile data
-        loadProfileFromFirestore()
-
-        // Apply circular avatar style
+        if currentProfile == nil {
+            loadProfileFromFirestore()
+        } else {
+            applyProfileToUI()
+        }
+        
         profileImageView.applyCircleAvatarNoCrop()
 
         // Check if edit button should show
@@ -122,8 +125,8 @@ final class ProfileProviderViewController: BaseViewController {
             }
         }
     }
-
-    // Apply profile data into UI
+    
+    // MARK: - Apply UI
     private func applyProfileToUI() {
         guard let profile = currentProfile else { return }
 
