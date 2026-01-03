@@ -7,38 +7,29 @@
 
 import Foundation
 
-class Booking {
-    var service: BookedService
-    let user: UserProfile
-    let provider: UserProfile
-    
-    init(service: BookedService, user: UserProfile, provider: UserProfile) {
-        self.service = service
-        self.user = user
-        self.provider = provider
-    }
-}
-
-class BookedService {
-    let id: UUID = UUID.init()
-    var state: BookedServiceStatus
-    let title: String
+class Booking: Codable {
+    var status: BookedServiceStatus
+    let serviceId: String
+    let userId: String
+    let providerId: String
+    let totalPrice: Double
+    let location: String
     let date: Date
     let time: String
-    let location: String
-    let totalPrice: Double
     
-    init(state: BookedServiceStatus, title: String, date: Date, time: String, location: String, totalPrice: Double) {
-        self.state = state
-        self.title = title
+    init(status: BookedServiceStatus = .Pending, serviceId: String, userId: String, providerId: String, totalPrice: Double, location: String, date: Date, time: String) {
+        self.status = status
+        self.serviceId = serviceId
+        self.userId = userId
+        self.providerId = providerId
+        self.totalPrice = totalPrice
+        self.location = location
         self.date = date
         self.time = time
-        self.location = location
-        self.totalPrice = totalPrice
     }
 }
 
-enum BookedServiceStatus: String {
+enum BookedServiceStatus: String, Codable {
     case Pending
     case Upcoming
     case Completed
