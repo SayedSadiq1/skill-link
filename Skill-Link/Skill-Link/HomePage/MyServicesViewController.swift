@@ -13,52 +13,63 @@ struct MyServiceItem {
     let title: String
     let category: String
     let availableAt: String
-    var available: Bool
+    let available: Bool
 }
 
 final class MyServicesViewController: BaseViewController, UITableViewDataSource, UITableViewDelegate {
 
     @IBOutlet weak var tableView: UITableView!
-    @IBAction func addServiceTapped(_ sender: UIButton) {
-            performSegue(withIdentifier: "toAddService", sender: nil)
-        }
 
     private let db = Firestore.firestore()
     private var services: [MyServiceItem] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // DO NOT set title or add nav buttons (you said it breaks your theme)
         setupTable()
         loadMyServices()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        loadMyServices()
+        loadMyServices() // ✅ refresh after disable/reactivate in details
     }
 
+    // MARK: - Add Service (keep your existing segue if you already have one)
+    @IBAction func addServiceTapped(_ sender: UIButton) {
+        // If you have a segue already, keep using it:
+        performSegue(withIdentifier: "toAddService", sender: nil)
+
+        // If you DON'T have a segue, comment the line above and use push:
+        // let vc = storyboard?.instantiateViewController(withIdentifier: "AddServiceViewController") as! AddServiceViewController
+        // navigationController?.pushViewController(vc, animated: true)
+    }
+
+    // MARK: - Table Setup
     private func setupTable() {
         tableView.dataSource = self
         tableView.delegate = self
-
-        // you are using storyboard prototype cell
         tableView.separatorStyle = .none
+        tableView.backgroundColor = .clear
+
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 180
+
+        // ✅ Force programmatic cell (prevents “only Active shows”)
+        tableView.register(MyServiceCell.self, forCellReuseIdentifier: "MyServiceCell")
     }
 
-
+    // MARK: - Firestore Load
     private func loadMyServices() {
         guard let providerId = Auth.auth().currentUser?.uid else {
             services = []
-            tableView.reloadData()
+            DispatchQueue.main.async { self.tableView.reloadData() }
             return
         }
 
         db.collection("Service")
             .whereField("providerId", isEqualTo: providerId)
             .getDocuments { [weak self] snap, error in
-                guard let self = self else { return }
+                guard let self else { return }
 
                 if let error = error {
                     self.showAlert("Error", error.localizedDescription)
@@ -77,52 +88,66 @@ final class MyServicesViewController: BaseViewController, UITableViewDataSource,
                     )
                 }
 
-                self.tableView.reloadData()
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
             }
     }
 
-    private func toggleAvailability(docId: String, newValue: Bool) {
-        db.collection("Service").document(docId).updateData(["available": newValue]) { [weak self] error in
-            if let error = error {
-                self?.showAlert("Error", error.localizedDescription)
-                return
+    // MARK: - Open Details (fetch full Service object)
+    private func openServiceDetails(serviceDocId: String) {
+        let manager = ServiceManager()
+        manager.fetchService(by: serviceDocId) { [weak self] result in
+            guard let self else { return }
+
+            switch result {
+            case .success(let svc):
+                let serviceDetailsStoryboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+                if let serviceDetails = serviceDetailsStoryboard.instantiateViewController(withIdentifier: "serviceDetailsPage") as? ServiceDetailsViewController {
+                    let serviceManager = ServiceManager()
+                    serviceManager.fetchService(by: serviceDocId) {[weak self] result in
+                        switch result {
+                        case .success(let success):
+                            serviceDetails.service = success
+                            serviceDetails.navigationItem.title = "Service Details"
+                            self!.navigationController?.pushViewController(serviceDetails, animated: true)
+                        case .failure(let failure):
+                            print("Error getting service details: \(failure.localizedDescription)")
+                        }}
+                    
+                }
+
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    self.showAlert("Error", error.localizedDescription)
+                }
             }
-            self?.loadMyServices()
         }
-    }
-
-    private func showAlert(_ title: String, _ msg: String) {
-        let a = UIAlertController(title: title, message: msg, preferredStyle: .alert)
-        a.addAction(UIAlertAction(title: "OK", style: .default))
-        present(a, animated: true)
     }
 
     // MARK: - UITableView
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return services.count
+        services.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        // MUST match storyboard cell identifier
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MyServiceCell", for: indexPath)
-
-        guard let myCell = cell as? MyServiceCell else {
-            return cell
-        }
+        let cell = tableView.dequeueReusableCell(withIdentifier: "MyServiceCell", for: indexPath) as! MyServiceCell
 
         let item = services[indexPath.row]
-        myCell.configure(
-            title: item.title,
-            category: item.category,
-            availableAt: item.availableAt,
-            available: item.available
-        )
+        cell.configure(title: item.title, category: item.category, availableAt: item.availableAt, available: item.available)
 
-        myCell.onToggle = { [weak self] in
-            self?.toggleAvailability(docId: item.docId, newValue: !item.available)
+        cell.onViewDetails = { [weak self] in
+            self?.openServiceDetails(serviceDocId: item.docId)
         }
 
-        return myCell
+        return cell
+    }
+
+    // MARK: - Alert
+    private func showAlert(_ title: String, _ msg: String) {
+        let a = UIAlertController(title: title, message: msg, preferredStyle: .alert)
+        a.addAction(UIAlertAction(title: "OK", style: .default))
+        present(a, animated: true)
     }
 }
