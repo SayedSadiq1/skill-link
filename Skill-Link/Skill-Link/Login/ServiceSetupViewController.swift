@@ -10,7 +10,7 @@ final class ServiceSetupViewController: BaseViewController {
     @IBOutlet weak var fromPicker: UIDatePicker!
     @IBOutlet weak var toPicker: UIDatePicker!
 
-    private let db = Firestore.firestore()  // Firestore reference to save the service data
+    private let db = Firestore.firestore()  // Firestore reference to save the service data.
     private var isSaving = false  // Flag to prevent multiple save operations
 
     override func viewDidLoad() {

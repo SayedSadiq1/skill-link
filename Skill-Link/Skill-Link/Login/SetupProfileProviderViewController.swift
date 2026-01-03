@@ -2,8 +2,10 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Handles provider profile setup flow
 final class SetupProfileProviderViewController: BaseViewController, UITextViewDelegate {
 
+    // UI elements for provider profile
     @IBOutlet weak var fullNameLabel: UILabel!
     @IBOutlet weak var skillsTextField: UITextField!
     @IBOutlet weak var contactTextField: UITextField!
@@ -11,71 +13,75 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     @IBOutlet weak var briefTextView: UITextView!
     @IBOutlet weak var profileImageView: UIImageView!
 
+    // Firebase and helpers
     private let db = Firestore.firestore()
     private var photoPicker: PhotoPickerHelper?
     private var selectedImage: UIImage?
-    private var isSaving = false
 
+    // State flags and cached values
+    private var isSaving = false
     private var loadedFullName: String = ""
 
-    // just a loading circle while we save, no popup view
+    // Loading indicator shown while saving
     private let loadingSpinner = UIActivityIndicatorView(style: .large)
 
+    // Disable back button on this screen
     override var shouldShowBackButton: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // dont let user go back from setup screen
+        // Block back swipe
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
-        // put a default image if user didnt pick one
+        // Set default profile image
         if profileImageView.image == nil {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
         }
-        
+
         profileImageView.applyCircleAvatarNoCrop()
 
-        // tap the image to change it
+        // Enable tapping image to change photo
         profileImageView.isUserInteractionEnabled = true
-        profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped)))
+        profileImageView.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped))
+        )
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
 
-        // style the brief area like the design
+        // Style brief input area
         briefContainerView.layer.cornerRadius = 10
         briefContainerView.layer.borderWidth = 1
         briefContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         briefContainerView.backgroundColor = .white
         briefContainerView.clipsToBounds = true
 
-        // basic text view setup
+        // Setup brief text view
         briefTextView.backgroundColor = .clear
         briefTextView.font = .systemFont(ofSize: 15)
         briefTextView.textColor = .label
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-
         briefTextView.delegate = self
         setBriefPlaceholderIfNeeded()
 
-        // add loading spinner in the middle
+        // Add loading spinner
         setupLoadingSpinner()
 
-        // read the name from firestore
+        // Load user name from firestore
         loadFullNameFromFirestore()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        // make profile image round
+        // Make profile image fully round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
-           profileImageView.clipsToBounds = true
-           profileImageView.contentMode = .scaleAspectFill
-        
+        profileImageView.clipsToBounds = true
+        profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 
+    // Spinner setup in center of screen
     private func setupLoadingSpinner() {
         loadingSpinner.translatesAutoresizingMaskIntoConstraints = false
         loadingSpinner.hidesWhenStopped = true
@@ -87,17 +93,13 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         ])
     }
 
+    // Toggle loading state
     private func setLoading(_ isLoading: Bool) {
-        if isLoading {
-            loadingSpinner.startAnimating()
-        } else {
-            loadingSpinner.stopAnimating()
-        }
+        isLoading ? loadingSpinner.startAnimating() : loadingSpinner.stopAnimating()
     }
 
-    // MARK: - Load name
+    // Load full name from firestore
     private func loadFullNameFromFirestore() {
-        // try local uid first so it stays consistent in the app
         guard let uid = LocalUserStore.currentUserId() ?? Auth.auth().currentUser?.uid else {
             fullNameLabel.text = "No user"
             return
@@ -118,7 +120,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
                 self.loadedFullName = name
                 self.fullNameLabel.text = name.isEmpty ? "Name not set" : name
 
-                // save name localy so other pages can use it
+                // Save basic profile locally
                 self.saveUserProfileLocally(
                     uid: uid,
                     name: name,
@@ -131,7 +133,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         }
     }
 
-    // MARK: - Placeholder
+    // Setup placeholder text for brief
     private func setBriefPlaceholderIfNeeded() {
         if briefTextView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             briefTextView.text = "Brief..."
@@ -140,7 +142,6 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     }
 
     func textViewDidBeginEditing(_ textView: UITextView) {
-        // remove placeholder once user starts typing
         if textView.textColor == .systemGray3 {
             textView.text = ""
             textView.textColor = .label
@@ -148,13 +149,12 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
-        // add placeholder back if it was left empty
         if textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             setBriefPlaceholderIfNeeded()
         }
     }
 
-    // MARK: - Continue
+    // Runs when continue button is tapped
     @IBAction func continueTapped(_ sender: UIButton) {
         guard !isSaving else { return }
         guard validateRequiredFields() else { return }
@@ -168,7 +168,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         sender.isEnabled = false
         setLoading(true)
 
-        // upload image if user selected one, otherwise save without it
+        // Upload image first if selected
         if let image = selectedImage {
             CloudinaryUploader.shared.uploadImage(image) { [weak self] result in
                 guard let self else { return }
@@ -188,7 +188,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         }
     }
 
-    // MARK: - Save provider profile
+    // Save provider data to firestore
     private func saveProviderProfile(uid: String, imageURL: String?, sender: UIButton) {
         let skillsArray = (skillsTextField.text ?? "")
             .split(separator: ",")
@@ -197,7 +197,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
 
         let contact = contactTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        let briefFinal: String =
+        let briefFinal =
             (briefTextView.textColor == .systemGray3)
             ? ""
             : briefTextView.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -225,7 +225,7 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
                     return
                 }
 
-                // update local profile after we saved firestore
+                // Update local profile after save
                 self.saveUserProfileLocally(
                     uid: uid,
                     name: self.loadedFullName,
@@ -242,8 +242,15 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         }
     }
 
-    private func saveUserProfileLocally(uid: String, name: String, skills: [String], brief: String, contact: String, imageURL: String?) {
-        // save everything in one place so other screens can read it
+    // Save provider profile locally
+    private func saveUserProfileLocally(
+        uid: String,
+        name: String,
+        skills: [String],
+        brief: String,
+        contact: String,
+        imageURL: String?
+    ) {
         let profile = UserProfile(
             id: uid,
             fullName: name,
@@ -258,26 +265,28 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         LocalUserStore.saveProfile(profile)
     }
 
+    // Finish saving and unlock UI
     private func finishSaving(sender: UIButton, completion: (() -> Void)? = nil) {
-        // turn off loader and unlock the UI again
         setLoading(false)
         isSaving = false
         sender.isEnabled = true
         completion?()
     }
 
+    // Navigate to provider profile screen
     private func goToProfileProvider() {
-        // go to provider profile screen after setup done
         let sb = UIStoryboard(name: "login", bundle: nil)
 
-        guard let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController") as? ProfileProviderViewController else {
+        guard let vc = sb.instantiateViewController(
+            withIdentifier: "ProfileProviderViewController"
+        ) as? ProfileProviderViewController else {
             fatalError("Could not find ProfileProviderViewController in storyboard.")
         }
 
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    // MARK: - Validation
+    // Validate required input fields
     private func validateRequiredFields() -> Bool {
         if loadedFullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             showAlert(message: "Your name is missing in firebase. Please register again.")
@@ -309,15 +318,15 @@ final class SetupProfileProviderViewController: BaseViewController, UITextViewDe
         return true
     }
 
+    // Shows alert popup
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "Setup Profile", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
 
-    // MARK: - Photo picking
+    // Opens photo picker for profile image
     @objc private func changePhotoTapped() {
-        // open photos and let user pick a new profile picture
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image

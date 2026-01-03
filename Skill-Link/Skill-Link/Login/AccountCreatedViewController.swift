@@ -2,25 +2,30 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Handles account created confirmation screen
 final class AccountCreatedViewController: BaseViewController {
 
+    // Firestore reference
     private let db = Firestore.firestore()
+
+    // Used to block double actions
     private var isLoading = false
 
+    // Disable back button on this screen
     override var shouldShowBackButton: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // stop user from going back to register/login screens
+        // Prevent swipe back navigation
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
     }
 
+    // Runs when continue button is pressed
     @IBAction func continueTapped(_ sender: UIButton) {
-        // stop double taps
         guard !isLoading else { return }
 
-        // use local user first, fallback to auth just in case
+        // Get user id from local or auth
         guard let uid = LocalUserStore.currentUserId() ?? Auth.auth().currentUser?.uid else {
             showAlert("You are not logged in. Please login again.")
             return
@@ -29,7 +34,7 @@ final class AccountCreatedViewController: BaseViewController {
         isLoading = true
         sender.isEnabled = false
 
-        // read the role and decide where to go next
+        // Read user role from firestore
         db.collection("User").document(uid).getDocument { [weak self] snap, err in
             guard let self else { return }
 
@@ -47,7 +52,7 @@ final class AccountCreatedViewController: BaseViewController {
 
                 let sb = UIStoryboard(name: "login", bundle: nil)
 
-                // go to the right setup screen based on role
+                // Navigate based on selected role
                 if role == "provider" {
                     let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController1")
                     self.navigationController?.pushViewController(vc, animated: true)
@@ -61,8 +66,8 @@ final class AccountCreatedViewController: BaseViewController {
         }
     }
 
+    // Shows simple alert popup
     private func showAlert(_ msg: String) {
-        // basic alert for this screen
         let alert = UIAlertController(title: "Account Created", message: msg, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)

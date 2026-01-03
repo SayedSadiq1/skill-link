@@ -2,43 +2,52 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Shows provider profile details
 final class ProfileProviderViewController: BaseViewController {
 
+    // Skills related views
     @IBOutlet weak var skillsStackView: UIStackView!
     @IBOutlet weak var skillsContainerView: UIView!
 
+    // Contact related views
     @IBOutlet weak var contactContainerView: UIView!
     @IBOutlet weak var contactLabel: UILabel!
 
+    // Name and brief section
     @IBOutlet weak var nameLabel: UILabel!
-
     @IBOutlet weak var briefContainerView: UIView!
     @IBOutlet weak var briefTextView: UITextView!
 
+    // Profile image and edit button
     @IBOutlet weak var profileImageView: UIImageView!
+    @IBOutlet weak var editButton: UIButton!
 
-    private var successBanner: UIView?
+    // Firestore and state
     private let db = Firestore.firestore()
-
     private var currentProfile: UserProfile?
 
+    // Disable back button
     override var shouldShowBackButton: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Style skills section
         skillsContainerView.layer.cornerRadius = 10
         skillsContainerView.layer.borderWidth = 1
         skillsContainerView.layer.borderColor = UIColor.systemGray4.cgColor
 
+        // Style contact section
         contactContainerView.layer.cornerRadius = 8
         contactContainerView.layer.borderWidth = 1
         contactContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         contactContainerView.backgroundColor = .white
 
+        // Setup fonts
         nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
         contactLabel.font = .systemFont(ofSize: 16)
 
+        // Setup brief text view
         briefTextView.isEditable = false
         briefTextView.isSelectable = false
         briefTextView.font = .systemFont(ofSize: 15)
@@ -48,20 +57,36 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.layer.borderColor = UIColor.systemGray4.cgColor
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
+        // Load profile data
         loadProfileFromFirestore()
-        
+
+        // Apply circular avatar style
         profileImageView.applyCircleAvatarNoCrop()
+
+        // Check if edit button should show
+        checkIfOwnProfile()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
+        // Keep profile image round
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 
-    // MARK: - Load Profile
+    // Hide edit button if not own profile
+    private func checkIfOwnProfile() {
+        guard let currentUserUID = Auth.auth().currentUser?.uid else { return }
+
+        if let profile = currentProfile, profile.id != currentUserUID {
+            editButton.isHidden = true
+        }
+    }
+
+    // Load provider profile from firestore
     private func loadProfileFromFirestore() {
         guard let uid = Auth.auth().currentUser?.uid else {
             showAlert("No logged in user.")
@@ -93,11 +118,12 @@ final class ProfileProviderViewController: BaseViewController {
                 self.currentProfile = profile
                 self.applyProfileToUI()
                 LocalUserStore.saveProfile(profile)
+                self.checkIfOwnProfile()
             }
         }
     }
 
-    // MARK: - Apply UI
+    // Apply profile data into UI
     private func applyProfileToUI() {
         guard let profile = currentProfile else { return }
 
@@ -114,7 +140,7 @@ final class ProfileProviderViewController: BaseViewController {
         }
     }
 
-    // MARK: - Skills Chips
+    // Display skills as chips
     private func showSkills(_ skills: [String]) {
         skillsStackView.arrangedSubviews.forEach {
             skillsStackView.removeArrangedSubview($0)
@@ -131,6 +157,7 @@ final class ProfileProviderViewController: BaseViewController {
         }
     }
 
+    // Create a skill chip label
     private func makeChip(text: String) -> UILabel {
         let label = PaddingLabel()
         label.text = text
@@ -143,6 +170,7 @@ final class ProfileProviderViewController: BaseViewController {
         return label
     }
 
+    // Label with padding support
     final class PaddingLabel: UILabel {
         var horizontalPadding: CGFloat = 12
         var verticalPadding: CGFloat = 6
@@ -157,15 +185,15 @@ final class ProfileProviderViewController: BaseViewController {
         }
 
         override var intrinsicContentSize: CGSize {
-            let size = super.intrinsicContentSize
+            let s = super.intrinsicContentSize
             return CGSize(
-                width: size.width + horizontalPadding * 2,
-                height: size.height + verticalPadding * 2
+                width: s.width + horizontalPadding * 2,
+                height: s.height + verticalPadding * 2
             )
         }
     }
 
-    // MARK: - Image Loader
+    // Load profile image from url
     private func loadImage(from url: URL) {
         profileImageView.image = UIImage(systemName: "person.circle.fill")
 
@@ -177,18 +205,22 @@ final class ProfileProviderViewController: BaseViewController {
         }.resume()
     }
 
-    // MARK: - Navigation
+    // Navigate to provider home page
     @IBAction func continueTapped(_ sender: UIButton) {
         let sb = UIStoryboard(name: "HomePage", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    // Open edit profile screen
     @IBAction func editTapped(_ sender: UIButton) {
         guard let profile = currentProfile else { return }
 
         let sb = UIStoryboard(name: "login", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "EditProfileViewController") as! EditProfileViewController
+        let vc = sb.instantiateViewController(
+            withIdentifier: "EditProfileViewController"
+        ) as! EditProfileViewController
+
         vc.profile = profile
 
         vc.onSave = { [weak self] updated in
@@ -200,7 +232,7 @@ final class ProfileProviderViewController: BaseViewController {
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    // MARK: - Alert
+    // Show alert message
     private func showAlert(_ message: String) {
         let alert = UIAlertController(title: "Profile", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))

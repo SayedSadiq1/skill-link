@@ -2,12 +2,22 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Handles login screen logic and navigation
 final class LoginPageController: BaseViewController {
 
+    // Email input field
     @IBOutlet weak var emailTextField: UITextField!
+
+    // Password input field
     @IBOutlet weak var passwordTextField: UITextField!
- static var loggedinUser: UserProfile?
+
+    // Holds logged in user profile
+    static var loggedinUser: UserProfile?
+
+    // Firestore reference
     private let db = Firestore.firestore()
+
+    // Spinner shown during loading
     private let spinner = UIActivityIndicatorView(style: .large)
 
     override func viewDidLoad() {
@@ -15,11 +25,12 @@ final class LoginPageController: BaseViewController {
         setupSpinner()
     }
 
-    // MARK: - Login
+    // Triggered when login button pressed
     @IBAction func loginButtonTapped(_ sender: UIButton) {
         let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let password = passwordTextField.text ?? ""
 
+        // Validate input values
         guard !email.isEmpty, !password.isEmpty else {
             showAlert(title: "Login", message: "Please enter email and password.")
             return
@@ -28,6 +39,7 @@ final class LoginPageController: BaseViewController {
         sender.isEnabled = false
         setLoading(true)
 
+        // Firebase email login
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] result, error in
             guard let self else { return }
 
@@ -37,17 +49,19 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
+            // Get logged in user id
             guard let uid = result?.user.uid else {
                 self.finish(sender)
                 self.showAlert(title: "Login Failed", message: "Missing user id.")
                 return
             }
 
+            // Load user profile from firestore
             self.loadUser(uid: uid, sender: sender)
         }
     }
 
-    // MARK: - Load user
+    // Loads user data after login
     private func loadUser(uid: String, sender: UIButton) {
         db.collection("User").document(uid).getDocument { [weak self] snap, error in
             guard let self else { return }
@@ -58,6 +72,7 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
+            // Check if user document exist
             guard let data = snap?.data() else {
                 try? Auth.auth().signOut()
                 LocalUserStore.clearProfile()
@@ -65,6 +80,7 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
+            // Check if account is suspended
             let isSuspended = data["isSuspended"] as? Bool ?? false
             if isSuspended {
                 try? Auth.auth().signOut()
@@ -77,6 +93,7 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
+            // Read user role from data
             let roleString = (data["role"] as? String ?? "").lowercased()
             guard let role = UserRole(rawValue: roleString) else {
                 self.finish(sender)
@@ -84,6 +101,7 @@ final class LoginPageController: BaseViewController {
                 return
             }
 
+            // Build local user profile model
             let profile = UserProfile(
                 id: uid,
                 fullName: data["fullName"] as? String ?? "",
@@ -97,29 +115,32 @@ final class LoginPageController: BaseViewController {
                 isSuspended: false
             )
 
+            // Save user data locally
             LocalUserStore.saveProfile(profile)
             LoginPageController.loggedinUser = profile
 
+            // Navigate based on user role
             self.finish(sender) {
                 role == .provider ? self.goToProviderHome() : self.goToSeekerHome()
             }
         }
     }
 
-    // MARK: - Navigation
+    // Navigate to provider home screen
     private func goToProviderHome() {
         let sb = UIStoryboard(name: "HomePage", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "ProviderHomeViewController")
         navigationController?.setViewControllers([vc], animated: true)
     }
 
+    // Navigate to seeker home screen
     private func goToSeekerHome() {
         let sb = UIStoryboard(name: "HomePage", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
         navigationController?.setViewControllers([vc], animated: true)
     }
 
-    // MARK: - Spinner
+    // Setup loading spinner in center
     private func setupSpinner() {
         spinner.translatesAutoresizingMaskIntoConstraints = false
         spinner.hidesWhenStopped = true
@@ -131,18 +152,20 @@ final class LoginPageController: BaseViewController {
         ])
     }
 
+    // Enable or disable loading state
     private func setLoading(_ loading: Bool) {
         loading ? spinner.startAnimating() : spinner.stopAnimating()
         view.isUserInteractionEnabled = !loading
     }
 
+    // Finish loading and re-enable button
     private func finish(_ sender: UIButton, completion: (() -> Void)? = nil) {
         setLoading(false)
         sender.isEnabled = true
         completion?()
     }
 
-    // MARK: - Alert
+    // Shows simple alert message
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))

@@ -9,7 +9,7 @@ final class AdminLoginViewController: BaseViewController {
 
     private let db = Firestore.firestore()
 
-    // The admin's email for login verification
+    // The admin's email for login verification.
     private let adminEmail = "admin@skilllink.com"
 
     @IBAction func loginTapped(_ sender: UIButton) {

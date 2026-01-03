@@ -2,29 +2,33 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Handles user registration flow
 final class RegisterViewController: BaseViewController {
 
+   
     @IBOutlet weak var fullNameTextField: UITextField!
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
 
+    // Firestore reference
     private let db = Firestore.firestore()
+
+    // Used to block double submit
     private var isLoading = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // nothing special here, just wait for user input
     }
 
+    // Runs when continue button is pressed
     @IBAction func continueTapped(_ sender: UIButton) {
-        // stop double taps while register is running
         guard !isLoading else { return }
 
         let fullName = (fullNameTextField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let email = (emailTextField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let password = (passwordTextField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // basic checks before we hit firebase
+        // Basic input checks
         guard !fullName.isEmpty else { showAlert("Please enter your full name."); return }
         guard !email.isEmpty else { showAlert("Please enter your email."); return }
         guard !password.isEmpty else { showAlert("Please enter your password."); return }
@@ -33,7 +37,7 @@ final class RegisterViewController: BaseViewController {
         isLoading = true
         sender.isEnabled = false
 
-        // create user in Firebase Auth first
+        // Create account using firebase auth
         Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
             guard let self else { return }
 
@@ -51,13 +55,13 @@ final class RegisterViewController: BaseViewController {
                 return
             }
 
-            // save basic user document in firestore
+            // Build user document for firestore
             let userDoc: [String: Any] = [
                 "email": email,
                 "fullName": fullName,
-                "role": "",                    // will be set in role selection
-                "profileCompleted": false,     // still not done yet
-                "isSuspended": false,          // default is active user
+                "role": "",
+                "profileCompleted": false,
+                "isSuspended": false,
                 "createdAt": FieldValue.serverTimestamp()
             ]
 
@@ -70,36 +74,37 @@ final class RegisterViewController: BaseViewController {
                     return
                 }
 
-                // save local profile so we always know who is logged in
+                // Create local profile copy
                 let localProfile = UserProfile(
                     id: uid,
                     fullName: fullName,
                     contact: email,
                     imageURL: nil,
-                    role: .seeker,      // temporary, will change after role selection
+                    role: .seeker,
                     skills: [],
                     brief: "",
                     isSuspended: false
                 )
 
+                // Save profile locally
                 LocalUserStore.saveProfile(localProfile)
                 LoginPageController.loggedinUser = localProfile
 
-                // go pick role next
+                // Go to role selection screen
                 self.goToRoleSelection()
             }
         }
     }
 
+    // Move user to role selection
     private func goToRoleSelection() {
-        // move to role selection screen
         let sb = UIStoryboard(name: "login", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "RoleSelectionViewController")
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    // Shows simple alert popup
     private func showAlert(_ message: String) {
-        // quick alert helper for this screen
         let alert = UIAlertController(title: "Register", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)

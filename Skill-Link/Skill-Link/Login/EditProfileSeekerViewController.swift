@@ -2,47 +2,58 @@ import UIKit
 import FirebaseAuth
 import FirebaseFirestore
 
+// Handles editing seeker profile
 final class EditProfileSeekerViewController: BaseViewController {
 
+    // Profile input fields and image
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var interestsTextField: UITextField!
     @IBOutlet weak var contactTextField: UITextField!
     @IBOutlet weak var profileImageView: UIImageView!
 
+    // Passed profile and save callback
     var profile: SeekerProfile?
     var onSave: ((SeekerProfile) -> Void)?
 
+    // Firebase and helpers
     private let db = Firestore.firestore()
     private var photoPicker: PhotoPickerHelper?
 
+    // Cloudinary config
     private let cloudName = "dgamwyki7"
     private let uploadPreset = "mobile_unsigned"
 
+    // Image and state flags
     private var selectedImageData: Data?
     private var selectedImageURL: String?
     private var isSaving = false
 
+    // Loading indicator
     private let loadingSpinner = UIActivityIndicatorView(style: .large)
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
+        // Apply circle avatar style
         profileImageView.applyCircleAvatarNoCrop()
-        
+
+        // Style text fields
         styleTextField(nameTextField)
         styleTextField(interestsTextField)
         styleTextField(contactTextField)
 
+        // Enable image tap to change photo
         profileImageView.isUserInteractionEnabled = true
         profileImageView.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(changePhotoTapped))
         )
 
+        // Setup loading spinner
         setupSpinner()
 
         guard let profile else { return }
 
+        // Fill fields with current profile data
         nameTextField.text = profile.name
         interestsTextField.text = profile.interests.joined(separator: ", ")
         contactTextField.text = profile.contact
@@ -57,14 +68,15 @@ final class EditProfileSeekerViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
+        // Keep profile image circular
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
-           profileImageView.clipsToBounds = true
-           profileImageView.contentMode = .scaleAspectFill
-        
+        profileImageView.clipsToBounds = true
+        profileImageView.contentMode = .scaleAspectFill
         profileImageView.updateCircleMask()
     }
 
-    // MARK: - Spinner
+    // Setup spinner in center
     private func setupSpinner() {
         loadingSpinner.translatesAutoresizingMaskIntoConstraints = false
         loadingSpinner.hidesWhenStopped = true
@@ -76,12 +88,13 @@ final class EditProfileSeekerViewController: BaseViewController {
         ])
     }
 
+    // Toggle loading state
     private func setLoading(_ loading: Bool) {
         loading ? loadingSpinner.startAnimating() : loadingSpinner.stopAnimating()
         view.isUserInteractionEnabled = !loading
     }
 
-    // MARK: - Style
+    // Apply common style to text fields
     private func styleTextField(_ tf: UITextField) {
         tf.layer.cornerRadius = 8
         tf.layer.borderWidth = 1
@@ -91,21 +104,19 @@ final class EditProfileSeekerViewController: BaseViewController {
         tf.leftViewMode = .always
     }
 
-    // MARK: - Image picker
+    // Open photo picker to change image
     @objc private func changePhotoTapped() {
         photoPicker = PhotoPickerHelper(presenter: self) { [weak self] image in
             guard let self else { return }
             self.profileImageView.image = image
             self.selectedImageData = image.jpegData(compressionQuality: 0.8)
-
-            // ✅ re-apply after setting new image
             self.profileImageView.applyCircleAvatarNoCrop()
             self.profileImageView.updateCircleMask()
         }
         photoPicker?.presentPicker()
     }
 
-    // MARK: - Save
+    // Save updated profile
     @IBAction func saveTapped(_ sender: UIButton) {
         guard !isSaving else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -123,23 +134,37 @@ final class EditProfileSeekerViewController: BaseViewController {
         isSaving = true
         setLoading(true)
 
+        // Upload image if changed
         if let imgData = selectedImageData {
             uploadToCloudinary(imageData: imgData) { [weak self] result in
                 guard let self else { return }
+
                 switch result {
                 case .success(let url):
-                    self.saveToFirestore(uid: uid, name: name, contact: contact, interests: interests, imageURL: url)
+                    self.saveToFirestore(
+                        uid: uid,
+                        name: name,
+                        contact: contact,
+                        interests: interests,
+                        imageURL: url
+                    )
                 case .failure:
                     self.isSaving = false
                     self.setLoading(false)
                 }
             }
         } else {
-            saveToFirestore(uid: uid, name: name, contact: contact, interests: interests, imageURL: selectedImageURL)
+            saveToFirestore(
+                uid: uid,
+                name: name,
+                contact: contact,
+                interests: interests,
+                imageURL: selectedImageURL
+            )
         }
     }
 
-    // MARK: - Firestore
+    // Save updated profile to firestore
     private func saveToFirestore(
         uid: String,
         name: String,
@@ -160,6 +185,7 @@ final class EditProfileSeekerViewController: BaseViewController {
         db.collection("User").document(uid).setData(data, merge: true) { [weak self] _ in
             guard let self else { return }
 
+            // Save profile locally
             let localProfile = UserProfile(
                 id: uid,
                 fullName: name,
@@ -173,20 +199,28 @@ final class EditProfileSeekerViewController: BaseViewController {
             LocalUserStore.saveProfile(localProfile)
 
             self.setLoading(false)
-            self.onSave?(SeekerProfile(name: name, interests: interests, contact: contact, imageURL: imageURL))
+            self.onSave?(
+                SeekerProfile(
+                    name: name,
+                    interests: interests,
+                    contact: contact,
+                    imageURL: imageURL,
+                    id: uid
+                )
+            )
+
             self.navigationController?.popViewController(animated: true)
         }
     }
 
-    // MARK: - Image load
+    // Load image from url
     private func loadImage(from url: URL) {
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
             guard let self else { return }
+
             if let data, let img = UIImage(data: data) {
                 DispatchQueue.main.async {
                     self.profileImageView.image = img
-
-                    // ✅ re-apply after async load
                     self.profileImageView.applyCircleAvatarNoCrop()
                     self.profileImageView.updateCircleMask()
                 }
@@ -194,7 +228,7 @@ final class EditProfileSeekerViewController: BaseViewController {
         }.resume()
     }
 
-    // MARK: - Cloudinary
+    // Upload image to cloudinary
     private func uploadToCloudinary(
         imageData: Data,
         completion: @escaping (Result<String, Error>) -> Void
@@ -221,7 +255,10 @@ final class EditProfileSeekerViewController: BaseViewController {
         req.httpBody = body
 
         URLSession.shared.dataTask(with: req) { data, _, error in
-            if let error = error { completion(.failure(error)); return }
+            if let error {
+                completion(.failure(error))
+                return
+            }
 
             if let data,
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
