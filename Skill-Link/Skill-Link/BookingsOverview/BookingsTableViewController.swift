@@ -3,24 +3,58 @@ import UIKit
 class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSource, UITableViewDelegate, BookingsTableViewCellDelegate {
     
     @IBOutlet weak var table: UITableView!
+    private var data: [Booking] = []
+    private var filteredData: [Booking] = []
+    private var currentState: BookedServiceStatus = .Upcoming
+    private var isProvider = LoginPageController.loggedinUser?.isProvider ?? true
+    private let bookingManager = BookingManager()
+    private let serviceManager = ServiceManager()
+    private let userService = FirebaseService.shared
+    private let userId = LoginPageController.loggedinUser?.id ?? "07PX2EXm9EXdcwV1IhT3jJiFxO02"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        userService.signIn(email: "123@123.com", password: "123123") {_ in }
         // Set up the table view
         table.dataSource = self
         table.delegate = self
+        
+        if isProvider {
+            bookingManager.fetchBookingsForProvider(userId) { [weak self] result in
+                switch result {
+                case .success(let bookings):
+                    print("Found \(bookings.count) for provider: \(String(describing: self?.userId))")
+                    self?.data = bookings
+                    self?.filteredData = bookings.filter({booking in booking.status == self?.currentState})
+                    self?.table.reloadData()
+                    self?.refreshTabs()
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            }
+        } else {
+            bookingManager.fetchBookingsForUser(LoginPageController.loggedinUser!.id){ [weak self] result in
+                switch result {
+                case .success(let bookings):
+                    print("Found \(bookings.count) for seeker: \(String(describing: self?.userId))")
+                    self?.data = bookings
+                    self?.filteredData = bookings.filter({booking in booking.status == self?.currentState})
+                    self?.table.reloadData()
+                    self?.refreshTabs()
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            }
+        }
         
         addProviderView()
         setupForCurrentTab()
     }
     
-    let data: [Booking] = []
-    
-    private var filteredData: [Booking] = []
-    private var currentState: BookedServiceStatus = .Upcoming
-    
+
     private func addProviderView() {
-        if !(LoginPageController.loggedinUser?.isProvider ?? false) {
+        if !(isProvider) {
             return
         }
         
@@ -41,7 +75,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         providerVC.tabBarItem = UITabBarItem(title: "Pending", image: UIImage(systemName: "person.fill.checkmark.and.xmark"), tag: 3)
         
         // 3. Check the condition (e.g., user is an admin)
-        if LoginPageController.loggedinUser?.isProvider ?? false {
+        if isProvider {
             // Insert the admin tab as the fourth item (index 3)
             var currentViewControllers = tabBarController.viewControllers ?? []
             // Ensure we don't insert it multiple times
@@ -59,14 +93,8 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     }
     
     func didTapApprove(for serviceId: String) {
-        print("BEFORE APPROVE")
-        printAllBookings()
-        
         BookingDataManager.shared.updateBookingState(serviceId: serviceId, newState: .Upcoming)
         showAlert(message: "Booking approved successfully!")
-        
-        print("AFTER APPROVE")
-        printAllBookings()
         table.reloadData()
         refreshTabs()
     }
@@ -84,17 +112,10 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         present(alert, animated: true)
     }
     
-    func printAllBookings() {
-        print("=== ALL BOOKINGS ===")
-        for booking in BookingDataManager.shared.getAllBookings() {
-            print("ID: \(booking.serviceId), State: \(booking.status), user ID: \(booking.userId)")
-        }
-    }
-    
     // MARK: - UITableViewDataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return BookingDataManager.shared.getBookings(for: currentState).count
+        return filteredData.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -102,22 +123,36 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
             return UITableViewCell()
         }
         
-        let booking = BookingDataManager.shared.getBookings(for: currentState)[indexPath.row]  // Use filteredData
+        let booking = filteredData[indexPath.row]  // Use filteredData
         
-        cell.delegate = self
         
         // Format the date
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .medium
+        serviceManager.fetchService(by: booking.serviceId) { [weak cell] result in
+            switch result {
+            case .success(let service):
+                cell?.serviceTitle.text = service.title
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
         
-        cell.serviceTitle?.text = booking.service.title
-        if currentState == .Pending {
-            cell.providedBy?.text = "Booked By: \(booking.user.name)"
-        } else {
-            if LoginPageController.loggedinUser?.isProvider ?? false {
-                cell.providedBy?.text = "Booked By: \(booking.user.name)"
-            } else {
-                cell.providedBy?.text = "Provided By: \(booking.provider.name)"
+        print("Setting user label jksahdkjsahdkjsahdkjsahkjdhskadsad")
+        userService.fetchUserProfile(uid: isProvider ? booking.userId : booking.providerId) {[weak cell, weak self] (result : Result<UserProfile, Error>) in
+            switch result {
+            case .success(let user):
+                if self!.currentState == .Pending {
+                    cell!.providedBy?.text = "Booked By: \(user.name)"
+                } else {
+                    if self!.isProvider {
+                        cell!.providedBy?.text = "Booked By: \(user.name)"
+                    } else {
+                        cell!.providedBy?.text = "Provided By: \(user.name)"
+                    }
+                }
+            case .failure(let failure):
+                print("Failed to get user for cell: \(failure.localizedDescription)")
             }
         }
         
@@ -161,7 +196,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
            let index = tabBarController.viewControllers?.firstIndex(of: self) {
             
             // Set current state based on tab index
-            if !(LoginPageController.loggedinUser?.isProvider ?? false) {
+            if !(isProvider) {
                 switch index {
                 case 0:
                     currentState = .Upcoming

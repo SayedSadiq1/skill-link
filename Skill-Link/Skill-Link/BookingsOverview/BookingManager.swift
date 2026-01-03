@@ -10,7 +10,7 @@ import FirebaseFirestore
 
 class BookingManager {
     private let db = Firestore.firestore()
-    private let collectionName = "bookings"
+    private let collectionName = "Booking"
     
     // MARK: - Save Booking
     func saveBooking(_ booking: Booking, completion: @escaping (Result<String, Error>) -> Void) {
