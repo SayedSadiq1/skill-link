@@ -14,41 +14,24 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Set up the table view
-        table.dataSource = self
         table.delegate = self
-        
-        if isProvider {
-            bookingManager.fetchBookingsForProvider(userId) { [weak self] result in
-                switch result {
-                case .success(let bookings):
-                    print("Found \(bookings.count) for provider: \(String(describing: self?.userId))")
-                    self?.data = bookings
-                    self?.filteredData = bookings.filter({booking in booking.status == self?.currentState})
-                    self?.table.reloadData()
-                    self?.refreshTabs()
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
+            table.dataSource = self
+            
+            // Add this notification observer
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleDataUpdate),
+                name: .bookingDataDidChange,
+                object: nil
+            )
+            
+            // Initial load
+            Task {
+                await loadBookings()
             }
-        } else {
-            bookingManager.fetchBookingsForUser(LoginPageController.loggedinUser!.id!){ [weak self] result in
-                switch result {
-                case .success(let bookings):
-                    print("Found \(bookings.count) for seeker: \(String(describing: self?.userId))")
-                    self?.data = bookings
-                    self?.filteredData = bookings.filter({booking in booking.status == self?.currentState})
-                    self?.table.reloadData()
-                    self?.refreshTabs()
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            }
-        }
-        
-        addProviderView()
-        setupForCurrentTab()
+            
+            addProviderView()
+            setupForCurrentTab()
     }
     
 
@@ -91,18 +74,42 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         }
     }
     
-    func didTapApprove(for serviceId: String) {
-        BookingDataManager.shared.updateBookingState(serviceId: serviceId, newState: .Upcoming)
-        showAlert(message: "Booking approved successfully!")
-        table.reloadData()
-        refreshTabs()
+    func didTapApprove(for booking: Booking) {
+        print("didTapApprove")
+        booking.status = .Upcoming
+        self.bookingManager.saveBooking(booking) { [weak self] result in
+            switch result {
+            case .success(_):
+                self?.updateBookingState(serviceId: booking.serviceId, newState: .Upcoming)
+                self?.table.reloadData()
+                self?.refreshTabs()
+            case .failure(let failure):
+                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
+            }
+        }
+        
+        self.table.reloadData()
+        self.refreshTabs()
+        self.showAlert(message: "Booking approved successfully!")
     }
     
-    func didTapDecline(for serviceId: String) {
-        BookingDataManager.shared.updateBookingState(serviceId: serviceId, newState: .Canceled)
-        showAlert(message: "Booking declined")
-        table.reloadData()
-        refreshTabs()
+    func didTapDecline(for booking: Booking) {
+        print("didTapDecline")
+        booking.status = .Canceled
+        self.bookingManager.saveBooking(booking) { [weak self] result in
+            switch result {
+            case .success(_):
+                self?.updateBookingState(serviceId: booking.serviceId, newState: .Canceled)
+                self?.table.reloadData()
+                self?.refreshTabs()
+            case .failure(let failure):
+                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
+            }
+        }
+        
+        self.table.reloadData()
+        self.refreshTabs()
+        self.showAlert(message: "Booking declined")
     }
     
     private func showAlert(message: String) {
@@ -159,7 +166,8 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
         cell.time?.text = booking.time
         cell.location?.text = booking.location
         cell.price?.text = "\(booking.totalPrice)BD"
-        cell.serviceId = booking.serviceId
+        cell.booking = booking
+        cell.delegate = self
         
         let stateLabel = cell.bookingCategory as! CardLabel
         stateLabel.alpha = CGFloat(0.65)
@@ -245,6 +253,54 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                     bookingVC.table.reloadData()
                 }
             }
+        }
+    }
+    
+    @objc private func handleDataUpdate() {
+        print("Notification received - reloading tab: \(currentState.rawValue)")
+        Task {
+            await loadBookings()
+        }
+    }
+    
+    private func loadBookings() async {
+        showLoadingIndicator() // Optional
+        defer { hideLoadingIndicator() }
+        
+        do {
+            let bookings: [Booking]
+            if isProvider {
+                bookings = try await bookingManager.fetchBookingsForProviderAsync(userId)
+            } else {
+                bookings = try await bookingManager.fetchBookingsForUserAsync(LoginPageController.loggedinUser!.id!)
+            }
+            
+            data = bookings
+            
+            // Update UI on main thread
+            await MainActor.run {
+                self.setupForCurrentTab() // This will filter and reload
+            }
+        } catch {
+            print("❌ Failed to load: \(error.localizedDescription)")
+            showAlert(message: "Failed to load bookings")
+        }
+    }
+    
+    func updateBookingState(serviceId: String, newState: BookedServiceStatus) {
+        if let index = data.firstIndex(where: { $0.serviceId == serviceId }) {
+            // Create a mutable copy
+            var booking = data[index]
+            booking.status = newState
+            data[index] = booking
+            refreshTabs()
+            self.table.reloadData()
+            
+            // Notify observers (tabs) of the change
+            NotificationCenter.default.post(
+                name: .bookingDataDidChange,
+                object: nil
+            )
         }
     }
 }

@@ -802,7 +802,7 @@
                                                                                 <color key="baseBackgroundColor" systemColor="systemGreenColor"/>
                                                                             </buttonConfiguration>
                                                                             <connections>
-                                                                                <action selector="approveBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="aWE-Fl-fHt"/>
+                                                                                <action selector="approveBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="xPS-Yd-CYH"/>
                                                                             </connections>
                                                                         </button>
                                                                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="EVk-E7-Nfr">
@@ -815,7 +815,7 @@
                                                                                 <color key="baseBackgroundColor" systemColor="systemRedColor"/>
                                                                             </buttonConfiguration>
                                                                             <connections>
-                                                                                <action selector="declineBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="2pR-Fa-bh7"/>
+                                                                                <action selector="declineBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="gLW-P1-3OU"/>
                                                                             </connections>
                                                                         </button>
                                                                     </subviews>
