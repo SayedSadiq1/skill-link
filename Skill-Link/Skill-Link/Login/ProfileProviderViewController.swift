@@ -20,7 +20,7 @@ final class ProfileProviderViewController: BaseViewController {
     private var successBanner: UIView?
     private let db = Firestore.firestore()
 
-    private var currentProfile: UserProfile?
+    var currentProfile: UserProfile?
 
     override var shouldShowBackButton: Bool { false }
 
@@ -48,7 +48,11 @@ final class ProfileProviderViewController: BaseViewController {
         briefTextView.layer.borderColor = UIColor.systemGray4.cgColor
         briefTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
-        loadProfileFromFirestore()
+        if currentProfile == nil {
+            loadProfileFromFirestore()
+        } else {
+            applyProfileToUI()
+        }
         
         profileImageView.applyCircleAvatarNoCrop()
     }
@@ -96,7 +100,7 @@ final class ProfileProviderViewController: BaseViewController {
             }
         }
     }
-
+    
     // MARK: - Apply UI
     private func applyProfileToUI() {
         guard let profile = currentProfile else { return }

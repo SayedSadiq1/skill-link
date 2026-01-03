@@ -108,6 +108,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
         
     }
     
+    // MARK: - Report/Deactivate
     @IBAction func reportClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
         if isProvider {
@@ -117,6 +118,7 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
                 config.image = UIImage(systemName: "xmark.app")
                 config.title = "Deactivate"
                 config.baseBackgroundColor = UIColor.red
+                service.available = true
                 cancelBtn.configuration = config
                 
             } else {
@@ -124,9 +126,11 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
                 config.image = UIImage(systemName: "repeat")
                 config.title = "Reactivate"
                 config.baseBackgroundColor = UIColor.systemTeal
+                service.available = false
                 cancelBtn.configuration = config
             }
             
+            ServiceManager().saveService(service) { _ in }
             refreshUI()
             return
         }
@@ -135,12 +139,14 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
         self.navigationController?.pushViewController(controller, animated: true)
     }
     
+    // MARK: - Book/Edit
     @IBAction func actionClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
         if !isProvider {
-            let controller = storyboard.instantiateViewController(identifier: "BookingPage")
+            let controller = storyboard.instantiateViewController(identifier: "BookingPage") as! BookingPageController
             controller.modalPresentationStyle = .fullScreen
             controller.navigationItem.title = "Confirm Booking"
+            controller.service = service
             self.navigationController?.pushViewController(controller, animated: true)
             return
         }
@@ -224,6 +230,8 @@ extension ServiceDetailsViewController: UITableViewDataSource {
     }
     
     private func configureProviderCell(_ cell: ServiceDetailsProviderCell) {
+        cell.parent = self
+        cell.providerId = service.providerId
         userSerivce.fetchUserProfile(uid: service.providerId) { [weak cell] result in
             switch result {
             case .success(let success):

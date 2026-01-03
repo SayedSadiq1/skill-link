@@ -9,16 +9,19 @@ import UIKit
 
 class BookingPageController: BaseViewController {
     @IBOutlet weak var locationTextField: UITextField!
-    var pickedDate: Date = Date.now
-    var pickedHour: Int = 8
-    var pickedMinute: Int = 0
+    var service: Service?
+    private var pickedDate: Date = Date.now
+    private var pickedHour: Int = 8
+    private var pickedMinute: Int = 0
+    private let bookingManager = BookingManager()
+    
     @IBAction func dateChanged(_ sender: UIDatePicker) {
         pickedDate = sender.date
     }
     @IBAction func timeChanged(_ sender: UIDatePicker) {
         let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: sender.date)
-        let minute = calendar.component(.minute, from: sender.date)
+        pickedHour = calendar.component(.hour, from: sender.date)
+        pickedMinute = calendar.component(.minute, from: sender.date)
     }
     
     
@@ -32,10 +35,18 @@ class BookingPageController: BaseViewController {
             showAlert(message: "Please enter a location")
             return
         }
+        
+        // navigate to payment
+        
+        bookingManager.saveBooking(Booking(serviceId: service!.id!, userId: LoginPageController.loggedinUser!.id!, providerId: service!.providerId, totalPrice: service!.priceBD, location: locationTextField.text!, date: pickedDate, time: formatTime(hours: pickedHour, minutes: pickedMinute))) {[weak self] _ in
+            self?.navigationController?.popViewController(animated: true)
+            self?.showAlert(message: "Service booked successfully!", title: "Success")
+        }
+        
     }
+    
     @IBAction func cancelBooking(_ sender: UIButton) {
         self.navigationController?.popViewController(animated: true)
-        dismiss(animated: true)
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,23 +54,42 @@ class BookingPageController: BaseViewController {
         // Do any additional setup after loading the view.
     }
     
-    private func showAlert(message: String) {
-        let alert = UIAlertController(title: "Validation Error",
+    private func showAlert(message: String, title: String = "Validation Error") {
+        let alert = UIAlertController(title: title,
                                     message: message,
                                     preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    func formatTime(hours: Int, minutes: Int) -> String {
+        // Validate input
+        guard hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59 else {
+            return "Invalid time"
+        }
+        
+        // Convert to 12-hour format
+        let hour12: Int
+        let period: String
+        
+        if hours == 0 {
+            hour12 = 12
+            period = "AM"
+        } else if hours == 12 {
+            hour12 = 12
+            period = "PM"
+        } else if hours > 12 {
+            hour12 = hours - 12
+            period = "PM"
+        } else {
+            hour12 = hours
+            period = "AM"
+        }
+        
+        // Format minutes with leading zero
+        let formattedMinutes = String(format: "%02d", minutes)
+        
+        return "\(hour12):\(formattedMinutes) \(period)"
     }
-    */
 
 }

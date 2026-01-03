@@ -14,13 +14,14 @@ class ServiceDetailsProviderCell: UITableViewCell {
         // Initialization code
     }
 
-    @IBOutlet weak var providerImage: UIImageView!
     @IBOutlet weak var providerName: UILabel!
     @IBOutlet weak var providerContactLabel: UILabel!
+    var parent: UIViewController?
+    var providerId: String?
+    let userManager = FirebaseService.shared
+    
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
     }
 
 }

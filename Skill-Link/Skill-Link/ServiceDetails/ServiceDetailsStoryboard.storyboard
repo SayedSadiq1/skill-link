@@ -854,7 +854,7 @@
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="175" translatesAutoresizingMaskIntoConstraints="NO" id="uO5-CH-Fk1">
                                 <rect key="frame" x="0.0" y="253" width="393" height="583"/>
                                 <subviews>
-                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" alignment="center" spacing="6" translatesAutoresizingMaskIntoConstraints="NO" id="rDx-o6-ZFZ">
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="6" translatesAutoresizingMaskIntoConstraints="NO" id="rDx-o6-ZFZ">
                                         <rect key="frame" x="0.0" y="0.0" width="393" height="323.33333333333331"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Pick a date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fCU-aR-f5x">
@@ -887,17 +887,18 @@
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" ambiguous="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="hB7-QF-Yyf">
+                                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="hB7-QF-Yyf">
                                                 <rect key="frame" x="6.6666666666666572" y="289.33333333333337" width="380" height="34"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="380" id="u1D-4q-8ir"/>
+                                                    <constraint firstAttribute="height" constant="34" id="uxv-7l-wsV"/>
                                                 </constraints>
                                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                 <textInputTraits key="textInputTraits"/>
                                             </textField>
                                         </subviews>
                                     </stackView>
-                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="1Lw-i6-93x">
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="1Lw-i6-93x">
                                         <rect key="frame" x="0.0" y="498.33333333333343" width="393" height="84.666666666666686"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tzx-C4-mK2">
@@ -921,6 +922,9 @@
                                                 </connections>
                                             </button>
                                         </subviews>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="84.670000000000002" id="mVy-dF-k9P"/>
+                                        </constraints>
                                     </stackView>
                                 </subviews>
                                 <constraints>
