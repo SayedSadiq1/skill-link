@@ -258,7 +258,7 @@ extension ServiceDetailsViewController: UITableViewDataSource {
     }
     
     private func configureProviderCell(_ cell: ServiceDetailsProviderCell) {
-        cell.providerName.text = service.provider.name
+        cell.providerName.text = service.provider.fullName
         cell.providerContactLabel.text = service.provider.contact
     }
     

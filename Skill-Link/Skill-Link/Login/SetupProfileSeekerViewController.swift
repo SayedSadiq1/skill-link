@@ -137,7 +137,7 @@ final class SetupProfileSeekerViewController: BaseViewController {
                 // SAVE LOCAL PROFILE
                 let profile = UserProfile(
                     id: uid,
-                    name: self.loadedFullName,
+                    fullName: self.loadedFullName,
                     contact: contact,
                     imageURL: imageURL,
                     role: .seeker,

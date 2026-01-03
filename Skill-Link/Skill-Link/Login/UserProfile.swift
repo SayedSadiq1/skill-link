@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseFirestore
 
 enum UserRole: String, Codable {
     case provider
@@ -8,22 +9,22 @@ enum UserRole: String, Codable {
 struct UserProfile: Codable {
 
     // Firebase UID (always exists after login/register)
-    let id: String
+    @DocumentID<String> var id: String?
 
     // Basic info
-    var name: String
-    var contact: String
+    var fullName: String
+    var contact: String?
     var imageURL: String?
 
     // Role
-    var role: UserRole
+    var role: UserRole = .seeker
 
     // Provider-only data (empty for seeker)
-    var skills: [String]
-    var brief: String
+    var skills: [String]?
+    var brief: String?
 
     // Account state (admin control)
-    var isSuspended: Bool
+    var isSuspended: Bool = false
 
     // MARK: - Helpers
 

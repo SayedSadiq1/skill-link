@@ -110,7 +110,7 @@ final class ProfileSeekerViewController: BaseViewController {
 
         let profile = UserProfile(
             id: uid,
-            name: currentProfile.name,
+            fullName: currentProfile.name,
             contact: currentProfile.contact,
             imageURL: currentProfile.imageURL,
             role: .seeker,

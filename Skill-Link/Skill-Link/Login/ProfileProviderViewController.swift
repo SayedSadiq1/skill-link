@@ -81,7 +81,7 @@ final class ProfileProviderViewController: BaseViewController {
 
                 let profile = UserProfile(
                     id: uid,
-                    name: data["fullName"] as? String ?? "",
+                    fullName: data["fullName"] as? String ?? "",
                     contact: data["contact"] as? String ?? "",
                     imageURL: data["imageURL"] as? String,
                     role: .provider,
@@ -101,11 +101,11 @@ final class ProfileProviderViewController: BaseViewController {
     private func applyProfileToUI() {
         guard let profile = currentProfile else { return }
 
-        nameLabel.text = profile.name
+        nameLabel.text = profile.fullName
         contactLabel.text = profile.contact
         briefTextView.text = profile.brief
 
-        showSkills(profile.skills)
+        showSkills(profile.skills ?? [])
 
         if let urlStr = profile.imageURL, let url = URL(string: urlStr) {
             loadImage(from: url)

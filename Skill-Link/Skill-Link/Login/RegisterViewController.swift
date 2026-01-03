@@ -73,7 +73,7 @@ final class RegisterViewController: BaseViewController {
                 // save local profile so we always know who is logged in
                 let localProfile = UserProfile(
                     id: uid,
-                    name: fullName,
+                    fullName: fullName,
                     contact: email,
                     imageURL: nil,
                     role: .seeker,      // temporary, will change after role selection

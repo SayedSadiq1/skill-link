@@ -55,8 +55,8 @@ final class EditProfileViewController: BaseViewController {
 
         guard let profile else { return }
 
-        nameTextField.text = profile.name
-        skillsTextField.text = profile.skills.joined(separator: ", ")
+        nameTextField.text = profile.fullName
+        skillsTextField.text = profile.skills?.joined(separator: ", ")
         briefTextView.text = profile.brief
         contactTextField.text = profile.contact
         selectedImageURL = profile.imageURL
@@ -162,7 +162,7 @@ final class EditProfileViewController: BaseViewController {
 
             let updated = UserProfile(
                 id: uid,
-                name: name,
+                fullName: name,
                 contact: contact,
                 imageURL: imageURL,
                 role: old.role,

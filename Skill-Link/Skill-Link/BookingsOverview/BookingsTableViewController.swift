@@ -33,7 +33,7 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
                 }
             }
         } else {
-            bookingManager.fetchBookingsForUser(LoginPageController.loggedinUser!.id){ [weak self] result in
+            bookingManager.fetchBookingsForUser(LoginPageController.loggedinUser!.id!){ [weak self] result in
                 switch result {
                 case .success(let bookings):
                     print("Found \(bookings.count) for seeker: \(String(describing: self?.userId))")
@@ -142,12 +142,12 @@ class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSo
             switch result {
             case .success(let user):
                 if self!.currentState == .Pending {
-                    cell!.providedBy?.text = "Booked By: \(user.name)"
+                    cell!.providedBy?.text = "Booked By: \(user.fullName)"
                 } else {
                     if self!.isProvider {
-                        cell!.providedBy?.text = "Booked By: \(user.name)"
+                        cell!.providedBy?.text = "Booked By: \(user.fullName)"
                     } else {
-                        cell!.providedBy?.text = "Provided By: \(user.name)"
+                        cell!.providedBy?.text = "Provided By: \(user.fullName)"
                     }
                 }
             case .failure(let failure):

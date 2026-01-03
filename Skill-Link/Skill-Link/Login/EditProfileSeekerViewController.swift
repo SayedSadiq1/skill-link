@@ -162,7 +162,7 @@ final class EditProfileSeekerViewController: BaseViewController {
 
             let localProfile = UserProfile(
                 id: uid,
-                name: name,
+                fullName: name,
                 contact: contact,
                 imageURL: imageURL,
                 role: .seeker,
