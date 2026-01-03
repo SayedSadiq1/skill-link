@@ -14,16 +14,11 @@ class ReportController: BaseViewController {
         "Bad Service",
         "Late Arrival",
         "Missed Appointment",
-        "Service Not Completed as Requested",
-        "Service Took Longer Than Promised",
-        "Rude or Unprofessional Behavior",
-        "Lack of Transparency About Costs or Process",
-        "Left Worksite Messy or Hazardous",
         "Damaged Property",
-        "Stole or Misused Customer Items",
         "Poor Follow-Up After Service"
     ]
     var serviceName: String?
+    var providerId: String?
     var userName: String?
     var selectedReason = "(no reason provided)"
     let reportManager = ServiceReportManager()
@@ -51,7 +46,7 @@ class ReportController: BaseViewController {
     
 
     @IBAction func reportSubmit(_ sender: Any) {
-        reportManager.saveReport(ServiceReport(serviceName: serviceName!, userName: userName!, reason: selectedReason)) { [weak self] result in
+        reportManager.saveReport(ServiceReport(serviceName: serviceName!, providerId: providerId!, userName: userName!, reason: selectedReason, reportedAt: Date.now)) { [weak self] result in
             switch result {
             case .success(_):
                 self!.navigationController?.popViewController(animated: true)

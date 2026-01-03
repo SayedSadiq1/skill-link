@@ -11,18 +11,20 @@ import FirebaseFirestore
 class ServiceReport: Codable {
     @DocumentID<String> var id: String?
     var serviceName: String
+    var providerId: String
     var userName: String
     var reason: String
     let reportedAt: Date
     var status: ServiceReportStatus
     
-    init(reportId: String? = nil, serviceName: String, userName: String, reason: String, reportedAt: Date = Date.now) {
-        self.id = reportId
+    init(id: String? = nil, serviceName: String, providerId: String, userName: String, reason: String, reportedAt: Date, status: ServiceReportStatus = .Pending) {
+        self.id = id
         self.serviceName = serviceName
+        self.providerId = providerId
         self.userName = userName
         self.reason = reason
         self.reportedAt = reportedAt
-        self.status = .Pending
+        self.status = status
     }
 }
 
