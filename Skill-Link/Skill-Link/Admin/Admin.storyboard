@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Kjq-5Q-6mv">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Kjq-5Q-6mv">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -11,7 +11,7 @@
         <!--Admin Dashboard-->
         <scene sceneID="pbZ-TX-kSm">
             <objects>
-                <viewController modalPresentationStyle="fullScreen" id="QIC-22-G9E" userLabel="Admin Dashboard" customClass="AdminViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="adminDashBoard" modalPresentationStyle="fullScreen" id="QIC-22-G9E" userLabel="Admin Dashboard" customClass="AdminViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="0EB-Uc-dZD">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -199,7 +199,7 @@
             <objects>
                 <navigationController id="Kjq-5Q-6mv" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="Rhy-Yp-tGM">
-                        <rect key="frame" x="0.0" y="118" width="393" height="44"/>
+                        <rect key="frame" x="0.0" y="59" width="393" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>
@@ -227,15 +227,6 @@
                                 <color key="highlightedColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <color key="shadowColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </label>
-                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="center" contentVerticalAlignment="center" text="search..." borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ccq-9n-tUw">
-                                <rect key="frame" x="96.666666666666686" y="233" width="200" height="34"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="200" id="JXd-Tg-dxK"/>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="c6s-CU-9s2"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
-                            </textField>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="gg8-ea-k4J">
                                 <rect key="frame" x="0.0" y="277" width="393" height="496"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -283,6 +274,9 @@
                                                             <buttonConfiguration key="configuration" style="filled" title="Suspend" cornerStyle="large">
                                                                 <color key="baseBackgroundColor" red="0.11372549830000001" green="0.18039217590000001" blue="0.3686274886" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             </buttonConfiguration>
+                                                            <connections>
+                                                                <action selector="actionButtonTapped:" destination="jJK-fQ-5qx" eventType="touchUpInside" id="2uq-h9-WVe"/>
+                                                            </connections>
                                                         </button>
                                                     </subviews>
                                                     <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -298,21 +292,30 @@
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
+                            <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="hh4-Rw-VY4">
+                                <rect key="frame" x="10" y="230" width="393" height="56"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <outlet property="delegate" destination="Gg8-ia-PBK" id="4Ld-C6-FYT"/>
+                                </connections>
+                            </searchBar>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="w6A-fy-xFq"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="KAe-ZF-M2Q" firstAttribute="top" secondItem="5Gf-w0-C4f" secondAttribute="top" constant="100" id="BAp-7t-lus"/>
+                            <constraint firstItem="gg8-ea-k4J" firstAttribute="top" secondItem="KAe-ZF-M2Q" secondAttribute="bottom" constant="137" id="EQd-qb-9q7"/>
                             <constraint firstItem="KAe-ZF-M2Q" firstAttribute="leading" secondItem="w6A-fy-xFq" secondAttribute="leading" id="FGG-If-qIn"/>
+                            <constraint firstItem="hh4-Rw-VY4" firstAttribute="trailing" secondItem="w6A-fy-xFq" secondAttribute="trailing" constant="10" id="Orh-W6-MDS"/>
                             <constraint firstItem="KAe-ZF-M2Q" firstAttribute="trailing" secondItem="w6A-fy-xFq" secondAttribute="trailing" id="THx-gD-qDK"/>
                             <constraint firstItem="gg8-ea-k4J" firstAttribute="centerX" secondItem="5Gf-w0-C4f" secondAttribute="centerX" id="Yki-59-A1q"/>
-                            <constraint firstItem="ccq-9n-tUw" firstAttribute="top" secondItem="KAe-ZF-M2Q" secondAttribute="bottom" constant="93" id="eBC-fg-90L"/>
-                            <constraint firstItem="gg8-ea-k4J" firstAttribute="top" secondItem="ccq-9n-tUw" secondAttribute="bottom" constant="10" id="fKA-By-fXd"/>
-                            <constraint firstItem="ccq-9n-tUw" firstAttribute="centerX" secondItem="5Gf-w0-C4f" secondAttribute="centerX" id="nOt-BB-y1r"/>
+                            <constraint firstItem="hh4-Rw-VY4" firstAttribute="top" secondItem="KAe-ZF-M2Q" secondAttribute="bottom" constant="90" id="ocR-dv-Oze"/>
+                            <constraint firstItem="hh4-Rw-VY4" firstAttribute="leading" secondItem="w6A-fy-xFq" secondAttribute="leading" constant="10" id="zuK-eO-Fig"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="jo8-t7-sDv"/>
                     <connections>
+                        <outlet property="searchBar" destination="hh4-Rw-VY4" id="sMQ-H1-vFK"/>
                         <outlet property="tableView" destination="gg8-ea-k4J" id="duI-Bb-cfh"/>
                     </connections>
                 </viewController>
@@ -910,7 +913,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="pNV-RH-NeW">
-                                <rect key="frame" x="30" y="269" width="333" height="475"/>
+                                <rect key="frame" x="30" y="269" width="333" height="509"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="ServiceCell" rowHeight="191" id="eHa-Zu-wBb" customClass="ServiceCell" customModule="Skill_Link" customModuleProvider="target">
