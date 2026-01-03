@@ -52,6 +52,8 @@ class ProviderChatViewController: BaseViewController,
 
         listenForMessages()
     }
+    
+    
 
     // MARK: - Firestore
 

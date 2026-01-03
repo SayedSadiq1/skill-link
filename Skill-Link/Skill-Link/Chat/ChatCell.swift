@@ -25,18 +25,36 @@ class ChatCell: UITableViewCell {
         bubbleView.layer.masksToBounds = true
     }
     
+
+    
     func configure(message: String, isSender: Bool) {
         messageLabel.text = message
 
-        leadingConstraint?.isActive = !isSender
-        trailingConstraint?.isActive = isSender
+        if isSender {
+            leadingConstraint?.priority = .defaultLow
+            trailingConstraint?.priority = .required
+            bubbleView.backgroundColor = .systemBlue
+            messageLabel.textColor = .white
 
-        bubbleView.backgroundColor = isSender ? .systemBlue : .systemGray5
-        messageLabel.textColor = isSender ? .white : .black
+            bubbleView.layer.maskedCorners = [
+                .layerMinXMinYCorner,
+                .layerMaxXMinYCorner,
+                .layerMinXMaxYCorner
+            ]
+        } else {
+            leadingConstraint?.priority = .required
+            trailingConstraint?.priority = .defaultLow
+            bubbleView.backgroundColor = .systemGray5
+            messageLabel.textColor = .black
 
-        bubbleView.layer.maskedCorners = isSender
-            ? [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner]
-            : [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+            bubbleView.layer.maskedCorners = [
+                .layerMinXMinYCorner,
+                .layerMaxXMinYCorner,
+                .layerMaxXMaxYCorner
+            ]
+        }
+
+        contentView.layoutIfNeeded()
     }
 
 }
