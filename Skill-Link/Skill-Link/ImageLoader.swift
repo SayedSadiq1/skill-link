@@ -1,21 +1,29 @@
 import UIKit
 
 class ImageDownloader {
-    static func downloadImage(from urlString: String) async throws -> UIImage {
+    static func downloadImage(from urlString: String, completion: @escaping (Result<UIImage, Error>) -> Void) {
         guard let url = URL(string: urlString) else {
-            throw NSError(domain: "Invalid URL", code: 400, userInfo: nil)
+            completion(.failure(NSError(domain: "Invalid URL", code: 400, userInfo: nil)))
+            return
         }
         
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw NSError(domain: "Bad response", code: 500, userInfo: nil)
-        }
-        
-        guard let image = UIImage(data: data) else {
-            throw NSError(domain: "Invalid image data", code: 422, userInfo: nil)
-        }
-        
-        return image
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                completion(.failure(NSError(domain: "Bad response", code: 500, userInfo: nil)))
+                return
+            }
+            
+            guard let data = data, let image = UIImage(data: data) else {
+                completion(.failure(NSError(domain: "Invalid image data", code: 422, userInfo: nil)))
+                return
+            }
+            
+            completion(.success(image))
+        }.resume()
     }
 }
