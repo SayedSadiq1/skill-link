@@ -57,7 +57,6 @@ class BookingPageController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
     }
     
     private func showAlert(message: String, title: String = "Validation Error") {

@@ -7,16 +7,7 @@
 
 import UIKit
 
-protocol BookingsTableViewCellDelegate: AnyObject {
-    func didTapApprove(for serviceId: String)
-    func didTapDecline(for serviceId: String)
-    func didTapRate(for serviceId: String)
-    func didTapSeeDetails(for serviceId: String)
-    func didTapFavorite(for serviceId: String)
-}
-
-
-class BookingsTableViewCell: UITableViewCell {
+final class BookingsTableViewCell: UITableViewCell {
 
     @IBOutlet weak var serviceTitle: UILabel!
     @IBOutlet weak var bookingCategory: UILabel!
@@ -25,71 +16,33 @@ class BookingsTableViewCell: UITableViewCell {
     @IBOutlet weak var time: UILabel!
     @IBOutlet weak var location: UILabel!
     @IBOutlet weak var price: UILabel!
-    var serviceId: String!
-    
     @IBOutlet weak var cellContextMenu: UIButton!
-    weak var delegate: BookingsTableViewCellDelegate?
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        // Initialization code
+
+    var serviceId: String = ""
+    var onRateTapped: ((String) -> Void)?
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        serviceId = ""
+        onRateTapped = nil
+        cellContextMenu.menu = nil
     }
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
-    
     func setupContextMenu(state: BookedServiceStatus) {
-        guard cellContextMenu != nil else { return }
-
-        switch state {
-        case .Upcoming:
-            cellContextMenu.menu = UIMenu(children: [
-                UIAction(title: "See Details") { [weak self] _ in
-                    guard let self else { return }
-                    self.delegate?.didTapSeeDetails(for: self.serviceId)
-                },
-                UIAction(title: "View Provider") { _ in },
-                UIAction(title: "Cancel") { _ in }
-            ])
-
-        case .Completed:
-            cellContextMenu.menu = UIMenu(children: [
-                UIAction(title: "See Details") { [weak self] _ in
-                    guard let self else { return }
-                    self.delegate?.didTapSeeDetails(for: self.serviceId)
-                },
-                UIAction(title: "Favorite", image: UIImage(systemName: "star")) { [weak self] _ in
-                    guard let self else { return }
-                    self.delegate?.didTapFavorite(for: self.serviceId)
-                },
-                UIAction(title: "Rate") { [weak self] _ in
-                    guard let self else { return }
-                    self.delegate?.didTapRate(for: self.serviceId)
-                }
-            ])
-
-        default:
-            cellContextMenu.menu = UIMenu(children: [
-                UIAction(title: "See Details") { [weak self] _ in
-                    guard let self else { return }
-                    self.delegate?.didTapSeeDetails(for: self.serviceId)
-                }
-            ])
+        guard state == .Completed else {
+            cellContextMenu.menu = nil
+            cellContextMenu.showsMenuAsPrimaryAction = false
+            return
         }
+
+        cellContextMenu.menu = UIMenu(children: [
+            UIAction(title: "Rate") { [weak self] _ in
+                guard let self else { return }
+                self.onRateTapped?(self.serviceId)
+            }
+        ])
 
         cellContextMenu.showsMenuAsPrimaryAction = true
         cellContextMenu.changesSelectionAsPrimaryAction = false
-    }
-
-
-    @IBAction func approveBtnTap(_ sender: UIButton) {
-        delegate?.didTapApprove(for: serviceId)
-    }
-    
-    @IBAction func declineBtnTap(_ sender: UIButton) {
-        delegate?.didTapDecline(for: serviceId)
     }
 }

@@ -20,9 +20,10 @@ final class PaymentViewController: BaseViewController {
     var price: Double?
     var isCashOnDelivery: Bool = false
     var tax: Double = 10.0
-    var servicePrice: Double = 0.0
-    var totalPrice: Double = 0.0
-    var transaction: Transaction?
+
+    private var servicePrice: Double = 0.0
+    private var totalPrice: Double = 0.0
+    private var isProcessingPayment = false
 
     private let serviceManager = ServiceFetcher()
 
@@ -40,8 +41,20 @@ final class PaymentViewController: BaseViewController {
         totalLabel.text = String(format: "%.2f BD", totalPrice)
     }
 
-    @IBAction func paymentTapped(_ sender: Any) {
-        guard let serviceID = serviceID else {
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // reset in case user comes back here
+        isProcessingPayment = false
+        paymentButton.isEnabled = true
+    }
+
+    @IBAction func paymentTapped(_ sender: UIButton) {
+
+        guard !isProcessingPayment else { return }
+        isProcessingPayment = true
+
+        guard let serviceID = serviceID, !serviceID.isEmpty else {
+            isProcessingPayment = false
             showSimpleAlert("Missing Service ID")
             return
         }
@@ -50,7 +63,6 @@ final class PaymentViewController: BaseViewController {
 
         Task { @MainActor in
             do {
-             
                 let serviceTitle = try await serviceManager.getServiceTitle(serviceId: serviceID)
 
                 let tx = Transaction(
@@ -61,17 +73,17 @@ final class PaymentViewController: BaseViewController {
                     createdAt: Date()
                 )
 
-                self.transaction = tx
+                try await TransactionsController.shared.createTransaction(
+                    id: Auth.auth().currentUser?.uid ?? "",
+                    transaction: tx
+                )
 
-                try await TransactionsController.shared.createTransaction(id: Auth.auth().currentUser?.uid ?? "", transaction: tx)
-
-                self.paymentButton.isEnabled = true
-                self.showSimpleAlert("Transaction created ✅")
-                self.popBack(steps: 3)
+                replaceWithSeekerHome()
 
             } catch {
-                self.paymentButton.isEnabled = true
-                self.showSimpleAlert("Failed: \(error.localizedDescription)")
+                isProcessingPayment = false
+                paymentButton.isEnabled = true
+                showSimpleAlert("Failed: \(error.localizedDescription)")
             }
         }
     }
@@ -81,24 +93,14 @@ final class PaymentViewController: BaseViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-}
-import UIKit
 
-extension UIViewController {
-    func popBack(steps: Int, animated: Bool = true) {
+    private func replaceWithSeekerHome() {
         guard let nav = navigationController else { return }
 
-        let vcs = nav.viewControllers
-        let targetIndex = vcs.count - 1 - steps
+        let sb = UIStoryboard(name: "HomePage", bundle: nil)
 
-        guard targetIndex >= 0 else {
-            nav.popToRootViewController(animated: animated)
-            return
-        }
+        let homeVC = sb.instantiateViewController(withIdentifier: "SeekerHomeViewController")
 
-        nav.popToViewController(vcs[targetIndex], animated: animated)
+        nav.setViewControllers([homeVC], animated: true)
     }
 }
-
-
-

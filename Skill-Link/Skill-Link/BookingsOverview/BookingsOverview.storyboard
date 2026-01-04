@@ -372,9 +372,6 @@
                                                                                 <imageReference key="image" image="star" catalog="system" symbolScale="small"/>
                                                                                 <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
                                                                             </buttonConfiguration>
-                                                                            <connections>
-                                                                                <segue destination="rj7-js-aQk" kind="show" identifier="toRate" id="ac3-G8-2Ra"/>
-                                                                            </connections>
                                                                         </button>
                                                                     </subviews>
                                                                 </stackView>
@@ -425,11 +422,12 @@
                     <tabBarItem key="tabBarItem" title="Completed" image="checkmark.rectangle.stack" catalog="system" selectedImage="checkmark.rectangle.stack" id="iVc-U3-nb2"/>
                     <connections>
                         <outlet property="table" destination="Jqe-rj-dKg" id="kPH-tS-Lif"/>
+                        <segue destination="rj7-js-aQk" kind="show" identifier="toRate" id="3nC-8O-qbw"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="q8W-wE-QDK" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-306.1068702290076" y="597.18309859154931"/>
+            <point key="canvasLocation" x="-306" y="597"/>
         </scene>
         <!--Canceled-->
         <scene sceneID="GMN-DE-mmG">
@@ -894,22 +892,22 @@
                                 <color key="shadowColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </label>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="center" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="K2B-CC-e4E">
-                                <rect key="frame" x="0.0" y="282.00000000000006" width="393" height="614.33333333333348"/>
+                                <rect key="frame" x="0.0" y="282" width="393" height="497.33333333333326"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="userRate" translatesAutoresizingMaskIntoConstraints="NO" id="YYM-L3-70H">
-                                        <rect key="frame" x="132" y="0.0" width="129" height="129"/>
+                                        <rect key="frame" x="144.33333333333334" y="0.0" width="104.33333333333334" height="104.33333333333333"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="YYM-L3-70H" secondAttribute="height" multiplier="1:1" id="8Zq-wi-zl0"/>
                                         </constraints>
                                     </imageView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Caza Tech" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="z04-H9-a9m">
-                                        <rect key="frame" x="120.00000000000001" y="149" width="153.33333333333337" height="38.333333333333343"/>
+                                        <rect key="frame" x="120.00000000000001" y="124.3333333333333" width="153.33333333333337" height="38.333333333333329"/>
                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="46w-FW-awG">
-                                        <rect key="frame" x="6.6666666666666572" y="207.33333333333331" width="380" height="50"/>
+                                        <rect key="frame" x="6.6666666666666572" y="182.66666666666669" width="380" height="50"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="YDl-5i-STd">
                                                 <rect key="frame" x="0.0" y="0.0" width="76" height="50"/>
@@ -957,13 +955,13 @@
                                         </constraints>
                                     </stackView>
                                     <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="ZNt-KY-Evz">
-                                        <rect key="frame" x="32" y="277.33333333333337" width="329" height="227.33333333333337"/>
+                                        <rect key="frame" x="32" y="252.66666666666663" width="329" height="184"/>
                                         <color key="textColor" systemColor="labelColor"/>
                                         <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                     </textView>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="izt-wQ-BaO">
-                                        <rect key="frame" x="78.666666666666671" y="524.66666666666663" width="235.66666666666663" height="89.666666666666629"/>
+                                        <rect key="frame" x="78.666666666666671" y="456.66666666666663" width="235.66666666666663" height="40.666666666666686"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="50" id="bhK-5p-IRa"/>
                                         </constraints>
@@ -975,7 +973,7 @@
                                             <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         </buttonConfiguration>
                                         <connections>
-                                            <action selector="submitTapped" destination="rj7-js-aQk" eventType="touchUpInside" id="VwB-xR-cmZ"/>
+                                            <action selector="submitTapped:" destination="rj7-js-aQk" eventType="touchUpInside" id="DnS-pL-srK"/>
                                         </connections>
                                     </button>
                                 </subviews>
