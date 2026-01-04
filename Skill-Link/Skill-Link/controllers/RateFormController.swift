@@ -5,7 +5,7 @@
 //  Created by Sayed on 20/12/2025.
 //
 import UIKit
-
+import FirebaseAuth
 class RateFormController : BaseViewController {
     
     @IBOutlet weak var reviewField: UITextView!
@@ -16,12 +16,24 @@ class RateFormController : BaseViewController {
     @IBOutlet weak var star3: UIButton!
     @IBOutlet weak var star4: UIButton!
     @IBOutlet weak var star5: UIButton!
-
+    
+    
     private var stars: [UIButton] {
         [star1, star2, star3, star4, star5]
     }
-
     
+    func getUserField(from userID: String, field: String) async -> Any? {
+        do {
+            // Assumes your users are stored in a collection named "Users"
+            let doc = try await db.collection("user").document(userID).getDocument()
+            return doc.data()?[field]
+        } catch {
+            print("❌ Error fetching user field: \(error)")
+            return nil
+        }
+    }
+    
+    var userName : String!
     var message: String?
     var rating: Int?
     var serviceID: String?
@@ -33,6 +45,9 @@ class RateFormController : BaseViewController {
         reviewField.layer.borderColor = UIColor.black.cgColor
         submitButton.backgroundColor = UIColor(hex: "#182E61")
         submitButton.layer.cornerRadius = 12
+        Task{
+            try await userName = try await getUserField(from: Auth.auth().currentUser?.uid ?? "", field: "fullName") as? String
+        }
     }
     
     func setStarsImage(buttonNumber: Int){
@@ -57,8 +72,9 @@ class RateFormController : BaseViewController {
     @IBAction func submitTapped() {
         
         Task {
-            try await ReviewController.shared.makeReview(senderName: /*will fix when auth is implemeted*/"", ServiceID: self.serviceID ?? "", content: self.reviewField.text!, rating: self.rating ?? 0)
+            try await ReviewController.shared.makeReview(senderName: self.userName , ServiceID: self.serviceID ?? "", content: self.reviewField.text!, rating: self.rating ?? 0)
         }
+        self.navigationController?.popViewController(animated: true)
     }
     
 }

@@ -7,32 +7,31 @@
 
 import UIKit
 
-class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
-    
+final class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
+
     // MARK: - Outlets
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var actionBtn: UIButton!
     @IBOutlet weak var cancelBtn: UIButton!
-    
+
     // MARK: - Properties
     var service: Service!
     let isProvider = LoginPageController.loggedinUser?.isProvider ?? true
     let userSerivce = FirebaseService.shared
-    
+
     // MARK: - ServiceEditDelegate
     func didUpdateService(_ updatedService: Service) {
         fetchFreshDataFromFirebase()
     }
-    
+
     private func refreshUI() {
-        // Reload all UI elements
         setupUI()
         tableView.reloadData()
     }
-    
+
     private func fetchFreshDataFromFirebase() {
-        guard let serviceID = service.id else { return }
-        
+        guard let serviceID = service?.id else { return }
+
         let serviceManager = ServiceManager()
         serviceManager.fetchService(by: serviceID) { [weak self] result in
             switch result {
@@ -41,11 +40,11 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
                 self?.refreshUI()
             case .failure(let error):
                 print("Error fetching fresh data: \(error)")
-                self?.refreshUI() // Still refresh with local data
+                self?.refreshUI()
             }
         }
     }
-    
+
     // MARK: - Cell Identifiers
     private enum CellIdentifier: String {
         case header = "headerCell"
@@ -55,11 +54,11 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
         case disclaimer = "disclaimerCell"
         case additionalInfo = "additionalInfoCell"
     }
-    
+
     // MARK: - Sections Enum
     private enum Section: Int, CaseIterable {
         case header, provider, description, details, disclaimers, additionalInfo
-        
+
         var title: String? {
             switch self {
             case .disclaimers: return "Disclaimers"
@@ -68,27 +67,28 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
             }
         }
     }
-    
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
-        print("CURRENT USER: \(String(describing: LoginPageController.loggedinUser))")
         super.viewDidLoad()
+
+        print("CURRENT USER: \(String(describing: LoginPageController.loggedinUser))")
+
+        tableView.dataSource = self
+        tableView.delegate = self
+
         setupUI()
-        tableView.reloadData()
     }
-    
+
     func setupUI() {
-        if !(isProvider) {
-            return
-        }
-        if service == nil {
-            return
-        }
-        
+        if !(isProvider) { return }
+        if service == nil { return }
+
         if actionBtn != nil {
             actionBtn.setTitle("Edit service", for: .normal)
             actionBtn.setImage(UIImage(systemName: "pencil"), for: .normal)
         }
+
         if cancelBtn != nil {
             if service.available {
                 var config = UIButton.Configuration.filled()
@@ -96,7 +96,6 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
                 config.title = "Deactivate"
                 config.baseBackgroundColor = UIColor.red
                 cancelBtn.configuration = config
-                
             } else {
                 var config = UIButton.Configuration.filled()
                 config.image = UIImage(systemName: "repeat")
@@ -105,136 +104,159 @@ class ServiceDetailsViewController: BaseViewController, ServiceEditDelegate {
                 cancelBtn.configuration = config
             }
         }
-        
     }
-    
+
     // MARK: - Report/Deactivate
     @IBAction func reportClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+
         if isProvider {
-            service.available = !service.available
+            service.available.toggle()
+
             if service.available {
                 var config = UIButton.Configuration.filled()
                 config.image = UIImage(systemName: "xmark.app")
                 config.title = "Deactivate"
                 config.baseBackgroundColor = UIColor.red
-                service.available = true
                 cancelBtn.configuration = config
-                
             } else {
                 var config = UIButton.Configuration.filled()
                 config.image = UIImage(systemName: "repeat")
                 config.title = "Reactivate"
                 config.baseBackgroundColor = UIColor.systemTeal
-                service.available = false
                 cancelBtn.configuration = config
             }
-            
+
             ServiceManager().saveService(service) { _ in }
             refreshUI()
             return
         }
-        
+
         let controller = storyboard.instantiateViewController(identifier: "reportPage") as! ReportController
         controller.serviceName = service.title
         controller.providerId = service.providerId
         controller.userName = LoginPageController.loggedinUser?.fullName ?? ""
-        self.navigationController?.pushViewController(controller, animated: true)
+        navigationController?.pushViewController(controller, animated: true)
     }
-    
+
     // MARK: - Book/Edit
     @IBAction func actionClicked(_ sender: Any) {
         let storyboard = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
+
         if !isProvider {
             let controller = storyboard.instantiateViewController(identifier: "BookingPage") as! BookingPageController
             controller.modalPresentationStyle = .fullScreen
             controller.navigationItem.title = "Confirm Booking"
             controller.service = service
-            self.navigationController?.pushViewController(controller, animated: true)
+            navigationController?.pushViewController(controller, animated: true)
             return
         }
-        
+
         guard let controller = storyboard.instantiateViewController(identifier: "EditView") as? EditController else {
             return
         }
-        
+
         controller.modalPresentationStyle = .fullScreen
         controller.navigationItem.title = "Edit Service Details"
         controller.service = service
         controller.delegate = self
-        self.navigationController?.pushViewController(controller, animated: true)
+        navigationController?.pushViewController(controller, animated: true)
+    }
+}
+
+// MARK: - Header Cell Delegate (Tap Reviews)
+extension ServiceDetailsViewController: ServiceDetailsHeaderCellDelegate {
+
+    func didTapReviewsOnHeader() {
+        guard let serviceID = service?.id else {
+            print("❌ Service ID missing")
+            return
+        }
+
+        let sb = UIStoryboard(name: "Rating", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: "ReviewsViewController") as? ReviewsViewController else {
+            print("❌ Could not instantiate ReviewsViewController. Check storyboard name + ID.")
+            return
+        }
+
+        vc.serviceID = serviceID
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
 // MARK: - UITableViewDataSource
 extension ServiceDetailsViewController: UITableViewDataSource {
-    
+
     func numberOfSections(in tableView: UITableView) -> Int {
-        return Section.allCases.count
+        Section.allCases.count
     }
-    
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard let sectionType = Section(rawValue: section) else { return 0 }
-        
+
         switch sectionType {
         case .header, .provider, .description, .details:
-            return 1 // One cell each
+            return 1
         case .disclaimers:
-            return service.disclaimers.count // Dynamic based on disclaimers
+            return service.disclaimers.count
         case .additionalInfo:
-            return 1 // Or more if you have additional info array
+            return 1
         }
     }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+    func tableView(_ tableView: UITableView,
+                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
         guard let section = Section(rawValue: indexPath.section) else {
             return UITableViewCell()
         }
-        
+
         switch section {
         case .header:
             let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.header.rawValue, for: indexPath) as! ServiceDetailsHeaderCell
             configureHeaderCell(cell)
             return cell
-            
+
         case .provider:
             let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.provider.rawValue, for: indexPath) as! ServiceDetailsProviderCell
             configureProviderCell(cell)
             return cell
-            
+
         case .description:
             let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.description.rawValue, for: indexPath) as! ServiceDetailsDescriptionCell
             configureDescriptionCell(cell)
             return cell
-            
+
         case .details:
             let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.details.rawValue, for: indexPath) as! ServiceDetailsDetailsCell
             configureDetailsCell(cell)
             return cell
-            
+
         case .disclaimers:
             let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.disclaimer.rawValue, for: indexPath) as! ServiceDetailsDisclaimerCell
             configureDisclaimerCell(cell, at: indexPath.row)
             return cell
-            
+
         case .additionalInfo:
             let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.additionalInfo.rawValue, for: indexPath) as! ServiceDetailsExtraInfoCell
             configureAdditionalInfoCell(cell)
             return cell
         }
     }
-    
+
     // MARK: - Cell Configuration Methods
     private func configureHeaderCell(_ cell: ServiceDetailsHeaderCell) {
+        cell.delegate = self // ✅ IMPORTANT for tap
         cell.titleLabel.text = service.title
         cell.categoryLabel.text = service.category
         cell.reviewsLabel.text = String(format: "%.1f", service.rating)
         cell.setStarsPrecise(rating: service.rating)
     }
-    
+
     private func configureProviderCell(_ cell: ServiceDetailsProviderCell) {
         cell.parent = self
         cell.providerId = service.providerId
+
         userSerivce.fetchUserProfile(uid: service.providerId) { [weak cell] result in
             switch result {
             case .success(let success):
@@ -245,29 +267,27 @@ extension ServiceDetailsViewController: UITableViewDataSource {
             }
         }
     }
-    
+
     private func configureDescriptionCell(_ cell: ServiceDetailsDescriptionCell) {
         cell.descriptionLabel.text = service.description
     }
-    
+
     private func configureDetailsCell(_ cell: ServiceDetailsDetailsCell) {
-        // Format price
         let priceText = String(format: "%.2f BD", service.priceBD)
         let priceTypeText = service.priceType == .Fixed ? "(Fixed Price)" : "(Per Hour)"
         cell.priceLabel.text = "\(priceText) \(priceTypeText)"
-        
-        // Availability
+
         cell.availabilityLabel.text = service.available ? "Available For Booking" : "Currently Unavailable"
         cell.availabilityLabel.textColor = service.available ? .systemTeal : .systemRed
-        // Duration
+
         cell.durationLabel.text = "\(service.durationMinHours)-\(service.durationMaxHours) Hours"
     }
-    
+
     private func configureDisclaimerCell(_ cell: ServiceDetailsDisclaimerCell, at index: Int) {
         guard index < service.disclaimers.count else { return }
         cell.disclaimerTextLabel.text = "\(service.disclaimers[index])"
     }
-    
+
     private func configureAdditionalInfoCell(_ cell: ServiceDetailsExtraInfoCell) {
         cell.infoLabel.text = "For bookings or inquiries, please contact the provider directly. All payments are secured and processed through our platform."
     }
@@ -275,19 +295,19 @@ extension ServiceDetailsViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 extension ServiceDetailsViewController: UITableViewDelegate {
-    
+
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let section = Section(rawValue: indexPath.section) else {
             return UITableView.automaticDimension
         }
-        
+
         switch section {
         case .header:
             return 100
         case .provider:
             return 100
         case .description:
-            return UITableView.automaticDimension // Let content determine
+            return UITableView.automaticDimension
         case .details:
             return 135
         case .disclaimers:
@@ -296,16 +316,16 @@ extension ServiceDetailsViewController: UITableViewDelegate {
             return 100
         }
     }
+
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return Section(rawValue: section)?.title
+        Section(rawValue: section)?.title
     }
-    
+
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return Section(rawValue: section)?.title != nil ? 40 : 0
+        Section(rawValue: section)?.title != nil ? 40 : 0
     }
-    
+
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        // For dynamic height cells
         cell.layoutIfNeeded()
     }
 }

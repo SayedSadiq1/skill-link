@@ -14,6 +14,9 @@ class NewCardViewController : BaseViewController,UITextFieldDelegate {
     @IBOutlet weak var cvvTExtField: UITextField!
     @IBOutlet weak var confirmButton: UIButton!
     
+    var serviceID : String?
+    var price : Double?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTextFields()
@@ -146,6 +149,14 @@ class NewCardViewController : BaseViewController,UITextFieldDelegate {
         
         confirmButton.isEnabled = isNameValid && isCardNumberValid && isCVVValid
         confirmButton.alpha = confirmButton.isEnabled ? 1.0 : 0.5
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "toPayment" {
+            let vc = segue.destination as! PaymentViewController
+            vc.price = price
+            vc.serviceID = serviceID
+        }
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {

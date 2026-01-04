@@ -10,7 +10,11 @@ import UIKit
 protocol BookingsTableViewCellDelegate: AnyObject {
     func didTapApprove(for serviceId: String)
     func didTapDecline(for serviceId: String)
+    func didTapRate(for serviceId: String)
+    func didTapSeeDetails(for serviceId: String)
+    func didTapFavorite(for serviceId: String)
 }
+
 
 class BookingsTableViewCell: UITableViewCell {
 
@@ -38,38 +42,48 @@ class BookingsTableViewCell: UITableViewCell {
     }
     
     func setupContextMenu(state: BookedServiceStatus) {
-        if cellContextMenu == nil {
-            return
-        }
-        
-        let closure = {(action : UIAction) in
-            print(action.title)
-        }
-        
-        
+        guard cellContextMenu != nil else { return }
+
         switch state {
         case .Upcoming:
             cellContextMenu.menu = UIMenu(children: [
-                UIAction(title: "See Details", attributes: [], handler: closure),
-                UIAction(title: "View Provider", handler: closure),
-                UIAction(title: "Cancel", handler: closure)
+                UIAction(title: "See Details") { [weak self] _ in
+                    guard let self else { return }
+                    self.delegate?.didTapSeeDetails(for: self.serviceId)
+                },
+                UIAction(title: "View Provider") { _ in },
+                UIAction(title: "Cancel") { _ in }
             ])
-            
+
         case .Completed:
             cellContextMenu.menu = UIMenu(children: [
-                UIAction(title: "See Details", state: .off, handler: closure),
-                UIAction(title: "Favorite", image: UIImage(systemName: "star"), handler: closure),
-                UIAction(title: "Rate", handler: closure)
+                UIAction(title: "See Details") { [weak self] _ in
+                    guard let self else { return }
+                    self.delegate?.didTapSeeDetails(for: self.serviceId)
+                },
+                UIAction(title: "Favorite", image: UIImage(systemName: "star")) { [weak self] _ in
+                    guard let self else { return }
+                    self.delegate?.didTapFavorite(for: self.serviceId)
+                },
+                UIAction(title: "Rate") { [weak self] _ in
+                    guard let self else { return }
+                    self.delegate?.didTapRate(for: self.serviceId)
+                }
             ])
+
         default:
             cellContextMenu.menu = UIMenu(children: [
-                UIAction(title: "See Details", state: .off, handler: closure)
+                UIAction(title: "See Details") { [weak self] _ in
+                    guard let self else { return }
+                    self.delegate?.didTapSeeDetails(for: self.serviceId)
+                }
             ])
         }
-        
+
         cellContextMenu.showsMenuAsPrimaryAction = true
         cellContextMenu.changesSelectionAsPrimaryAction = false
     }
+
 
     @IBAction func approveBtnTap(_ sender: UIButton) {
         delegate?.didTapApprove(for: serviceId)

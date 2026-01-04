@@ -14,13 +14,7 @@ class PaymentVerficationController : UIViewController {
         super.viewDidLoad()
     }
     
-    @IBAction func navigateToRateProvider(_ sender: UIButton) {
-        performSegue(withIdentifier: "rateProvider", sender: self)
-    }
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "rateProvider" {
-            segue.destination.modalPresentationStyle = .fullScreen
-        }
-    }
 
+    @IBOutlet weak var backButtonTapped: UILabel!
+    
 }

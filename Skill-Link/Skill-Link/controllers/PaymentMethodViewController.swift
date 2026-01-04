@@ -9,7 +9,8 @@ import FirebaseAuth
 class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITableViewDataSource {
 
     var isCashOnDelivery: Bool = false
-
+    var price: Double?
+    var serviceID: String?
     private var paymentMethods: [PaymentMethod] = [
         PaymentMethod(name: "Cash", imageName: "cash", destination: "confirmOrder"),
         PaymentMethod(name: "BenefitPay", imageName: "benefitpay", destination:"confirmPayment"),
@@ -79,7 +80,15 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ConfirmPayment" {
             if let destinationVC = segue.destination as? PaymentViewController {
+                destinationVC.price = price
+                destinationVC.serviceID = serviceID
                 destinationVC.isCashOnDelivery = isCashOnDelivery
+            }
+        }
+        else if segue.identifier == "addCard" {
+            if let vc = segue.destination as? NewCardViewController {
+                vc.price = price
+                vc.serviceID = serviceID
             }
         }
     }

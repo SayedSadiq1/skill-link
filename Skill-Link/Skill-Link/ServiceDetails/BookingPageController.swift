@@ -36,7 +36,13 @@ class BookingPageController: BaseViewController {
             return
         }
         
-        // navigate to payment
+        let sb = UIStoryboard(name: "payment", bundle: nil)
+        let vc = sb.instantiateViewController(identifier: "PaymentMethodViewController", ) as! PaymentMethodViewController
+        vc.serviceID = service?.id
+        vc.price = service?.priceBD
+        self.navigationController?.pushViewController(vc, animated: true)
+        
+        
         
         bookingManager.saveBooking(Booking(serviceId: service!.id!, userId: LoginPageController.loggedinUser!.id!, providerId: service!.providerId, totalPrice: service!.priceBD, location: locationTextField.text!, date: pickedDate, time: formatTime(hours: pickedHour, minutes: pickedMinute))) {[weak self] _ in
             self?.navigationController?.popViewController(animated: true)
