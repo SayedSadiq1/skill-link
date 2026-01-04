@@ -40,6 +40,8 @@ class UserManagementController : BaseViewController,
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
 
         tableView.delegate = self
         tableView.dataSource = self
@@ -49,6 +51,7 @@ class UserManagementController : BaseViewController,
         tableView.sectionHeaderTopPadding = 0   // iOS 15+
         tableView.rowHeight = 100
         
+        searchBar.searchBarStyle = .minimal
         searchBar.delegate = self
         searchBar.placeholder = "Search users..."
         
