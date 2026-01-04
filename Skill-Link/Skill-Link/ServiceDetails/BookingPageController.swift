@@ -37,7 +37,7 @@ class BookingPageController: BaseViewController {
         }
         
         let sb = UIStoryboard(name: "payment", bundle: nil)
-        let vc = sb.instantiateViewController(identifier: "PaymentMethodViewController", ) as! PaymentMethodViewController
+        let vc = sb.instantiateViewController(identifier: "PaymentMethodViewController" ) as! PaymentMethodViewController
         vc.serviceID = service?.id
         vc.price = service?.priceBD
         self.navigationController?.pushViewController(vc, animated: true)
