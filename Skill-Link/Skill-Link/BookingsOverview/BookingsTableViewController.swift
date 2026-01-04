@@ -101,9 +101,9 @@ final class BookingsOverviewTableViewController: BaseViewController,
         guard let index = tabBarController?.viewControllers?.firstIndex(of: self) else { return }
 
         if isProvider {
-            currentState = [.Pending, .Upcoming, .Completed, .Canceled][safe: index] ?? .Upcoming
+            currentState = [.Pending, .Upcoming, .Completed, .Canceled][ index] ?? .Upcoming
         } else {
-            currentState = [.Upcoming, .Completed, .Canceled][safe: index] ?? .Upcoming
+            currentState = [.Upcoming, .Completed, .Canceled][index] ?? .Upcoming
         }
     }
 

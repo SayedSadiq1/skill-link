@@ -28,6 +28,10 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
         // Optional UI polish (recommended)
         paymentMethodTable.separatorStyle = .none
         paymentMethodTable.backgroundColor = .clear
+        
+        Task{
+            try await loadData()
+        }
     
     }
     
@@ -35,9 +39,7 @@ class PaymentMethodViewController: BaseViewController, UITableViewDelegate, UITa
         super.viewWillAppear(animated)
         isCashOnDelivery = false
         
-        Task{
-            try await loadData()
-        }
+        
     }
 
     // MARK: - UITableViewDataSource

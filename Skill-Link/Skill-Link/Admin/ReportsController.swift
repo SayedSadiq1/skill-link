@@ -50,6 +50,7 @@ class ReportsController: BaseViewController,
         tableView.rowHeight = 200
         
         searchBar.delegate = self
+        searchBar.searchBarStyle = .minimal
         searchBar.placeholder = "Search reports..."
         searchBar.autocapitalizationType = .none
         
@@ -112,9 +113,9 @@ class ReportsController: BaseViewController,
             return nil
         }) { error, _ in
             if let error = error {
-                print("❌ Suspend failed:", error)
+                print("Suspend failed:", error)
             } else {
-                print("✅ Provider suspended")
+                print("Provider suspended")
             }
         }
     }
@@ -191,7 +192,7 @@ class ReportsController: BaseViewController,
             .addSnapshotListener { snapshot, error in
 
                 if let error = error {
-                    print("❌ Report listener error:", error)
+                    print("Report listener error:", error)
                     return
                 }
 
@@ -247,7 +248,6 @@ class ReportsController: BaseViewController,
     // MARK: - UITableViewDelegate
     func tableView(_ tableView: UITableView,
                    didSelectRowAt indexPath: IndexPath) {
-        // optional: handle tap
     }
     
     deinit {

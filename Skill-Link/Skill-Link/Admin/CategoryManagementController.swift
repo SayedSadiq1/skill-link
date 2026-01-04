@@ -104,6 +104,11 @@ class CategoryManagementController: BaseViewController,
                 self.showDuplicateError()
                 return
             }
+            
+            if self.isDuplicateCategory(newName) {
+                self.showDuplicateError()
+                return
+            }
 
             self.updateCategory(oldName: oldName, newName: newName)
         })
