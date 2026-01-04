@@ -69,15 +69,13 @@ final class AccountInfoViewController: BaseViewController {
 
     // MARK: - Navigation
     private func goToStartPage() {
-//        let sb = UIStoryboard(name: "login", bundle: nil)
-//
-//        guard let startVC = sb.instantiateViewController(
-//            withIdentifier: "StartPageViewController"
-//        ) else {
-//            fatalError("StartPageViewController not found. Check storyboard ID.")
-//        }
-//
-//        navigationController?.setViewControllers([startVC], animated: true)
+        let sb = UIStoryboard(name: "login", bundle: nil)
+
+        let startVC = sb.instantiateViewController(
+            withIdentifier: "StartPageViewController"
+        ) as! StartPageViewController
+
+        navigationController?.setViewControllers([startVC], animated: true)
     }
 
     // MARK: - Alert

@@ -95,7 +95,7 @@ final class AdminLoginViewController: BaseViewController {
     private func goToAdminDashboard() {
         // Navigate to the admin dashboard screen after successful login
         let sb = UIStoryboard(name: "Admin", bundle: nil)
-        let dashboard = sb.instantiateViewController(withIdentifier: "Admin DashBoard")
+        let dashboard = sb.instantiateViewController(withIdentifier: "adminDashBoard")
         navigationController?.setViewControllers([dashboard], animated: true)
     }
 

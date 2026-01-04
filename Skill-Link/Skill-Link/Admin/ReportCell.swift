@@ -15,17 +15,22 @@ class ReportCell: UITableViewCell {
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var reviewButton: UIButton!
 
-    override func awakeFromNib() {
-        super.awakeFromNib()
+    var onReviewTapped: (() -> Void)?
 
-        reviewButton.layer.cornerRadius = 12
-        reviewButton.clipsToBounds = true
+    @IBAction func reviewTapped(_ sender: UIButton) {
+        onReviewTapped?()
     }
 
-    func configure(with report: ReportsController.Report) {
-        titleLabel.text = report.title
-        serviceLabel.text = "Reported Service: \(report.service)"
+    func configure(with report: ReportModel) {
+        titleLabel.text = "Reported by: \(report.userName)"
+        serviceLabel.text = "Service: \(report.serviceName)"
         reasonLabel.text = "Reason: \(report.reason)"
         statusLabel.text = "Status: \(report.status)"
+
+        reviewButton.setTitle(
+            report.status == "Pending" ? "Review" : "Reviewed",
+            for: .normal
+        )
+        reviewButton.isEnabled = report.status == "Pending"
     }
 }

@@ -1,352 +1,121 @@
 import UIKit
 
-class BookingsOverviewTableViewController: BaseViewController, UITableViewDataSource, UITableViewDelegate, BookingsTableViewCellDelegate {
-    
+final class BookingsOverviewTableViewController: BaseViewController,
+                                                 UITableViewDataSource,
+                                                 UITableViewDelegate {
+
     @IBOutlet weak var table: UITableView!
+
     private var data: [Booking] = []
     private var filteredData: [Booking] = []
     private var currentState: BookedServiceStatus = .Upcoming
-    private var isProvider = LoginPageController.loggedinUser?.isProvider ?? true
+
     private let bookingManager = BookingManager()
     private let serviceManager = ServiceManager()
     private let userService = FirebaseService.shared
-    private let userId = LoginPageController.loggedinUser?.id ?? "07PX2EXm9EXdcwV1IhT3jJiFxO02"
-    
+
+    private let userId = LoginPageController.loggedinUser?.id ?? ""
+    private let isProvider = LoginPageController.loggedinUser?.isProvider ?? false
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        table.delegate = self
         table.dataSource = self
-        
-        if isProvider {
-            bookingManager.fetchBookingsForProvider(userId) { [weak self] result in
-                switch result {
-                case .success(let bookings):
-                    print("Found \(bookings.count) for provider: \(String(describing: self?.userId))")
-                    self?.data = bookings
-                    self?.filteredData = bookings.filter({booking in booking.status == self?.currentState})
-                    self?.table.reloadData()
-                    self?.refreshTabs()
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            }
-        } else {
-            bookingManager.fetchBookingsForUser(LoginPageController.loggedinUser!.id!){ [weak self] result in
-                switch result {
-                case .success(let bookings):
-                    print("Found \(bookings.count) for seeker: \(String(describing: self?.userId))")
-                    self?.data = bookings
-                    self?.filteredData = bookings.filter({booking in booking.status == self?.currentState})
-                    self?.table.reloadData()
-                    self?.refreshTabs()
-                case .failure(let error):
-                    print("COULDNT LOAD USER BOOKINGS: \(error.localizedDescription)")
-                }
-            }
-        }
-        
-        addProviderView()
-        setupForCurrentTab()
-    }
-    
+        table.delegate = self
 
-    private func addProviderView() {
-        if !isProvider {
-            return
-        }
-        
-        guard let tabBarController = self.tabBarController else {
-            return
-        }
-        
-        if tabBarController.viewControllers?.count == 4 {
-            return
-        }
-        
-        // 2. Prepare your conditional view controller (e.g., from Storyboard)
-        let storyboard = UIStoryboard(name: "BookingsOverview", bundle: nil)
-        let providerVC = storyboard.instantiateViewController(withIdentifier: "PendingBookings")
-        
-        // Configure the adminVC's tab bar item
-        providerVC.tabBarItem = UITabBarItem(title: "Pending", image: UIImage(systemName: "person.fill.checkmark.and.xmark"), tag: 3)
-        
-        // 3. Check the condition (e.g., user is an admin)
-        if isProvider {
-            // Insert the admin tab as the fourth item (index 3)
-            var currentViewControllers = tabBarController.viewControllers ?? []
-            // Ensure we don't insert it multiple times
-            if !currentViewControllers.contains(providerVC) {
-                currentViewControllers.insert(providerVC, at: 0) // Add at specific position
-                tabBarController.viewControllers = currentViewControllers
-            }
-        } else {
-            if let providerVCIndex = tabBarController.viewControllers?.firstIndex(where: { $0.tabBarItem.title == "Pending" }) {
-                var currentViewControllers = tabBarController.viewControllers
-                currentViewControllers?.remove(at: providerVCIndex)
-                tabBarController.viewControllers = currentViewControllers
-            }
-        }
+        setupForCurrentTab()
+        fetchBookings()
     }
-    
-    // MARK: - Delegate
-    func didTapApprove(for booking: Booking) {
-        print("didTapApprove")
-        booking.status = .Upcoming
-        self.bookingManager.updateBooking(booking) { [weak self] result in
+
+    // MARK: - Fetch
+    private func fetchBookings() {
+        guard !userId.isEmpty else { return }
+
+        let handler: (Result<[Booking], Error>) -> Void = { [weak self] result in
+            guard let self else { return }
             switch result {
-            case .success(_):
-                self?.updateBookingState(serviceId: booking.serviceId, newState: .Upcoming)
-                self?.table.reloadData()
-                self?.refreshTabs()
-            case .failure(let failure):
-                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
+            case .success(let bookings):
+                self.data = bookings
+                self.filteredData = bookings.filter { $0.status == self.currentState }
+                self.table.reloadData()
+            case .failure(let error):
+                print("❌ Fetch bookings error:", error.localizedDescription)
             }
         }
-        
-        self.table.reloadData()
-        self.refreshTabs()
-        self.showAlert(message: "Booking approved successfully!")
+
+        isProvider
+            ? bookingManager.fetchBookingsForProvider(userId, completion: handler)
+            : bookingManager.fetchBookingsForUser(userId, completion: handler)
     }
-    
-    func didTapDecline(for booking: Booking) {
-        print("didTapDecline")
-        booking.status = .Canceled
-        self.bookingManager.updateBooking(booking) { [weak self] result in
-            switch result {
-            case .success(_):
-                self?.updateBookingState(serviceId: booking.serviceId, newState: .Canceled)
-                self?.table.reloadData()
-                self?.refreshTabs()
-            case .failure(let failure):
-                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
-            }
-        }
-        
-        self.table.reloadData()
-        self.refreshTabs()
-        self.showAlert(message: "Booking declined")
-    }
-    
-    func goToServiceDetails(for serviceId: String) {
-        serviceManager.fetchService(by: serviceId) { [weak self] result in
-            switch result {
-            case .success(let service):
-                let sb = UIStoryboard(name: "ServiceDetailsStoryboard", bundle: nil)
-                let vc = sb.instantiateViewController(withIdentifier: "serviceDetailsPage") as! ServiceDetailsViewController
-                vc.service = service
-                self!.navigationController?.pushViewController(vc, animated: true)
-            case .failure(let err):
-                self?.showAlert(message: "An error occured")
-                print(err.localizedDescription)
-            }
-        }
-    }
-    
-    func markServiceCompleted(for booking: Booking) {
-        booking.status = .Completed
-        updateBookingState(serviceId: booking.serviceId, newState: .Completed)
-        bookingManager.updateBooking(booking) { [weak self] result in
-            switch result {
-            case .success(_):
-                self?.updateBookingState(serviceId: booking.serviceId, newState: .Completed)
-                self?.table.reloadData()
-                self?.refreshTabs()
-            case .failure(let failure):
-                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
-            }
-        }
-    }
-    
-    func goToProviderProfile(for providerId: String) {
-        userService.fetchUserProfile(uid: providerId) { [weak self] result in
-            switch result {
-            case .success(let success):
-                let sb = UIStoryboard(name: "login", bundle: nil)
-                let vc = sb.instantiateViewController(withIdentifier: "ProfileProviderViewController") as! ProfileProviderViewController
-                vc.currentProfile = success
-                self!.navigationController?.pushViewController(vc, animated: true)
-            case .failure(let failure):
-                self?.showAlert(message: "An error occured: \(failure.localizedDescription)")
-            }
-        }
-    }
-    
-    func markServiceCanceled(for booking: Booking) {
-        booking.status = .Canceled
-        updateBookingState(serviceId: booking.serviceId, newState: .Canceled)
-        bookingManager.updateBooking(booking) { [weak self] result in
-            switch result {
-            case .success(_):
-                self?.updateBookingState(serviceId: booking.serviceId, newState: .Canceled)
-                self?.table.reloadData()
-                self?.refreshTabs()
-            case .failure(let failure):
-                self?.showAlert(message: "Action failed: \(failure.localizedDescription)")
-            }
-        }
-    }
-    
-    
-    private func showAlert(message: String) {
-        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
-    
-    // MARK: - UITableViewDataSource
-    
+
+    // MARK: - Table
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return filteredData.count
+        filteredData.count
     }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? BookingsTableViewCell else {
+
+    func tableView(_ tableView: UITableView,
+                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+                as? BookingsTableViewCell else {
             return UITableViewCell()
         }
-        
-        let booking = filteredData[indexPath.row]  // Use filteredData
-        
-        
-        // Format the date
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .medium
+
+        let booking = filteredData[indexPath.row]
+
+        cell.serviceId = booking.serviceId
+
+        cell.onRateTapped = { [weak self] serviceId in
+            guard let self, !serviceId.isEmpty else { return }
+            self.performSegue(withIdentifier: "toRate", sender: serviceId)
+        }
+
+        cell.price.text = "\(booking.totalPrice) BD"
+        cell.time.text = booking.time
+        cell.location.text = booking.location
+
+        let df = DateFormatter()
+        df.dateStyle = .medium
+        cell.date.text = df.string(from: booking.date)
+
         serviceManager.fetchService(by: booking.serviceId) { [weak cell] result in
-            switch result {
-            case .success(let service):
+            if case .success(let service) = result {
                 cell?.serviceTitle.text = service.title
-            case .failure(let err):
-                print(err.localizedDescription)
             }
         }
-        
-        print("Setting user label jksahdkjsahdkjsahdkjsahkjdhskadsad")
-        userService.fetchUserProfile(uid: isProvider ? booking.userId : booking.providerId) {[weak cell, weak self] (result : Result<UserProfile, Error>) in
-            switch result {
-            case .success(let user):
-                if self!.currentState == .Pending {
-                    cell!.providedBy?.text = "Booked By: \(user.fullName)"
-                } else {
-                    if self!.isProvider {
-                        cell!.providedBy?.text = "Booked By: \(user.fullName)"
-                    } else {
-                        cell!.providedBy?.text = "Provided By: \(user.fullName)"
-                    }
-                }
-            case .failure(let failure):
-                print("Failed to get user for cell: \(failure.localizedDescription)")
+
+        userService.fetchUserProfile(uid: isProvider ? booking.userId : booking.providerId) {
+            [weak cell] result in
+            if case .success(let user) = result {
+                cell?.providedBy.text = self.isProvider
+                    ? "Booked By: \(user.fullName)"
+                    : "Provided By: \(user.fullName)"
             }
         }
-        
-        cell.date?.text = dateFormatter.string(from: booking.date)
-        cell.time?.text = booking.time
-        cell.location?.text = booking.location
-        cell.price?.text = "\(booking.totalPrice)BD"
-        cell.booking = booking
-        cell.delegate = self
-        
-        let stateLabel = cell.bookingCategory as! CardLabel
-        stateLabel.alpha = CGFloat(0.65)
-        stateLabel.text = booking.status.rawValue
-        switch booking.status {
-        case .Pending:
-            stateLabel.setBackgroundColor(UIColor.yellow)
-        case .Upcoming:
-            stateLabel.setBackgroundColor(UIColor.tintColor)
-        case .Completed:
-            stateLabel.setBackgroundColor(UIColor.systemGreen)
-        case .Canceled:
-            stateLabel.setBackgroundColor(UIColor.orange)
-        }
-        
+
         cell.setupContextMenu(state: currentState)
-        
         return cell
     }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 250
-    }
-    //
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        table.deselectRow(at: indexPath, animated: true)
-        // Handle row selection
-    }
-    
+
+    // MARK: - Tabs
     private func setupForCurrentTab() {
-        // Get the current tab index
-        if let tabBarController = self.tabBarController,
-           let index = tabBarController.viewControllers?.firstIndex(of: self) {
-            
-            // Set current state based on tab index
-            if !(isProvider) {
-                switch index {
-                case 0:
-                    currentState = .Upcoming
-                case 1:
-                    currentState = .Completed
-                case 2:
-                    currentState = .Canceled
-                default:
-                    break
-                }
-            } else {
-                switch index {
-                case 0:
-                    currentState = .Pending
-                case 1:
-                    currentState = .Upcoming
-                case 2:
-                    currentState = .Completed
-                case 3:
-                    currentState = .Canceled
-                default:
-                    break
-                }
-            }
-            
-            
-            // Filter the data
-            filteredData = BookingDataManager.shared.getBookings(for: currentState)
-            
-            // Reload table
-            table.reloadData()
-            
-            // Debug
-            print("Tab \(index): Showing \(filteredData.count) \(currentState.rawValue) services")
+        guard let index = tabBarController?.viewControllers?.firstIndex(of: self) else { return }
+
+        if isProvider {
+            currentState = [.Pending, .Upcoming, .Completed, .Canceled][safe: index] ?? .Upcoming
+        } else {
+            currentState = [.Upcoming, .Completed, .Canceled][safe: index] ?? .Upcoming
         }
     }
-    
-    private func refreshTabs() {
-        if let tabBarController = self.navigationController?.tabBarController {
-            tabBarController.viewControllers?.forEach { viewController in
-                if let nav = viewController as? UINavigationController,
-                   let bookingVC = nav.viewControllers.first as? BookingsOverviewTableViewController,
-                   bookingVC != self {
-                    bookingVC.table.reloadData()
-                } else if let bookingVC = viewController as? BookingsOverviewTableViewController,
-                          bookingVC != self {
-                    bookingVC.table.reloadData()
-                }
-            }
-        }
-    }
-    
-    func updateBookingState(serviceId: String, newState: BookedServiceStatus) {
-        if let index = data.firstIndex(where: { $0.serviceId == serviceId }) {
-            // Create a mutable copy
-            var booking = data[index]
-            booking.status = newState
-            data[index] = booking
-            filteredData = data.filter({booking in booking.status == self.currentState})
-            refreshTabs()
-            self.table.reloadData()
-            
-            // Notify observers (tabs) of the change
-            NotificationCenter.default.post(
-                name: .bookingDataDidChange,
-                object: nil
-            )
-        }
+
+    // MARK: - Segue
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard segue.identifier == "toRate",
+              let serviceId = sender as? String,
+              !serviceId.isEmpty else { return }
+
+        let dest = (segue.destination as? UINavigationController)?.viewControllers.first
+            ?? segue.destination
+
+        (dest as? RateFormController)?.serviceID = serviceId
     }
 }
