@@ -174,12 +174,13 @@ extension ServiceDetailsViewController: ServiceDetailsHeaderCellDelegate {
         }
 
         let sb = UIStoryboard(name: "Rating", bundle: nil)
-        guard let vc = sb.instantiateViewController(withIdentifier: "ReviewsViewController") as? ReviewsViewController else {
+        guard let vc = sb.instantiateViewController(withIdentifier: "ReviewsViewController") as? ReviewsViewController
+        else {
             print("❌ Could not instantiate ReviewsViewController. Check storyboard name + ID.")
             return
         }
 
-        vc.serviceID = serviceID
+        vc.serviceID = service.id
         navigationController?.pushViewController(vc, animated: true)
     }
 }

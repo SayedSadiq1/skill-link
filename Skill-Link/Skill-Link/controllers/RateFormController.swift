@@ -25,7 +25,7 @@ class RateFormController : BaseViewController {
     func getUserField(from userID: String, field: String) async -> Any? {
         do {
             // Assumes your users are stored in a collection named "Users"
-            let doc = try await db.collection("user").document(userID).getDocument()
+            let doc = try await db.collection("User").document(userID).getDocument()
             return doc.data()?[field]
         } catch {
             print("❌ Error fetching user field: \(error)")
@@ -47,6 +47,7 @@ class RateFormController : BaseViewController {
         submitButton.layer.cornerRadius = 12
         Task{
             try await userName = try await getUserField(from: Auth.auth().currentUser?.uid ?? "", field: "fullName") as? String
+            print(userName)
         }
     }
     

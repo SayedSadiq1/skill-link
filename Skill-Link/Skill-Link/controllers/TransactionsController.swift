@@ -40,6 +40,7 @@ final class TransactionsController {
     }
     
     func createTransaction(id: String, transaction: Transaction) async throws {
+        print(LoginPageController.loggedinUser?.id)
         let currentUser = Firestore.firestore().collection("User").document(id)
         
         let newTransaction: [String: Any] = [

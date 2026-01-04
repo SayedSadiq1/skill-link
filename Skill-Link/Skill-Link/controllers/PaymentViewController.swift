@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 final class PaymentViewController: BaseViewController {
 
@@ -62,7 +63,7 @@ final class PaymentViewController: BaseViewController {
 
                 self.transaction = tx
 
-                try await TransactionsController.shared.createTransaction(id: serviceID, transaction: tx)
+                try await TransactionsController.shared.createTransaction(id: Auth.auth().currentUser?.uid ?? "", transaction: tx)
 
                 self.paymentButton.isEnabled = true
                 self.showSimpleAlert("Transaction created ✅")
