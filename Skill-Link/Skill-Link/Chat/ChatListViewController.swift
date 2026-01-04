@@ -230,6 +230,7 @@ class ChatListViewController: BaseViewController,
                 self.openChat(chatId: pairId, provider: provider)
             } else {
                 // Create chat ONCE
+                print(LocalUserStore.loadProfile())
                 guard let profile = LocalUserStore.loadProfile() else {
                     print("❌ No local user profile")
                     return

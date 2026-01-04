@@ -11,7 +11,7 @@ enum UserRole: String, Codable {
 struct UserProfile: Codable {
 
     // Firebase user id from auth
-    @DocumentID<String> var id: String?
+    var id: String
 
     // User basic details
     var fullName: String

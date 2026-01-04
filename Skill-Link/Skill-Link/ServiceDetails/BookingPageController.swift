@@ -44,7 +44,7 @@ class BookingPageController: BaseViewController {
         
         
         
-        bookingManager.saveBooking(Booking(serviceId: service!.id!, userId: LoginPageController.loggedinUser!.id!, providerId: service!.providerId, totalPrice: service!.priceBD, location: locationTextField.text!, date: pickedDate, time: formatTime(hours: pickedHour, minutes: pickedMinute))) {[weak self] _ in
+        bookingManager.saveBooking(Booking(serviceId: service!.id!, userId: LoginPageController.loggedinUser!.id, providerId: service!.providerId, totalPrice: service!.priceBD, location: locationTextField.text!, date: pickedDate, time: formatTime(hours: pickedHour, minutes: pickedMinute))) {[weak self] _ in
             
         }
         
