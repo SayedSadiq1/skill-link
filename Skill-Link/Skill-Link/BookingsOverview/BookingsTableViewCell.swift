@@ -1,10 +1,3 @@
-//
-//  UpcomingTableViewCell.swift
-//  Skill-Link
-//
-//  Created by BP-36-201-24 on 18/12/2025.
-//
-
 import UIKit
 
 final class BookingsTableViewCell: UITableViewCell {
@@ -19,12 +12,16 @@ final class BookingsTableViewCell: UITableViewCell {
     @IBOutlet weak var cellContextMenu: UIButton!
 
     var serviceId: String = ""
+
+    // Callbacks handled by ViewController
     var onRateTapped: ((String) -> Void)?
+    var onSeeDetailsTapped: ((String) -> Void)?
 
     override func prepareForReuse() {
         super.prepareForReuse()
         serviceId = ""
         onRateTapped = nil
+        onSeeDetailsTapped = nil
         cellContextMenu.menu = nil
     }
 
@@ -36,7 +33,11 @@ final class BookingsTableViewCell: UITableViewCell {
         }
 
         cellContextMenu.menu = UIMenu(children: [
-            UIAction(title: "Rate") { [weak self] _ in
+            UIAction(title: "See Details") { [weak self] _ in
+                guard let self else { return }
+                self.onSeeDetailsTapped?(self.serviceId)
+            },
+            UIAction(title: "Rate", image: UIImage(systemName: "star")) { [weak self] _ in
                 guard let self else { return }
                 self.onRateTapped?(self.serviceId)
             }

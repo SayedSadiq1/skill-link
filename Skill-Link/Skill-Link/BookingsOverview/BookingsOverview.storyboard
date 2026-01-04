@@ -166,6 +166,9 @@
                                                                                 <imageReference key="image" image="phone" catalog="system" symbolScale="small"/>
                                                                                 <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
                                                                             </buttonConfiguration>
+                                                                            <connections>
+                                                                                <action selector="callButtonTapped:" destination="UXc-5Q-qNl" eventType="touchUpInside" id="FuY-QK-TPb"/>
+                                                                            </connections>
                                                                         </button>
                                                                     </subviews>
                                                                 </stackView>
@@ -803,7 +806,7 @@
                                                                                 <color key="baseBackgroundColor" systemColor="systemGreenColor"/>
                                                                             </buttonConfiguration>
                                                                             <connections>
-                                                                                <action selector="approveBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="aWE-Fl-fHt"/>
+                                                                                <action selector="approveBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="xPS-Yd-CYH"/>
                                                                             </connections>
                                                                         </button>
                                                                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="EVk-E7-Nfr">
@@ -816,7 +819,7 @@
                                                                                 <color key="baseBackgroundColor" systemColor="systemRedColor"/>
                                                                             </buttonConfiguration>
                                                                             <connections>
-                                                                                <action selector="declineBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="2pR-Fa-bh7"/>
+                                                                                <action selector="declineBtnTap:" destination="FfL-g3-rmA" eventType="touchUpInside" id="gLW-P1-3OU"/>
                                                                             </connections>
                                                                         </button>
                                                                     </subviews>
@@ -842,6 +845,7 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="approveDeclineButtons" destination="JsT-eM-Oar" id="EFj-4c-JXK"/>
                                             <outlet property="bookingCategory" destination="50O-iK-xtv" id="6bp-Tf-yX3"/>
                                             <outlet property="cellContextMenu" destination="T7i-6V-d1s" id="HK5-hE-36d"/>
                                             <outlet property="date" destination="nst-j5-ps3" id="aOF-oK-DFA"/>

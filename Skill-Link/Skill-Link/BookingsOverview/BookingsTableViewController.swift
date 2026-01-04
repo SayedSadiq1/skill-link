@@ -14,8 +14,8 @@ final class BookingsOverviewTableViewController: BaseViewController,
     private let serviceManager = ServiceManager()
     private let userService = FirebaseService.shared
 
-    private let userId: String = LoginPageController.loggedinUser?.id ?? ""
-    private let isProvider: Bool = LoginPageController.loggedinUser?.isProvider ?? false
+    private let userId = LoginPageController.loggedinUser?.id ?? ""
+    private let isProvider = LoginPageController.loggedinUser?.isProvider ?? false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +26,7 @@ final class BookingsOverviewTableViewController: BaseViewController,
         fetchBookings()
     }
 
+    // MARK: - Fetch
     private func fetchBookings() {
         guard !userId.isEmpty else { return }
 
@@ -36,16 +37,14 @@ final class BookingsOverviewTableViewController: BaseViewController,
                 self.data = bookings
                 self.filteredData = bookings.filter { $0.status == self.currentState }
                 self.table.reloadData()
-            case .failure(let err):
-                print("Next booking fetch error:", err.localizedDescription)
+            case .failure(let error):
+                print("❌ Fetch bookings error:", error.localizedDescription)
             }
         }
 
-        if isProvider {
-            bookingManager.fetchBookingsForProvider(userId, completion: handler)
-        } else {
-            bookingManager.fetchBookingsForUser(userId, completion: handler)
-        }
+        isProvider
+            ? bookingManager.fetchBookingsForProvider(userId, completion: handler)
+            : bookingManager.fetchBookingsForUser(userId, completion: handler)
     }
 
     // MARK: - Table
@@ -56,26 +55,20 @@ final class BookingsOverviewTableViewController: BaseViewController,
     func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? BookingsTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+                as? BookingsTableViewCell else {
             return UITableViewCell()
         }
 
         let booking = filteredData[indexPath.row]
 
-        // ✅ IMPORTANT: set this BEFORE calling setupContextMenu
         cell.serviceId = booking.serviceId
 
-        // ✅ When user taps Rate from menu, pass sender = serviceId
         cell.onRateTapped = { [weak self] serviceId in
-            guard let self else { return }
-            guard !serviceId.isEmpty else {
-                print("❌ serviceId empty from cell")
-                return
-            }
+            guard let self, !serviceId.isEmpty else { return }
             self.performSegue(withIdentifier: "toRate", sender: serviceId)
         }
 
-        // UI
         cell.price.text = "\(booking.totalPrice) BD"
         cell.time.text = booking.time
         cell.location.text = booking.location
@@ -90,10 +83,10 @@ final class BookingsOverviewTableViewController: BaseViewController,
             }
         }
 
-        userService.fetchUserProfile(uid: isProvider ? booking.userId : booking.providerId) { [weak self, weak cell] result in
-            guard let self, let cell else { return }
+        userService.fetchUserProfile(uid: isProvider ? booking.userId : booking.providerId) {
+            [weak cell] result in
             if case .success(let user) = result {
-                cell.providedBy.text = self.isProvider
+                cell?.providedBy.text = self.isProvider
                     ? "Booked By: \(user.fullName)"
                     : "Provided By: \(user.fullName)"
             }
@@ -103,55 +96,26 @@ final class BookingsOverviewTableViewController: BaseViewController,
         return cell
     }
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        let booking = filteredData[indexPath.row]
-        guard booking.status == .Completed else { return }
-
-        // ✅ pass sender directly
-        performSegue(withIdentifier: "toRate", sender: booking.serviceId)
-    }
-
     // MARK: - Tabs
     private func setupForCurrentTab() {
         guard let index = tabBarController?.viewControllers?.firstIndex(of: self) else { return }
 
         if isProvider {
-            switch index {
-            case 0: currentState = .Pending
-            case 1: currentState = .Upcoming
-            case 2: currentState = .Completed
-            case 3: currentState = .Canceled
-            default: currentState = .Upcoming
-            }
+            currentState = [.Pending, .Upcoming, .Completed, .Canceled][safe: index] ?? .Upcoming
         } else {
-            switch index {
-            case 0: currentState = .Upcoming
-            case 1: currentState = .Completed
-            case 2: currentState = .Canceled
-            default: currentState = .Upcoming
-            }
+            currentState = [.Upcoming, .Completed, .Canceled][safe: index] ?? .Upcoming
         }
     }
 
     // MARK: - Segue
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard segue.identifier == "toRate" else { return }
+        guard segue.identifier == "toRate",
+              let serviceId = sender as? String,
+              !serviceId.isEmpty else { return }
 
-        guard let serviceId = sender as? String, !serviceId.isEmpty else {
-            print("❌ sender serviceId missing in prepare | sender:", String(describing: sender))
-            return
-        }
+        let dest = (segue.destination as? UINavigationController)?.viewControllers.first
+            ?? segue.destination
 
-        let dest = (segue.destination as? UINavigationController)?.viewControllers.first ?? segue.destination
-
-        guard let rateVC = dest as? RateFormController else {
-            print("❌ Destination is not RateFormController:", type(of: dest))
-            return
-        }
-
-        rateVC.serviceID = serviceId
-        print("✅ Passing serviceID:", serviceId)
+        (dest as? RateFormController)?.serviceID = serviceId
     }
 }
