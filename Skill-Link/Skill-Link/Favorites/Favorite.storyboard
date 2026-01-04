@@ -114,10 +114,10 @@
             </objects>
             <point key="canvasLocation" x="-1825" y="118"/>
         </scene>
-        <!--Base View Controller-->
+        <!--Favorites View Controller-->
         <scene sceneID="ogw-bl-JrY">
             <objects>
-                <viewController id="k0U-9j-3wX" customClass="BaseViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="FavoritesViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="k0U-9j-3wX" customClass="FavoritesViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="sl7-qE-dkd">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -198,10 +198,10 @@
             </objects>
             <point key="canvasLocation" x="-880.15267175572512" y="127.46478873239437"/>
         </scene>
-        <!--Base View Controller-->
+        <!--Recently Viewed View Controller-->
         <scene sceneID="itt-4M-NsP">
             <objects>
-                <viewController modalPresentationStyle="fullScreen" id="vij-JF-AdP" customClass="BaseViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="RecentlyViewedViewController" modalPresentationStyle="fullScreen" useStoryboardIdentifierAsRestorationIdentifier="YES" id="vij-JF-AdP" customClass="RecentlyViewedViewController" customModule="Skill_Link" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="BMD-Ql-mTL">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
