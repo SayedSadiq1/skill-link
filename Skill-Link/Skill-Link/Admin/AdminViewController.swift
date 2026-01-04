@@ -17,7 +17,12 @@ class AdminViewController: BaseViewController {
     @IBOutlet weak var activeProvidersLabel: UILabel!
     @IBOutlet weak var activeBookingsLabel: UILabel!
     @IBOutlet weak var reportedCasesLabel: UILabel!
-    @IBOutlet weak var pendingVerificationsLabel: UILabel!
+    
+    private var usersListener: ListenerRegistration?
+    private var providersListener: ListenerRegistration?
+    private var bookingsListener: ListenerRegistration?
+    private var reportsListener: ListenerRegistration?
+
     
     private let db = Firestore.firestore()
 
@@ -27,21 +32,80 @@ class AdminViewController: BaseViewController {
 
         print(FirebaseApp.app() != nil ? "Firebase connected" : "Firebase not connected")
 
-        // Total users (already working)
-        db.collection("User").getDocuments { snapshot, error in
-            let count = snapshot?.documents.count ?? 0
-            DispatchQueue.main.async {
-                self.totalUsersLabel.text = "\(count)"
-            }
-        }
+        listenTotalUsers()
+        listenActiveProviders()
+        listenActiveBookings()
+        listenReportedCases()
 
-        fetchActiveProviders()
-        fetchActiveBookings()
-        fetchReportedCases()
-
-        // Pending verifications removed
-        pendingVerificationsLabel.isHidden = true
     }
+    
+    func listenTotalUsers() {
+        usersListener = db.collection("User")
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("Total users error:", error)
+                    return
+                }
+
+                let count = snapshot?.documents.count ?? 0
+                DispatchQueue.main.async {
+                    self.totalUsersLabel.text = "\(count)"
+                }
+            }
+    }
+    
+    func listenActiveProviders() {
+        providersListener = db.collection("User")
+            .whereField("role", isEqualTo: "provider")
+            .whereField("isSuspended", isEqualTo: false)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("Active providers error:", error)
+                    return
+                }
+
+                let count = snapshot?.documents.count ?? 0
+                DispatchQueue.main.async {
+                    self.activeProvidersLabel.text = "\(count)"
+                }
+            }
+    }
+    
+    func listenActiveBookings() {
+        bookingsListener = db.collection("Booking")
+            .whereField("status", isEqualTo: "Upcoming")
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("Active bookings error:", error)
+                    return
+                }
+
+                let count = snapshot?.documents.count ?? 0
+                DispatchQueue.main.async {
+                    self.activeBookingsLabel.text = "\(count)"
+                }
+            }
+    }
+    
+    func listenReportedCases() {
+        reportsListener = db.collection("Report")
+            .whereField("status", isEqualTo: "Pending")
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("Reported cases error:", error)
+                    return
+                }
+
+                let count = snapshot?.documents.count ?? 0
+                DispatchQueue.main.async {
+                    self.reportedCasesLabel.text = "\(count)"
+                }
+            }
+    }
+
+
+
+
 
     
     
@@ -52,7 +116,7 @@ class AdminViewController: BaseViewController {
             .getDocuments { snapshot, error in
 
                 if let error = error {
-                    print("❌ Active providers error:", error)
+                    print("Active providers error:", error)
                     return
                 }
 
@@ -69,7 +133,7 @@ class AdminViewController: BaseViewController {
             .getDocuments { snapshot, error in
 
                 if let error = error {
-                    print("❌ Active bookings error:", error)
+                    print("Active bookings error:", error)
                     return
                 }
 
@@ -86,7 +150,7 @@ class AdminViewController: BaseViewController {
             .getDocuments { snapshot, error in
 
                 if let error = error {
-                    print("❌ Reported cases error:", error)
+                    print("Reported cases error:", error)
                     return
                 }
 

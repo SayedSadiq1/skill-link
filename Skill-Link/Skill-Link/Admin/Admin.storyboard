@@ -83,20 +83,6 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Pending Verifications" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Y62-xl-LFW">
-                                        <rect key="frame" x="8" y="160" width="167" height="22"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" type="system" weight="light" pointSize="18"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="100" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5Tn-kb-bsZ">
-                                        <rect key="frame" x="244" y="160" width="30" height="22"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" type="system" weight="light" pointSize="18"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
@@ -185,7 +171,6 @@
                     <connections>
                         <outlet property="activeBookingsLabel" destination="XXA-j3-rRD" id="gHb-L0-0Qz"/>
                         <outlet property="activeProvidersLabel" destination="22u-5g-wdo" id="VOp-ih-rJ8"/>
-                        <outlet property="pendingVerificationsLabel" destination="5Tn-kb-bsZ" id="bKC-fV-Wqq"/>
                         <outlet property="reportedCasesLabel" destination="h0e-Su-IKJ" id="Uz0-C9-mgi"/>
                         <outlet property="totalUsersLabel" destination="cdi-Kh-bSc" id="HEC-sx-5wk"/>
                     </connections>
