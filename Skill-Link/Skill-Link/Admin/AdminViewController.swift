@@ -8,6 +8,7 @@
 import UIKit
 import Firebase
 import FirebaseFirestore
+import FirebaseAuth
 
 
 class AdminViewController: BaseViewController {
@@ -95,21 +96,50 @@ class AdminViewController: BaseViewController {
                 }
             }
     }
-
-
-
-
-
     
+    @IBAction func signOutTapped(_ sender: UIButton) {
+        let alert = UIAlertController(
+            title: "Sign Out",
+            message: "Are you sure you want to sign out?",
+            preferredStyle: .alert
+        )
 
-    /*
-    // MARK: - Navigation
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+        alert.addAction(UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
+            self?.performSignOut()
+        })
+
+        present(alert, animated: true)
     }
-    */
+
+    private func performSignOut() {
+        do {
+            // Firebase sign out
+            try Auth.auth().signOut()
+
+            LocalUserStore.clearProfile()
+
+            goToStartPage()
+        } catch {
+            showAlert(title: "Error", message: "Failed to sign out. Please try again.")
+        }
+    }
+    
+    private func goToStartPage() {
+        let sb = UIStoryboard(name: "login", bundle: nil)
+
+        let startVC = sb.instantiateViewController(
+            withIdentifier: "StartPageViewController"
+        ) as! StartPageViewController
+
+        navigationController?.setViewControllers([startVC], animated: true)
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
 
 }
