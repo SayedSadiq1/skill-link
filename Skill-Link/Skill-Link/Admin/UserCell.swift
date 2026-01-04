@@ -14,7 +14,9 @@ class UserCell: UITableViewCell {
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var actionButton: UIButton!
 
-    override func awakeFromNib() {
-        super.awakeFromNib()
+    var onActionTapped: (() -> Void)?
+
+    @IBAction func actionButtonTapped(_ sender: UIButton) {
+        onActionTapped?()
     }
 }
